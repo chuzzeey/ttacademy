@@ -9,17 +9,15 @@ const Stat = () => {
     useEffect(() => {
         const timer = setTimeout(() => {
             setStartCounting(true)
-        }, 2000) // 2 seconds delay
-
+        }, 2000)
         return () => clearTimeout(timer)
     }, [])
 
     useEffect(() => {
         if (!startCounting) return
 
-        // Courses counter (1 to 56)
-        const coursesDuration = 2000 // 2 seconds
-        const coursesInterval = 50 // Update every 50ms
+        const coursesDuration = 2000
+        const coursesInterval = 50
         const coursesSteps = coursesDuration / coursesInterval
         const coursesIncrement = 56 / coursesSteps
 
@@ -30,9 +28,8 @@ const Stat = () => {
             })
         }, coursesInterval)
 
-        // Students counter (0 to 800)
-        const studentsDuration = 2000 // 2 seconds
-        const studentsInterval = 50 // Update every 50ms
+        const studentsDuration = 2000
+        const studentsInterval = 50
         const studentsSteps = studentsDuration / studentsInterval
         const studentsIncrement = 800 / studentsSteps
 
@@ -48,23 +45,24 @@ const Stat = () => {
             clearInterval(studentsTimer)
         }
     }, [startCounting])
+
     return (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 w-full -mt-20 lg:-mt-43">
-            <div className="flex flex-col items-start justify-center rounded-4xl bg-white/80 backdrop-blur-md py-4 px-6 shadow-sm h-14 lg:h-[7.5rem] animate-[slideUp_0.6s_ease-out_0.9s_forwards]">
-                <h3 className="text-4xl font-bold text-gray-800 tabular-nums" style={{fontFamily: 'SF Pro, -apple-system, BlinkMacSystemFont, sans-serif'}}>{Math.floor(coursesCount)}</h3>
-                <p className="text-gray-600 font-normal" style={{fontFamily: 'SF Pro, -apple-system, BlinkMacSystemFont, sans-serif'}}>Online courses</p>
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4 w-full">
+            <div className="flex flex-col items-start justify-center rounded-2xl bg-white/90 backdrop-blur-md py-4 px-6 shadow-sm border border-white/50 h-14 lg:h-[7.5rem] animate-[slideUp_0.6s_ease-out_0.9s_forwards]">
+                <h3 className="text-3xl lg:text-4xl font-bold text-[#1a1a2e] tabular-nums">{Math.floor(coursesCount)}</h3>
+                <p className="text-[#5a5a6e] text-sm">Online courses</p>
             </div>
-            <div className="flex flex-col items-start justify-center rounded-4xl bg-white/80 backdrop-blur-md py-4 px-6 shadow-sm h-14 lg:h-[7.5rem] animate-[slideUp_0.6s_ease-out_1.0s_forwards]">
-                <h3 className="text-4xl font-bold text-gray-800 tabular-nums" style={{fontFamily: 'SF Pro, -apple-system, BlinkMacSystemFont, sans-serif'}}>{Math.floor(studentsCount)}+</h3>
-                <p className="text-gray-600 font-normal" style={{fontFamily: 'SF Pro, -apple-system, BlinkMacSystemFont, sans-serif'}}>Happy students</p>
+            <div className="flex flex-col items-start justify-center rounded-2xl bg-white/90 backdrop-blur-md py-4 px-6 shadow-sm border border-white/50 h-14 lg:h-[7.5rem] animate-[slideUp_0.6s_ease-out_1.0s_forwards]">
+                <h3 className="text-3xl lg:text-4xl font-bold text-[#1a1a2e] tabular-nums">{Math.floor(studentsCount)}+</h3>
+                <p className="text-[#5a5a6e] text-sm">Happy students</p>
             </div>
-            <div className="flex flex-col items-start justify-center rounded-4xl bg-white/80 backdrop-blur-md py-4 px-6 shadow-sm h-14 lg:h-[7.5rem] animate-[slideUp_0.6s_ease-out_1.1s_forwards]">
-                <h3 className="text-4xl font-bold text-gray-800 tabular-nums" style={{fontFamily: 'SF Pro, -apple-system, BlinkMacSystemFont, sans-serif'}}>24<span className="font-light">/7</span></h3>
-                <p className="text-gray-600 font-normal" style={{fontFamily: 'SF Pro, -apple-system, BlinkMacSystemFont, sans-serif'}}>Learning access</p>
+            <div className="flex flex-col items-start justify-center rounded-2xl bg-white/90 backdrop-blur-md py-4 px-6 shadow-sm border border-white/50 h-14 lg:h-[7.5rem] animate-[slideUp_0.6s_ease-out_1.1s_forwards]">
+                <h3 className="text-3xl lg:text-4xl font-bold text-[#1a1a2e] tabular-nums">24<span className="font-light">/7</span></h3>
+                <p className="text-[#5a5a6e] text-sm">Learning access</p>
             </div>
-            <div className="flex flex-col items-start justify-center rounded-4xl bg-blue-600 py-4 px-6 shadow-sm h-14 lg:h-[7.5rem] animate-[slideUp_0.6s_ease-out_1.2s_forwards]">
-                <h3 className="text-4xl font-bold text-white tabular-nums" style={{fontFamily: 'SF Pro, -apple-system, BlinkMacSystemFont, sans-serif'}}>98%</h3>
-                <p className="text-gray-200 font-normal" style={{fontFamily: 'SF Pro, -apple-system, BlinkMacSystemFont, sans-serif'}}>Satisfaction rate</p>
+            <div className="flex flex-col items-start justify-center rounded-2xl bg-gradient-to-br from-[#00d98a] to-[#00965f] py-4 px-6 shadow-sm h-14 lg:h-[7.5rem] animate-[slideUp_0.6s_ease-out_1.2s_forwards]">
+                <h3 className="text-3xl lg:text-4xl font-bold text-white tabular-nums">98%</h3>
+                <p className="text-white/80 text-sm">Satisfaction rate</p>
             </div>
         </div>
     )

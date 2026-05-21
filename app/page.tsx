@@ -1,7 +1,6 @@
 'use client'
 
 import Home from '@/components/home'
-import Video from '@/components/video'
 import Benefits from '@/components/benefits'
 import WhatYouGet from '@/components/whatyouget'
 import Join from '@/components/join'
@@ -13,7 +12,6 @@ export default function HomePage() {
   return (
     <main>
       <Home />
-      <Video />
       <Benefits />
       <WhatYouGet />
       <Join />

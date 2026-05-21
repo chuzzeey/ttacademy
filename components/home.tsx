@@ -5,6 +5,7 @@ import Stat from './stat'
 
 const Home = () => {
     const [currentHeroIndex, setCurrentHeroIndex] = useState(0)
+    const [scrolled, setScrolled] = useState(false)
 
     const scrollToTop = () => {
         window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -31,84 +32,90 @@ const Home = () => {
         return () => clearInterval(interval)
     }, [])
 
+    useEffect(() => {
+        const handleScroll = () => setScrolled(window.scrollY > 20)
+        window.addEventListener('scroll', handleScroll)
+        return () => window.removeEventListener('scroll', handleScroll)
+    }, [])
+
     return (
         <>
-            {/* Navigation Bar */}
-            <nav className="shadow-sm" style={{background: 'linear-gradient(180deg, #ffffff 70%, #f0fffa 100%)'}}>
+            {/* Navigation Bar - Premium Glass */}
+            <nav className={`relative top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'glass shadow-sm' : 'bg-transparent'}`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between items-center ">
-                        {/* Logo */}
+                    <div className="flex justify-between items-center h-16 md:h-20">
                         <button 
                             onClick={() => window.location.reload()}
-                            className="flex flex-col items-start gap-2 bg-transparent border-none cursor-pointer hover:opacity-80 transition-opacity"
+                            className="flex flex-col items-start gap-1 bg-transparent border-none cursor-pointer hover:opacity-80 transition-opacity"
                         >
-                            <Image src="/rad.jpeg" alt="E-Lab Logo" width={80} height={32} className="h-8 mt-4 w-auto" priority loading="eager" />
-                            <span className="text-[10px] font-bold text-black tracking-wide" style={{fontFamily: 'SF Pro, -apple-system, BlinkMacSystemFont, sans-serif'}}>
+                            <Image src="/rad.jpeg" alt="Tech Trailblazer Academy" width={80} height={32} className="h-7 md:h-8 w-auto" priority loading="eager" />
+                            <span className="text-[9px] md:text-[10px] font-bold gradient-text tracking-wide">
                                 Tech Trailblazer Academy
                             </span>
                         </button>
 
                         {/* Desktop Navigation */}
-                        <div className="hidden lg:flex items-center space-x-8">
-                            {['Home', 'Courses', 'FAQ'].map((item, index) => {
+                        <div className="hidden lg:flex items-center gap-2 bg-white/60 backdrop-blur-md rounded-full p-1 border border-gray-100/50 shadow-sm">
+                            {['Home', 'Courses', 'FAQ'].map((item) => {
                                 const handleClick = () => {
                                     switch(item) {
-                                        case 'Home':
-                                            scrollToTop()
-                                            break
-                                        case 'Courses':
-                                            scrollToFeaturedCourses()
-                                            break
-                                        case 'FAQ':
-                                            scrollToFAQ()
-                                            break
-                                        default:
-                                            break
+                                        case 'Home': scrollToTop(); break
+                                        case 'Courses': scrollToFeaturedCourses(); break
+                                        case 'FAQ': scrollToFAQ(); break
                                     }
                                 }
                                 return (
                                     <button 
                                         key={item} 
                                         onClick={handleClick}
-                                        className="text-black hover:text-white px-3 py-1 rounded-full hover:bg-black transition-colors bg-gray-200/80 backdrop-blur-md border border-gray-300 flex items-center gap-1" 
-                                        style={{fontFamily: 'SF Pro, -apple-system, BlinkMacSystemFont, sans-serif'}}
+                                        className="text-sm font-medium text-gray-700 hover:text-white px-5 py-2 rounded-full hover:bg-gradient-to-r hover:from-[#00d98a] hover:to-[#00965f] transition-all duration-200"
                                     >
                                         {item}
-                                        {item === 'Courses' && (
-                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                            </svg>
-                                        )}
                                     </button>
                                 )
                             })}
                         </div>
-
-                                            </div>
+                    </div>
                 </div>
-
-                            </nav>
+            </nav>
 
             {/* Hero Section */}
-            <section className="relative min-h-screen flex items-center rounded-bl-3xl rounded-br-3xl overflow-hidden px-4 md:px-8" style={{background: 'linear-gradient(180deg, #f0fffa 0%, #ccffeb 10%)'}}>
-                {/* Stats Overlay - Desktop Only */}
+            <section className="relative min-h-screen flex items-center overflow-hidden" style={{background: 'linear-gradient(175deg, #ffffff 0%, #f0fffa 20%, #d4ffe8 45%, #ccffe6 65%, #f0fffa 85%, #ffffff 100%)'}}>
+                {/* Decorative Elements */}
+                <div className="absolute top-20 right-0 w-96 h-96 bg-gradient-to-bl from-[#00d98a]/10 to-transparent rounded-full blur-3xl" />
+                <div className="absolute bottom-40 left-20 w-64 h-64 bg-gradient-to-tr from-[#00d98a]/8 to-transparent rounded-full blur-3xl" />
+                
+                {/* Green Accent Line */}
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-transparent via-[#00d98a]/40 to-transparent hidden lg:block" />
+                
+                {/* Fade transition to next section */}
+                <div className="absolute bottom-0 left-0 right-0 h-32 md:h-48 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none z-10" />
+                
+                {/* Stats - Desktop Only */}
                 <div className="hidden lg:block absolute bottom-8 left-0 right-0 z-10 px-8">
                     <Stat />
                 </div>
                 
-                <div className="max-w-9xl mx-auto px-4 sm:px-6 md:px-8 lg:px-0 lg:ml-16 w-full">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div className="max-w-9xl mx-auto px-4 sm:px-6 md:px-8 lg:pl-20 w-full pt-20">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
                         {/* Hero Content */}
-                        <div className="text-center md:text-left lg:text-left mt-6 lg:-mt-75 space-y-4 md:space-y-6 relative z-10 px-4 sm:px-6 md:px-8 lg:px-0">
-                            <h1 className="text-4xl md:text-5xl lg:text-8xl font-semibold text-gray-900" style={{fontFamily: 'SF Pro, -apple-system, BlinkMacSystemFont, sans-serif', letterSpacing: '-0.005em'}}>
+                        <div className="text-center md:text-left lg:text-left space-y-5 md:space-y-6 relative z-10 px-4 sm:px-6 md:px-8 lg:px-0">
+                            <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm border border-[#00d98a]/20 rounded-full px-4 py-1.5 animate-[fadeIn_1s_ease-out_forwards] opacity-0">
+                                <span className="w-2 h-2 rounded-full bg-[#00d98a] animate-pulse" />
+                                <span className="text-xs font-semibold text-[#00965f] tracking-wide">Education That Works</span>
+                            </div>
+                            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold text-[#1a1a2e] leading-[1.02] tracking-tight">
                                 <span className="inline-block animate-[slideUp_0.6s_ease-out_forwards]">LEARN.</span>{' '}
                                 <span className="inline-block animate-[slideUp_0.6s_ease-out_0.15s_forwards]">GROW.</span><br/>
-                                <span className="inline-block animate-[slideUp_0.6s_ease-out_0.3s_forwards]">SUCCEED.</span>
+                                <span className="inline-block bg-gradient-to-r from-[#00d98a] to-[#00965f] bg-clip-text text-transparent animate-[slideUp_0.6s_ease-out_0.3s_forwards]">SUCCEED.</span>
                             </h1>
-                            <p className="text-base md:text-lg lg:text-xl lg:text-3xl text-black max-w-xl mx-auto md:mx-auto lg:mx-0 animate-[slideUp_0.8s_ease-out_0.5s_forwards]" style={{fontFamily: 'SF Pro, -apple-system, BlinkMacSystemFont, sans-serif'}}>
+                            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-[#5a5a6e] max-w-xl mx-auto md:mx-auto lg:mx-0 leading-relaxed animate-[slideUp_0.8s_ease-out_0.5s_forwards]">
                                 Learn from industry experts and gain the skills to advance your career.
                             </p>
-                            <button onClick={scrollToFeaturedCourses} className="bg-blue-600 text-white hover:bg-blue-700 px-8 lg:px-10 py-3 lg:py-4 text-lg lg:text-xl font-medium rounded-full transition-colors flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 mx-auto lg:mx-0 animate-[slideUp_0.8s_ease-out_0.7s_forwards]" style={{fontFamily: 'SF Pro, -apple-system, BlinkMacSystemFont, sans-serif'}}>
+                            <button 
+                                onClick={scrollToFeaturedCourses} 
+                                className="bg-gradient-to-r from-[#00d98a] to-[#00965f] text-white hover:from-[#00b873] hover:to-[#00734a] px-8 lg:px-10 py-3.5 lg:py-4 text-base sm:text-lg lg:text-xl font-semibold rounded-full transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:shadow-[#00d98a]/25 transform hover:-translate-y-0.5 mx-auto lg:mx-0 animate-[slideUp_0.8s_ease-out_0.7s_forwards]"
+                            >
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                 </svg>
@@ -116,19 +123,23 @@ const Home = () => {
                             </button>
                         </div>
 
-                        {/* Hero Image */}
+                        {/* Hero Image - Blended with Background */}
                         <div className="relative flex justify-center">
-                            <div className="relative w-[400px] h-[400px] md:w-[500px] md:h-[500px] lg:w-[750px] lg:h-[750px]">
-                                {['/ceoo.png', '/so3.jpeg', '/so2.jpeg'].map((src, index) => (
+                            <div className="relative w-[320px] h-[320px] sm:w-[380px] sm:h-[380px] md:w-[480px] md:h-[480px] lg:w-[650px] lg:h-[650px]">
+                                {[
+                                    'https://res.cloudinary.com/dwry4zb9z/image/upload/q_auto/f_auto/v1779339410/ceoo-Photoroom_fr28w6.png',
+                                    'https://res.cloudinary.com/dwry4zb9z/image/upload/q_auto/f_auto/v1779339410/so3-Photoroom_chmd5i.png',
+                                    'https://res.cloudinary.com/dwry4zb9z/image/upload/q_auto/f_auto/v1779339410/so2-Photoroom_i3ih86.png'
+                                ].map((src, index) => (
                                     <Image
                                         key={src}
                                         src={src}
-                                        alt={`Professional woman ${index + 1}`}
+                                        alt={`Professional ${index + 1}`}
                                         width={700}
                                         height={800}
-                                        sizes="(max-width: 768px) 400px, (max-width: 1024px) 500px, 750px"
-                                        quality={85}
-                                        className={`rounded-lg object-cover absolute inset-0 transition-opacity duration-1000 scale-110 ${currentHeroIndex === index ? 'opacity-100' : 'opacity-0'}`}
+                                        sizes="(max-width: 768px) 320px, (max-width: 1024px) 480px, 650px"
+                                        quality={90}
+                                        className={`object-cover absolute inset-0 transition-all duration-1000 ease-in-out ${currentHeroIndex === index ? 'opacity-100 scale-100' : 'opacity-0 scale-105'}`}
                                         priority={index === 0}
                                         loading={index === 0 ? "eager" : "lazy"}
                                     />

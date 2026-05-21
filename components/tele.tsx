@@ -7,10 +7,7 @@ const TelegramButton = () => {
         href="https://t.me/techblazeracademy"
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex items-center justify-center px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110 animate-pulse"
-        style={{
-          animation: 'float 3s ease-in-out infinite'
-        }}
+        className="inline-flex items-center justify-center px-6 py-3.5 bg-gradient-to-r from-[#00d98a] to-[#00965f] text-white font-semibold rounded-full shadow-lg hover:shadow-xl hover:shadow-[#00d98a]/25 transition-all duration-300 transform hover:-translate-y-0.5"
       >
         <svg
           className="w-5 h-5 mr-2"
@@ -22,18 +19,6 @@ const TelegramButton = () => {
         </svg>
         Join our telegram community
       </a>
-      
-      {/* Floating Animation Styles */}
-      <style jsx>{`
-        @keyframes float {
-          0%, 100% {
-            transform: translateY(0px);
-          }
-          50% {
-            transform: translateY(-10px);
-          }
-        }
-      `}</style>
     </>
   );
 };

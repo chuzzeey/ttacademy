@@ -57,53 +57,59 @@ const FAQ = () => {
     }, [])
 
     return (
-        <>
-            <style jsx>{`
-                @keyframes slideInLeft {
-                    0% {
-                        transform: translateX(-50px);
-                        opacity: 0;
-                    }
-                    100% {
-                        transform: translateX(0);
-                        opacity: 1;
-                    }
-                }
-            `}</style>
-            <div ref={sectionRef} id="faq-section" className="w-full px-4 py-12 md:py-16 md:px-8 lg:px-16 bg-white">
-                <div className="mx-auto max-w-4xl px-4 md:px-0">
-                    <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-black mb-8 md:mb-12 font-sf-display">
+        <div ref={sectionRef} id="faq-section" className="w-full px-4 md:px-8 lg:px-16 py-16 md:py-24 bg-white relative overflow-hidden">
+            {/* Pure white top fade to blend with join section */}
+            <div className="absolute top-0 left-0 right-0 h-24 md:h-32 bg-gradient-to-b from-white via-white/90 to-transparent pointer-events-none z-20" />
+            {/* Decorative */}
+            <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute top-0 left-0 w-64 h-64 bg-gradient-to-tr from-[#00d98a]/5 to-transparent rounded-full blur-3xl" />
+                <div className="absolute bottom-0 right-0 w-64 h-64 bg-gradient-to-bl from-[#00d98a]/5 to-transparent rounded-full blur-3xl" />
+            </div>
+            
+            <div className="mx-auto max-w-3xl relative z-10">
+                <div className={`text-center mb-10 md:mb-14 ${isVisible ? 'animate-[fadeIn_0.8s_ease-out_forwards]' : 'opacity-0'}`}>
+                    <span className="label-text text-[#00d98a] mb-3 block">Support</span>
+                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#1a1a2e] mb-3">
                         FREQUENTLY ASKED<br />QUESTIONS
                     </h2>
-                    <div className="space-y-4">
-                        {faqs.map((faq, index) => (
-                            <div
-                                key={index}
-                                className={`bg-gray-100 rounded-3xl p-4 md:p-6 cursor-pointer transition-all duration-300 hover:bg-gray-200 ${isVisible ? 'animate-[slideInLeft_1.5s_ease-out_forwards]' : 'opacity-0'}`}
-                                style={{ animationDelay: `${index * 0.4}s` }}
+                    <p className="text-base md:text-lg text-[#5a5a6e]">
+                        Everything you need to know
+                    </p>
+                </div>
+
+                <div className="space-y-3 md:space-y-4">
+                    {faqs.map((faq, index) => (
+                        <div
+                            key={index}
+                            className={`bg-white rounded-2xl overflow-hidden transition-all duration-300 card-premium ${isVisible ? 'animate-[slideInLeft_0.5s_ease-out_forwards]' : 'opacity-0'}`}
+                            style={{ animationDelay: `${index * 0.1}s` }}
+                        >
+                            <button
+                                className="w-full text-left p-4 md:p-6 flex justify-between items-center gap-4 bg-transparent border-none cursor-pointer"
                                 onClick={() => toggleFAQ(index)}
                             >
-                                <div className="flex justify-between items-center">
-                                    <h3 className="text-base md:text-lg lg:text-xl font-semibold text-black pr-4">
-                                        {faq.question}
-                                    </h3>
-                                    <div className={`w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0 transition-transform duration-300 ${openIndex === index ? 'rotate-45' : ''}`}>
-                                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                        </svg>
-                                    </div>
+                                <span className="text-sm sm:text-base md:text-lg font-semibold text-[#1a1a2e] flex-1">
+                                    {faq.question}
+                                </span>
+                                <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-[#00d98a] to-[#00965f] flex items-center justify-center flex-shrink-0 transition-transform duration-300 ${openIndex === index ? 'rotate-45' : ''}`}>
+                                    <svg className="w-4 h-4 md:w-5 md:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                                    </svg>
                                 </div>
-                                <div className={`overflow-hidden transition-all duration-500 ease-in-out ${openIndex === index ? 'max-h-48 mt-4 opacity-100' : 'max-h-0 opacity-0'}`}>
-                                    <p className="text-gray-700">
+                            </button>
+                            <div className={`overflow-hidden transition-all duration-400 ease-in-out ${openIndex === index ? 'max-h-48' : 'max-h-0'}`}>
+                                <div className="px-4 md:px-6 pb-4 md:pb-6">
+                                    <div className="w-full h-px bg-gradient-to-r from-[#00d98a]/30 to-transparent mb-4" />
+                                    <p className="text-[#5a5a6e] text-sm sm:text-base">
                                         {faq.answer}
                                     </p>
                                 </div>
                             </div>
-                        ))}
-                    </div>
+                        </div>
+                    ))}
                 </div>
             </div>
-        </>
+        </div>
     )
 }
 

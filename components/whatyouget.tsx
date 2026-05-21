@@ -155,74 +155,77 @@ const WhatYouGet = () => {
     }, [])
 
     return (
-        <>
-            <style jsx>{`
-                @keyframes slideInUp {
-                    0% {
-                        transform: translateY(100px);
-                        opacity: 0;
-                    }
-                    100% {
-                        transform: translateY(0);
-                        opacity: 1;
-                    }
-                }
-            `}</style>
-            <div ref={sectionRef} id="featured-courses" className="w-full px-2 md:px-4 lg:px-40 py-8 md:py-12 lg:py-12 bg-gradient-to-br from-gray-50 to-gray-100 rounded-3xl overflow-x-hidden">
-            <div className="mx-auto max-w-8xl lg:mx-auto md:mx-auto sm:mx-auto">
+        <div ref={sectionRef} id="featured-courses" className="w-full px-3 md:px-6 lg:px-16 py-16 md:py-24 bg-gradient-to-b from-[#f0fffa] to-white relative overflow-hidden">
+            {/* Pure white top fade to blend with benefits section */}
+            <div className="absolute top-0 left-0 right-0 h-24 md:h-32 bg-gradient-to-b from-white via-white/90 to-transparent pointer-events-none z-20" />
+            
+            {/* Decorative */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-6xl h-full pointer-events-none">
+                <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-[#00d98a]/8 to-transparent rounded-full blur-3xl" />
+            </div>
+            
+            <div className="mx-auto max-w-8xl relative z-10">
                 {/* Header */}
-                <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-black mb-8 text-center font-sf-display bg-gradient-to-r from-black to-gray-800 bg-clip-text text-transparent">
-                    FEATURED COURSES
-                </h2>
+                <div className={`text-center mb-10 md:mb-14 ${isVisible ? 'animate-[fadeIn_0.8s_ease-out_forwards]' : 'opacity-0'}`}>
+                    <span className="label-text text-[#00d98a] mb-3 block">Our Programs</span>
+                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#1a1a2e] mb-3">
+                        FEATURED COURSES
+                    </h2>
+                    <p className="text-base md:text-lg text-[#5a5a6e] max-w-2xl mx-auto">
+                        Industry-relevant curriculum designed for your success
+                    </p>
+                </div>
 
-                {/* Course Cards */}
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 md:gap-4 lg:gap-6 overflow-x-hidden">
+                {/* Course Cards - Premium Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-5">
                     {courses.map((course, index) => (
-                        <div key={index} className={`rounded-xl p-2 md:p-4 shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 bg-white text-black hover:bg-gray-50 border border-gray-200 ${isVisible ? 'animate-[slideInUp_1s_ease-out_forwards]' : 'opacity-0'}`} style={{ animationDelay: `${Math.floor(index / 2) * 0.5}s` }}>
+                        <div 
+                            key={index} 
+                            className={`card-premium rounded-xl overflow-hidden ${isVisible ? 'animate-[scaleIn_0.5s_ease-out_forwards]' : 'opacity-0'}`}
+                            style={{ animationDelay: `${Math.floor(index / 2) * 0.1}s` }}
+                        >
                             {/* Course Image */}
-                            <div className="relative w-full h-24 md:h-32 mb-2 rounded-lg overflow-hidden">
+                            <div className="relative w-full aspect-[4/3] overflow-hidden">
                                 <Image
                                     src={course.image}
                                     alt={course.title}
                                     fill
                                     sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 20vw"
-                                    quality={80}
+                                    quality={85}
                                     loading="lazy"
-                                    className="object-cover"
+                                    className="object-cover transition-transform duration-500 group-hover:scale-105"
                                 />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
                                 {/* Duration Badge */}
-                                <div className="absolute top-2 right-2 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow-md">
+                                <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm text-[#00965f] text-[10px] md:text-xs font-bold px-2 py-1 rounded-full shadow-sm">
                                     {course.duration}
                                 </div>
                             </div>
 
-                            
                             {/* Course Info */}
-                            <h3 className="text-base md:text-lg font-bold mb-2 font-sf-display text-gray-900">
-                                {course.title}
-                            </h3>
-                            <a 
-                                href="https://chat.whatsapp.com/Bi5XuFToVdjBPRvIawWz5W"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="w-full mt-3 px-3 py-1 md:py-3 rounded-3xl text-xs md:text-sm font-bold transition-all duration-300 transform hover:scale-[1.02] active:scale-95 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white hover:from-[#128C7E] hover:to-[#0F5132] shadow-lg hover:shadow-xl flex items-center justify-center gap-2 border-2 border-[#25D366] relative overflow-hidden group animate-pulse hover:animate-bounce"
-                            >
-                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
-                                <svg className="w-5 h-5 relative z-10" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.149-.67.149-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414-.074-.123-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.327-1.682a9.86 9.86 0 005.26 1.483h.004c5.45 0 9.884-4.434 9.884-9.884 0-2.64-1.03-5.122-2.898-6.988z"/>
-                                </svg>
-                                <span className="relative z-10">Inquire on WhatsApp</span>
-                                <svg className="w-4 h-4 relative z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
-                            </a>
+                            <div className="p-3 md:p-4">
+                                <h3 className="text-xs sm:text-sm md:text-base font-bold text-[#1a1a2e] mb-3 leading-tight">
+                                    {course.title}
+                                </h3>
+                                <a 
+                                    href="https://chat.whatsapp.com/Bi5XuFToVdjBPRvIawWz5W"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 text-[10px] md:text-xs font-semibold rounded-lg bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white hover:from-[#128C7E] hover:to-[#0F5132] transition-all duration-200 shadow-sm hover:shadow-md"
+                                >
+                                    <svg className="w-3 h-3 md:w-4 md:h-4" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.149-.67.149-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414-.074-.123-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.327-1.682a9.86 9.86 0 005.26 1.483h.004c5.45 0 9.884-4.434 9.884-9.884 0-2.64-1.03-5.122-2.898-6.988z"/>
+                                    </svg>
+                                    <span>Inquire</span>
+                                </a>
+                            </div>
                         </div>
                     ))}
                 </div>
-
             </div>
+            {/* Bottom white fade to Join section */}
+            <div className="absolute bottom-0 left-0 right-0 h-24 md:h-32 bg-gradient-to-t from-white via-white/90 to-transparent pointer-events-none z-20" />
         </div>
-        </>
     )
 }
 

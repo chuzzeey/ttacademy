@@ -27,73 +27,55 @@ const Join = () => {
     }, [])
 
     return (
-        <>
-            <style jsx>{`
-                @keyframes zoomSmoke {
-                    0%, 100% {
-                        transform: scale(1);
-                        filter: drop-shadow(0 0 0px rgba(0, 0, 0, 0.2));
-                    }
-                    25% {
-                        transform: scale(1.05);
-                        filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.4));
-                    }
-                    50% {
-                        transform: scale(1.1);
-                        filter: drop-shadow(0 0 15px rgba(0, 0, 0, 0.5));
-                    }
-                    75% {
-                        transform: scale(1.05);
-                        filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.4));
-                    }
-                }
-            `}</style>
-            <style jsx>{`
-                @keyframes zoomIn {
-                    0% {
-                        transform: scale(0.5);
-                        opacity: 0;
-                    }
-                    100% {
-                        transform: scale(1);
-                        opacity: 1;
-                    }
-                }
-            `}</style>
-        <div ref={sectionRef} id="join-section" className="w-full px-4 md:px-8 lg:px-16 py-12 md:py-16 lg:py-16 bg-white">
-            <div className="mx-auto max-w-4xl px-4 md:px-0">
+        <div ref={sectionRef} id="join-section" className="w-full px-4 md:px-8 lg:px-16 py-16 md:py-24 bg-gradient-to-b from-white to-[#f0fffa] relative overflow-hidden">
+            {/* Pure white top fade to blend with featured courses */}
+            <div className="absolute top-0 left-0 right-0 h-24 md:h-32 bg-gradient-to-b from-white via-white/90 to-transparent pointer-events-none z-20" />
+            {/* Decorative */}
+            <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-br from-[#00d98a]/8 to-transparent rounded-full blur-3xl" />
+            </div>
+            
+            <div className="mx-auto max-w-4xl relative z-10">
                 {/* Top Row Images */}
-                <div className="flex justify-between items-center mb-6 md:mb-8">
-                    <div className="w-32 h-32 md:w-40 md:h-40 relative rounded-3xl overflow-hidden transform -rotate-6">
-                        <Image
-                            src="/stud1.jpeg"
-                            alt="Learner 1"
-                            fill
-                            sizes="160px"
-                            quality={80}
-                            loading="lazy"
-                            className="object-cover"
-                        />
+                <div className="flex justify-between items-center mb-6 md:mb-10">
+                    <div className="relative">
+                        <div className="absolute -inset-2 bg-gradient-to-br from-[#00d98a]/20 to-transparent rounded-2xl blur-sm" />
+                        <div className="relative w-20 h-20 sm:w-28 sm:h-28 md:w-36 md:h-36 rounded-2xl overflow-hidden shadow-lg transform -rotate-3 hover:rotate-0 transition-transform duration-500">
+                            <Image
+                                src="/stud1.jpeg"
+                                alt="Learner 1"
+                                fill
+                                sizes="(max-width: 640px) 80px, (max-width: 768px) 112px, 144px"
+                                quality={85}
+                                loading="lazy"
+                                className="object-cover"
+                            />
+                        </div>
                     </div>
-                    <div className="w-32 h-32 md:w-40 md:h-40 relative rounded-3xl overflow-hidden transform rotate-6">
-                        <Image
-                            src="/stud2.jpeg"
-                            alt="Learner 2"
-                            fill
-                            sizes="160px"
-                            quality={80}
-                            loading="lazy"
-                            className="object-cover"
-                        />
+                    <div className="relative">
+                        <div className="absolute -inset-2 bg-gradient-to-br from-[#00d98a]/20 to-transparent rounded-2xl blur-sm" />
+                        <div className="relative w-20 h-20 sm:w-28 sm:h-28 md:w-36 md:h-36 rounded-2xl overflow-hidden shadow-lg transform rotate-3 hover:rotate-0 transition-transform duration-500">
+                            <Image
+                                src="/stud2.jpeg"
+                                alt="Learner 2"
+                                fill
+                                sizes="(max-width: 640px) 80px, (max-width: 768px) 112px, 144px"
+                                quality={85}
+                                loading="lazy"
+                                className="object-cover"
+                            />
+                        </div>
                     </div>
                 </div>
 
                 {/* Content */}
-                <div className={`text-center mb-6 md:mb-8 ${isVisible ? 'animate-[zoomIn_0.8s_ease-out_forwards]' : 'opacity-0'}`}>
-                    <h2 className="text-3xl md:text-4xl lg:text-6xl font-bold text-black mb-4" style={{fontFamily: 'SF Pro, -apple-system, BlinkMacSystemFont, sans-serif'}}>
-                        JOIN 8,000+ LEARNERS<br />TODAY!
+                <div className={`text-center mb-6 md:mb-10 ${isVisible ? 'animate-[scaleIn_0.8s_ease-out_forwards]' : 'opacity-0'}`}>
+                    <span className="label-text text-[#00d98a] mb-3 block">Community</span>
+                    <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-[#1a1a2e] mb-4 leading-tight">
+                        JOIN 8,000+ LEARNERS<br />
+                        <span className="gradient-text">TODAY!</span>
                     </h2>
-                    <p className="text-lg text-gray-700 mb-6" style={{fontFamily: 'SF Pro, -apple-system, BlinkMacSystemFont, sans-serif'}}>
+                    <p className="text-base sm:text-lg md:text-xl text-[#5a5a6e] mb-6 md:mb-8">
                         Start your learning journey now!
                     </p>
                     <TelegramButton />
@@ -101,32 +83,39 @@ const Join = () => {
 
                 {/* Bottom Row Images */}
                 <div className="flex justify-between items-center">
-                    <div className="w-32 h-32 md:w-40 md:h-40 relative rounded-3xl overflow-hidden transform rotate-6">
-                        <Image
-                            src="/stud3.jpeg"
-                            alt="Learner 3"
-                            fill
-                            sizes="160px"
-                            quality={80}
-                            loading="lazy"
-                            className="object-cover"
-                        />
+                    <div className="relative">
+                        <div className="absolute -inset-2 bg-gradient-to-br from-[#00d98a]/20 to-transparent rounded-2xl blur-sm" />
+                        <div className="relative w-20 h-20 sm:w-28 sm:h-28 md:w-36 md:h-36 rounded-2xl overflow-hidden shadow-lg transform rotate-3 hover:rotate-0 transition-transform duration-500">
+                            <Image
+                                src="/stud3.jpeg"
+                                alt="Learner 3"
+                                fill
+                                sizes="(max-width: 640px) 80px, (max-width: 768px) 112px, 144px"
+                                quality={85}
+                                loading="lazy"
+                                className="object-cover"
+                            />
+                        </div>
                     </div>
-                    <div className="w-32 h-32 md:w-40 md:h-40 relative rounded-3xl overflow-hidden transform -rotate-6">
-                        <Image
-                            src="/stud4.jpeg"
-                            alt="Learner 4"
-                            fill
-                            sizes="160px"
-                            quality={80}
-                            loading="lazy"
-                            className="object-cover"
-                        />
+                    <div className="relative">
+                        <div className="absolute -inset-2 bg-gradient-to-br from-[#00d98a]/20 to-transparent rounded-2xl blur-sm" />
+                        <div className="relative w-20 h-20 sm:w-28 sm:h-28 md:w-36 md:h-36 rounded-2xl overflow-hidden shadow-lg transform -rotate-3 hover:rotate-0 transition-transform duration-500">
+                            <Image
+                                src="/stud4.jpeg"
+                                alt="Learner 4"
+                                fill
+                                sizes="(max-width: 640px) 80px, (max-width: 768px) 112px, 144px"
+                                quality={85}
+                                loading="lazy"
+                                className="object-cover"
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
+            {/* Bottom white fade to FAQ section */}
+            <div className="absolute bottom-0 left-0 right-0 h-24 md:h-32 bg-gradient-to-t from-white via-white/90 to-transparent pointer-events-none z-20" />
         </div>
-        </>
     )
 }
 
