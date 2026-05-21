@@ -208,7 +208,7 @@ const WhatYouGet = () => {
                                     {course.title}
                                 </h3>
                                 <a 
-                                    href="https://chat.whatsapp.com/Bi5XuFToVdjBPRvIawWz5W"
+                                    href="https://chat.whatsapp.com/H3iTluQFKWh9i9X9wqFMEe"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 text-[10px] md:text-xs font-semibold rounded-lg bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white hover:from-[#128C7E] hover:to-[#0F5132] transition-all duration-200 shadow-sm hover:shadow-md"
