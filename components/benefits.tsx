@@ -109,10 +109,10 @@ const Benefits = () => {
                 <div className="absolute inset-0 bg-white/50" />
             </div>
             
-            {/* Decorative Green Blurs */}
+            {/* Decorative Blurs */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-6xl h-full pointer-events-none">
-                <div className="absolute top-20 right-0 w-72 h-72 bg-gradient-to-bl from-[#00d98a]/8 to-transparent rounded-full blur-3xl" />
-                <div className="absolute bottom-20 left-0 w-72 h-72 bg-gradient-to-tr from-[#00d98a]/8 to-transparent rounded-full blur-3xl" />
+                <div className="absolute top-20 right-0 w-72 h-72 bg-gradient-to-bl from-[#ef4444]/8 to-transparent rounded-full blur-3xl" />
+                <div className="absolute bottom-20 left-0 w-72 h-72 bg-gradient-to-tr from-[#991b1b]/8 to-transparent rounded-full blur-3xl" />
             </div>
             
             {/* Bottom white fade to next section */}
@@ -120,7 +120,7 @@ const Benefits = () => {
             
             <div className="mx-auto max-w-4xl relative z-10">
                 <div className={`text-center mb-10 md:mb-14 ${isVisible ? 'animate-[fadeIn_0.8s_ease-out_forwards]' : 'opacity-0'}`}>
-                    <span className="label-text text-[#00d98a] mb-3 block">Why Choose Us</span>
+                    <span className="label-text text-[#dc2626] mb-3 block">Why Choose Us</span>
                     <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#1a1a2e] mb-3">
                         Why Choose Tech Trailblazer Academy
                     </h2>
@@ -136,7 +136,7 @@ const Benefits = () => {
                             className={`group card-premium rounded-2xl p-5 md:p-7 flex items-start gap-4 md:gap-6 bg-white/90 backdrop-blur-sm ${isVisible ? 'animate-[slideInUp_0.6s_ease-out_forwards]' : 'opacity-0'}`}
                             style={{ animationDelay: `${0.2 + (index * 0.15)}s` }}
                         >
-                            <div className="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-[#00d98a] to-[#00965f] rounded-xl flex items-center justify-center text-white flex-shrink-0 shadow-lg shadow-[#00d98a]/20 group-hover:shadow-xl group-hover:shadow-[#00d98a]/30 transition-shadow">
+                            <div className="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-[#dc2626] to-[#991b1b] rounded-xl flex items-center justify-center text-white flex-shrink-0 shadow-lg shadow-[#ef4444]/20 group-hover:shadow-xl group-hover:shadow-[#ef4444]/30 transition-shadow">
                                 {getIcon(benefit.icon)}
                             </div>
                             <div className="flex-1">

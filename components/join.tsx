@@ -27,19 +27,17 @@ const Join = () => {
     }, [])
 
     return (
-        <div ref={sectionRef} id="join-section" className="w-full px-4 md:px-8 lg:px-16 py-16 md:py-24 bg-gradient-to-b from-white to-[#f0fffa] relative overflow-hidden">
-            {/* Pure white top fade to blend with featured courses */}
-            <div className="absolute top-0 left-0 right-0 h-24 md:h-32 bg-gradient-to-b from-white via-white/90 to-transparent pointer-events-none z-20" />
+        <div ref={sectionRef} id="join-section" className="w-full px-4 md:px-8 lg:px-16 py-16 md:py-24 bg-white relative overflow-hidden">
             {/* Decorative */}
             <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-br from-[#00d98a]/8 to-transparent rounded-full blur-3xl" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-br from-[#ef4444]/8 to-transparent rounded-full blur-3xl" />
             </div>
             
             <div className="mx-auto max-w-4xl relative z-10">
                 {/* Top Row Images */}
                 <div className="flex justify-between items-center mb-6 md:mb-10">
                     <div className="relative">
-                        <div className="absolute -inset-2 bg-gradient-to-br from-[#00d98a]/20 to-transparent rounded-2xl blur-sm" />
+                        <div className="absolute -inset-2 bg-gradient-to-br from-[#ef4444]/20 to-transparent rounded-2xl blur-sm" />
                         <div className="relative w-20 h-20 sm:w-28 sm:h-28 md:w-36 md:h-36 rounded-2xl overflow-hidden shadow-lg transform -rotate-3 hover:rotate-0 transition-transform duration-500">
                             <Image
                                 src="/stud1.jpeg"
@@ -53,7 +51,7 @@ const Join = () => {
                         </div>
                     </div>
                     <div className="relative">
-                        <div className="absolute -inset-2 bg-gradient-to-br from-[#00d98a]/20 to-transparent rounded-2xl blur-sm" />
+                        <div className="absolute -inset-2 bg-gradient-to-br from-[#ef4444]/20 to-transparent rounded-2xl blur-sm" />
                         <div className="relative w-20 h-20 sm:w-28 sm:h-28 md:w-36 md:h-36 rounded-2xl overflow-hidden shadow-lg transform rotate-3 hover:rotate-0 transition-transform duration-500">
                             <Image
                                 src="/stud2.jpeg"
@@ -70,7 +68,7 @@ const Join = () => {
 
                 {/* Content */}
                 <div className={`text-center mb-6 md:mb-10 ${isVisible ? 'animate-[scaleIn_0.8s_ease-out_forwards]' : 'opacity-0'}`}>
-                    <span className="label-text text-[#00d98a] mb-3 block">Community</span>
+                    <span className="label-text text-[#dc2626] mb-3 block">Community</span>
                     <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-[#1a1a2e] mb-4 leading-tight">
                         JOIN 8,000+ LEARNERS<br />
                         <span className="gradient-text">TODAY!</span>
@@ -84,7 +82,7 @@ const Join = () => {
                 {/* Bottom Row Images */}
                 <div className="flex justify-between items-center">
                     <div className="relative">
-                        <div className="absolute -inset-2 bg-gradient-to-br from-[#00d98a]/20 to-transparent rounded-2xl blur-sm" />
+                        <div className="absolute -inset-2 bg-gradient-to-br from-[#ef4444]/20 to-transparent rounded-2xl blur-sm" />
                         <div className="relative w-20 h-20 sm:w-28 sm:h-28 md:w-36 md:h-36 rounded-2xl overflow-hidden shadow-lg transform rotate-3 hover:rotate-0 transition-transform duration-500">
                             <Image
                                 src="/stud3.jpeg"
@@ -98,7 +96,7 @@ const Join = () => {
                         </div>
                     </div>
                     <div className="relative">
-                        <div className="absolute -inset-2 bg-gradient-to-br from-[#00d98a]/20 to-transparent rounded-2xl blur-sm" />
+                        <div className="absolute -inset-2 bg-gradient-to-br from-[#ef4444]/20 to-transparent rounded-2xl blur-sm" />
                         <div className="relative w-20 h-20 sm:w-28 sm:h-28 md:w-36 md:h-36 rounded-2xl overflow-hidden shadow-lg transform -rotate-3 hover:rotate-0 transition-transform duration-500">
                             <Image
                                 src="/stud4.jpeg"
@@ -113,8 +111,6 @@ const Join = () => {
                     </div>
                 </div>
             </div>
-            {/* Bottom white fade to FAQ section */}
-            <div className="absolute bottom-0 left-0 right-0 h-24 md:h-32 bg-gradient-to-t from-white via-white/90 to-transparent pointer-events-none z-20" />
         </div>
     )
 }

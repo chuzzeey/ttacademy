@@ -132,6 +132,15 @@ const WhatYouGet = () => {
             hours: "12 Hours",
             size: "Intermediate",
             image: "/cloud_course.jpeg"
+        },
+        {
+            title: "Data Analysis",
+            description: "Master data analysis techniques to interpret complex datasets and drive business decisions.",
+            duration: "3 Months",
+            lessons: "32 Lessons",
+            hours: "10 Hours",
+            size: "Intermediate",
+            image: "https://res.cloudinary.com/djdbcoyot/image/upload/v1779569012/c91h3hde2gujqh087u8w.jpg"
         }
     ]
 
@@ -155,19 +164,16 @@ const WhatYouGet = () => {
     }, [])
 
     return (
-        <div ref={sectionRef} id="featured-courses" className="w-full px-3 md:px-6 lg:px-16 py-16 md:py-24 bg-gradient-to-b from-[#f0fffa] to-white relative overflow-hidden">
-            {/* Pure white top fade to blend with benefits section */}
-            <div className="absolute top-0 left-0 right-0 h-24 md:h-32 bg-gradient-to-b from-white via-white/90 to-transparent pointer-events-none z-20" />
-            
+        <div ref={sectionRef} id="featured-courses" className="w-full px-3 md:px-6 lg:px-16 py-16 md:py-24 bg-white relative overflow-hidden">
             {/* Decorative */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-6xl h-full pointer-events-none">
-                <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-[#00d98a]/8 to-transparent rounded-full blur-3xl" />
+                <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-[#ef4444]/8 to-transparent rounded-full blur-3xl" />
             </div>
             
             <div className="mx-auto max-w-8xl relative z-10">
                 {/* Header */}
                 <div className={`text-center mb-10 md:mb-14 ${isVisible ? 'animate-[fadeIn_0.8s_ease-out_forwards]' : 'opacity-0'}`}>
-                    <span className="label-text text-[#00d98a] mb-3 block">Our Programs</span>
+                    <span className="label-text text-[#dc2626] mb-3 block">Our Programs</span>
                     <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#1a1a2e] mb-3">
                         FEATURED COURSES
                     </h2>
@@ -197,7 +203,7 @@ const WhatYouGet = () => {
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
                                 {/* Duration Badge */}
-                                <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm text-[#00965f] text-[10px] md:text-xs font-bold px-2 py-1 rounded-full shadow-sm">
+                                <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm text-[#dc2626] text-[10px] md:text-xs font-bold px-2 py-1 rounded-full shadow-sm">
                                     {course.duration}
                                 </div>
                             </div>
@@ -211,7 +217,7 @@ const WhatYouGet = () => {
                                     href="https://chat.whatsapp.com/H3iTluQFKWh9i9X9wqFMEe"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 text-[10px] md:text-xs font-semibold rounded-lg bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white hover:from-[#128C7E] hover:to-[#0F5132] transition-all duration-200 shadow-sm hover:shadow-md"
+                                    className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 text-[10px] md:text-xs font-semibold rounded-lg bg-[#25D366] text-white hover:bg-[#128C7E] transition-all duration-200 shadow-sm hover:shadow-md"
                                 >
                                     <svg className="w-3 h-3 md:w-4 md:h-4" fill="currentColor" viewBox="0 0 24 24">
                                         <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.149-.67.149-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414-.074-.123-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.327-1.682a9.86 9.86 0 005.26 1.483h.004c5.45 0 9.884-4.434 9.884-9.884 0-2.64-1.03-5.122-2.898-6.988z"/>
@@ -223,8 +229,6 @@ const WhatYouGet = () => {
                     ))}
                 </div>
             </div>
-            {/* Bottom white fade to Join section */}
-            <div className="absolute bottom-0 left-0 right-0 h-24 md:h-32 bg-gradient-to-t from-white via-white/90 to-transparent pointer-events-none z-20" />
         </div>
     )
 }
