@@ -3,6 +3,7 @@
 import Home from '@/components/home'
 import Benefits from '@/components/benefits'
 import WhatYouGet from '@/components/whatyouget'
+import Contact from '@/components/contact'
 import Join from '@/components/join'
 import FAQ from '@/components/faq'
 import WhatsAppButton from '@/components/whatsapp'
@@ -14,6 +15,7 @@ export default function HomePage() {
       <Home />
       <Benefits />
       <WhatYouGet />
+      <Contact />
       <Join />
       <FAQ />
       <div className="flex justify-center py-8">

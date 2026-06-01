@@ -120,13 +120,41 @@ const Benefits = () => {
             
             <div className="mx-auto max-w-4xl relative z-10">
                 <div className={`text-center mb-10 md:mb-14 ${isVisible ? 'animate-[fadeIn_0.8s_ease-out_forwards]' : 'opacity-0'}`}>
-                    <span className="label-text text-[#dc2626] mb-3 block">Why Choose Us</span>
-                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#1a1a2e] mb-3">
-                        Why Choose Tech Trailblazer Academy
+                    {/* Pill badge */}
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white border border-red-100 rounded-full shadow-sm mb-5">
+                        <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                        <span className="text-xs font-semibold text-red-600 tracking-wide uppercase">Why Choose Us</span>
+                    </div>
+                    
+                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#1a1a2e] mb-4 tracking-tight leading-[1.05]">
+                        Why Choose{" "}
+                        <span className="relative inline-block">
+                            <span className="bg-gradient-to-r from-red-600 via-rose-500 to-red-700 bg-clip-text text-transparent">
+                                Tech Trailblazer Academy
+                            </span>
+                            <svg className="absolute -bottom-2 left-0 w-full h-3" viewBox="0 0 100 10" preserveAspectRatio="none">
+                                <path d="M0 8 Q25 2 50 8 T100 6" stroke="url(#swooshGradientBenefits)" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+                                <defs>
+                                    <linearGradient id="swooshGradientBenefits" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" stopColor="#ef4444" stopOpacity="0.1" />
+                                        <stop offset="50%" stopColor="#dc2626" stopOpacity="0.5" />
+                                        <stop offset="100%" stopColor="#ef4444" stopOpacity="0.1" />
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                        </span>
                     </h2>
-                    <p className="text-base md:text-lg text-[#5a5a6e] max-w-2xl mx-auto">
+                    
+                    <p className="text-base md:text-xl text-[#6b6b7b] max-w-2xl mx-auto leading-relaxed font-medium">
                         Real results, not just certificates
                     </p>
+                    
+                    {/* Divider */}
+                    <div className="flex items-center justify-center gap-4 mt-6">
+                        <div className="h-px w-16 bg-gradient-to-r from-transparent to-red-300" />
+                        <div className="w-2 h-2 bg-red-400 rounded-full rotate-45" />
+                        <div className="h-px w-16 bg-gradient-to-l from-transparent to-red-300" />
+                    </div>
                 </div>
 
                 <div className="space-y-4 md:space-y-6">
