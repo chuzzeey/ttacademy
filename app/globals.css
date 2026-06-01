@@ -226,6 +226,13 @@
   50% { transform: translateY(-10px); }
 }
 
-.animate-scroll-right {
-  animation: scroll-right 30s linear infinite;
+  .animate-scroll-right {
+    animation: scroll-right 30s linear infinite;
+  }
+
+/* Prevent iOS zoom on input focus */
+@media (max-width: 768px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
 }
