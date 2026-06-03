@@ -12,10 +12,11 @@ import Footer from '@/components/footer'
 export default function HomePage() {
   return (
     <main>
+            <Contact />
       <Home />
       <Benefits />
       <WhatYouGet />
-      <Contact />
+
       <Join />
       <FAQ />
       <div className="flex justify-center py-8">

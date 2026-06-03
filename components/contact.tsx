@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import Image from 'next/image'
 
 const STEPS = [
   { id: 1, label: "Personal Identity", heading: "Let's start with your basic information", subtext: "We need your full name to personalize your experience." },
@@ -12,21 +13,70 @@ const STEPS = [
 ]
 
 const COURSES = [
-  "Cybersecurity",
-  "Data Science",
-  "AI Automation",
-  "Computer Networking",
-  "Ethical Hacking",
-  "Graphic Design",
-  "UI/UX Design",
-  "Full Stack Development",
-  "Frontend Development",
-  "Backend Development",
-  "Web Development",
-  "Digital Marketing",
-  "Cloud Computing",
-  "Data Analysis",
+  "Cybersecurity", "Data Science", "AI Automation", "Computer Networking",
+  "Ethical Hacking", "Graphic Design", "UI/UX Design", "Full Stack Development",
+  "Frontend Development", "Backend Development", "Web Development",
+  "Digital Marketing", "Cloud Computing", "Data Analysis",
 ]
+
+function HeaderNav({ scrolled }: { scrolled: boolean }) {
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const scrollToContact = () => {
+    const contactSection = document.getElementById('contact')
+    if (contactSection) {
+      contactSection.scrollIntoView({ behavior: 'smooth' })
+    }
+  }
+
+  const scrollToFAQ = () => {
+    const faqSection = document.getElementById('faq-section')
+    if (faqSection) {
+      faqSection.scrollIntoView({ behavior: 'smooth' })
+    }
+  }
+
+  return (
+    <nav className={`sticky top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'glass shadow-sm' : 'bg-transparent'}`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16 md:h-20">
+          <button
+            onClick={() => window.location.reload()}
+            className="flex flex-col items-start gap-1 bg-transparent border-none cursor-pointer hover:opacity-80 transition-opacity"
+          >
+            <Image src="/rad.jpeg" alt="Tech Trailblazer Academy" width={80} height={32} className="h-7 md:h-8 w-auto" priority loading="eager" />
+            <span className="text-[9px] md:text-[10px] font-bold text-[#1a1a2e] tracking-wide">
+              Tech Trailblazer Academy
+            </span>
+          </button>
+
+          <div className="hidden lg:flex items-center gap-2 bg-white/60 backdrop-blur-md rounded-full p-1 border border-gray-100/50 shadow-sm">
+            {['Home', 'Register', 'FAQ'].map((item) => {
+              const handleClick = () => {
+                switch(item) {
+                  case 'Home': scrollToTop(); break
+                  case 'Register': scrollToContact(); break
+                  case 'FAQ': scrollToFAQ(); break
+                }
+              }
+              return (
+                <button
+                  key={item}
+                  onClick={handleClick}
+                  className="text-sm font-medium text-gray-700 hover:text-white px-5 py-2 rounded-full hover:bg-gradient-to-r hover:from-[#dc2626] hover:to-[#991b1b] transition-all duration-200"
+                >
+                  {item}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+    </nav>
+  )
+}
 
 export default function Contact() {
   const [currentStep, setCurrentStep] = useState(1)
@@ -35,6 +85,7 @@ export default function Contact() {
     name: "", email: "", mobile: "", sex: "", country: "", state: "",
     course: "", employment: "", laptop: "", reason: "",
   })
+  const [scrolled, setScrolled] = useState(false)
 
   const [countries, setCountries] = useState<{ code: string; name: string }[]>([])
   const [states, setStates] = useState<{ code: string; name: string }[]>([])
@@ -52,7 +103,12 @@ export default function Contact() {
   const [slideOffset, setSlideOffset] = useState(0)
   const cardRef = useRef<HTMLDivElement>(null)
 
-  // Global Enter key handler
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20)
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
+
   useEffect(() => {
     if (submitted) return
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -66,7 +122,6 @@ export default function Contact() {
     return () => window.removeEventListener("keydown", handleKeyDown)
   }, [currentStep, submitted])
 
-  // Fetch countries
   useEffect(() => {
     const fetchCountries = async () => {
       try {
@@ -84,7 +139,6 @@ export default function Contact() {
     fetchCountries()
   }, [])
 
-  // Fetch states when country changes
   useEffect(() => {
     const fetchStates = async () => {
       if (!form.country || form.country === "OTHER") { setStates([]); return }
@@ -201,216 +255,213 @@ export default function Contact() {
   const progress = ((currentStep) / STEPS.length) * 100
   const countryLabel = countries.find(c => c.code === form.country)?.name || "Not selected"
 
+  const submittedView = (
+    <section id="contact" className="w-full px-4 md:px-8 lg:px-16 py-16 md:py-24 bg-white relative overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-br from-[#ef4444]/5 to-transparent rounded-full blur-3xl" />
+      </div>
+      <div className="mx-auto max-w-md relative z-10 text-center">
+        <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-[#dc2626]/10 border border-[#dc2626]/20 flex items-center justify-center">
+          <svg className="w-10 h-10 text-[#dc2626]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13l4 4L19 7" /></svg>
+        </div>
+        <h2 className="text-2xl sm:text-3xl font-bold text-[#1a1a2e] mb-3">Application Submitted!</h2>
+        <p className="text-[#5a5a6e] text-sm mb-2">Thank you, <span className="text-[#1a1a2e] font-medium">{form.name.split(" ")[0]}</span>!</p>
+        <p className="text-[#5a5a6e] text-sm mb-8 leading-relaxed">We will contact you via <span className="text-[#1a1a2e] font-medium">email</span> and <span className="text-[#1a1a2e] font-medium">WhatsApp</span> using the details you provided. Please check your inbox regularly for updates.</p>
+        <div className="p-4 rounded-xl border border-[#1a1a2e]/10 bg-[#1a1a2e]/[0.02] mb-6">
+          <p className="text-[#5a5a6e] text-xs mb-2">Application Summary</p>
+          <div className="text-left space-y-1 text-sm">
+            <p className="text-[#1a1a2e]/70"><span className="text-[#1a1a2e]/40">Name:</span> {form.name}</p>
+            <p className="text-[#1a1a2e]/70"><span className="text-[#1a1a2e]/40">Email:</span> {form.email}</p>
+            <p className="text-[#1a1a2e]/70"><span className="text-[#1a1a2e]/40">Course:</span> {form.course || "Not selected"}</p>
+          </div>
+        </div>
+        <button onClick={() => { setSubmitted(false); setCurrentStep(1); setForm({ name: "", email: "", mobile: "", sex: "", country: "", state: "", course: "", employment: "", laptop: "", reason: "" }) }} className="px-6 py-2.5 rounded-lg bg-[#1a1a2e]/10 border border-[#1a1a2e]/20 text-[#1a1a2e]/70 text-sm hover:bg-[#1a1a2e]/20 transition">Register Another Student</button>
+      </div>
+    </section>
+  )
+
   if (submitted) {
     return (
-      <section id="contact" className="w-full px-4 md:px-8 lg:px-16 py-16 md:py-24 bg-white relative overflow-hidden">
-        {/* Decorative */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-br from-[#ef4444]/5 to-transparent rounded-full blur-3xl" />
-        </div>
-        <div className="mx-auto max-w-md relative z-10 text-center">
-          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-[#dc2626]/10 border border-[#dc2626]/20 flex items-center justify-center">
-            <svg className="w-10 h-10 text-[#dc2626]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13l4 4L19 7" /></svg>
-          </div>
-          <h2 className="text-2xl sm:text-3xl font-bold text-[#1a1a2e] mb-3">Application Submitted!</h2>
-          <p className="text-[#5a5a6e] text-sm mb-2">Thank you, <span className="text-[#1a1a2e] font-medium">{form.name.split(" ")[0]}</span>!</p>
-          <p className="text-[#5a5a6e] text-sm mb-8 leading-relaxed">We will contact you via <span className="text-[#1a1a2e] font-medium">email</span> and <span className="text-[#1a1a2e] font-medium">WhatsApp</span> using the details you provided. Please check your inbox regularly for updates.</p>
-          <div className="p-4 rounded-xl border border-[#1a1a2e]/10 bg-[#1a1a2e]/[0.02] mb-6">
-            <p className="text-[#5a5a6e] text-xs mb-2">Application Summary</p>
-            <div className="text-left space-y-1 text-sm">
-              <p className="text-[#1a1a2e]/70"><span className="text-[#1a1a2e]/40">Name:</span> {form.name}</p>
-              <p className="text-[#1a1a2e]/70"><span className="text-[#1a1a2e]/40">Email:</span> {form.email}</p>
-              <p className="text-[#1a1a2e]/70"><span className="text-[#1a1a2e]/40">Course:</span> {form.course || "Not selected"}</p>
-            </div>
-          </div>
-          <button onClick={() => { setSubmitted(false); setCurrentStep(1); setForm({ name: "", email: "", mobile: "", sex: "", country: "", state: "", course: "", employment: "", laptop: "", reason: "" }) }} className="px-6 py-2.5 rounded-lg bg-[#1a1a2e]/10 border border-[#1a1a2e]/20 text-[#1a1a2e]/70 text-sm hover:bg-[#1a1a2e]/20 transition">Register Another Student</button>
-        </div>
-      </section>
+      <>
+        <HeaderNav scrolled={scrolled} />
+        {submittedView}
+      </>
     )
   }
 
   return (
-    <section id="contact" className="w-full px-4 md:px-8 lg:px-16 py-16 md:py-24 bg-white relative overflow-hidden">
-      {/* Decorative blurs */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-[#ef4444]/8 to-transparent rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-[#991b1b]/6 to-transparent rounded-full blur-3xl" />
-      </div>
-
-      <div className="mx-auto max-w-4xl relative z-10">
-        {/* Header */}
-        <div className="text-center mb-10 md:mb-14">
-          {/* Pill badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white border border-red-100 rounded-full shadow-sm mb-5">
-            <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-            <span className="text-xs font-semibold text-red-600 tracking-wide uppercase">Registration</span>
-          </div>
-          
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#1a1a2e] mb-4 tracking-tight leading-[1.05]">
-            READY TO START YOUR<br />
-            <span className="relative inline-block">
-              <span className="bg-gradient-to-r from-red-600 via-rose-500 to-red-700 bg-clip-text text-transparent">
-                JOURNEY?
-              </span>
-              <svg className="absolute -bottom-2 left-0 w-full h-3" viewBox="0 0 100 10" preserveAspectRatio="none">
-                <path d="M0 8 Q25 2 50 8 T100 6" stroke="url(#swooshGradientReg)" strokeWidth="2.5" fill="none" strokeLinecap="round" />
-                <defs>
-                  <linearGradient id="swooshGradientReg" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#ef4444" stopOpacity="0.1" />
-                    <stop offset="50%" stopColor="#dc2626" stopOpacity="0.5" />
-                    <stop offset="100%" stopColor="#ef4444" stopOpacity="0.1" />
-                  </linearGradient>
-                </defs>
-              </svg>
-            </span>
-          </h2>
-          
-          <p className="text-base md:text-xl text-[#6b6b7b] max-w-2xl mx-auto leading-relaxed font-medium">
-            Fill out the form below and we'll get you enrolled in no time.
-          </p>
-          
-          {/* Divider */}
-          <div className="flex items-center justify-center gap-4 mt-6">
-            <div className="h-px w-16 bg-gradient-to-r from-transparent to-red-300" />
-            <div className="w-2 h-2 bg-red-400 rounded-full rotate-45" />
-            <div className="h-px w-16 bg-gradient-to-l from-transparent to-red-300" />
-          </div>
+    <>
+      <HeaderNav scrolled={scrolled} />
+      <section id="contact" className="w-full px-4 md:px-8 lg:px-16 py-16 md:py-24 bg-white relative overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-[#ef4444]/8 to-transparent rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-[#991b1b]/6 to-transparent rounded-full blur-3xl" />
         </div>
 
-        {/* Wizard Card */}
-        <div ref={cardRef} className="max-w-xl mx-auto" style={{ transform: `translateY(${slideOffset}px)`, transition: "transform 0.3s ease-out" }}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && e.target instanceof HTMLElement && e.target.tagName !== "TEXTAREA") {
-              e.preventDefault()
-              if (currentStep < 6) goNext()
-              else handleSubmit()
-            }
-          }}
-        >
-          {/* Progress bar */}
-          <div className="mb-6">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-[11px] text-[#5a5a6e] font-mono tracking-wider uppercase">{STEPS[currentStep - 1].label}</span>
-              <span className="text-[11px] text-[#5a5a6e]/60">Step {currentStep} of {STEPS.length}</span>
+        <div className="mx-auto max-w-4xl relative z-10">
+          <div className="text-center mb-10 md:mb-14">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white border border-red-100 rounded-full shadow-sm mb-5">
+              <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+              <span className="text-xs font-semibold text-red-600 tracking-wide uppercase">Registration</span>
             </div>
-            <div className="h-1 bg-[#1a1a2e]/10 rounded-full overflow-hidden">
-              <div className="h-full bg-[#dc2626] rounded-full transition-all duration-500 ease-out" style={{ width: `${progress}%` }} />
+
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#1a1a2e] mb-4 tracking-tight leading-[1.05]">
+              READY TO START YOUR<br />
+              <span className="relative inline-block">
+                <span className="bg-gradient-to-r from-red-600 via-rose-500 to-red-700 bg-clip-text text-transparent">
+                  JOURNEY?
+                </span>
+                <svg className="absolute -bottom-2 left-0 w-full h-3" viewBox="0 0 100 10" preserveAspectRatio="none">
+                  <path d="M0 8 Q25 2 50 8 T100 6" stroke="url(#swooshGradientReg)" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+                  <defs>
+                    <linearGradient id="swooshGradientReg" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#ef4444" stopOpacity="0.1" />
+                      <stop offset="50%" stopColor="#dc2626" stopOpacity="0.5" />
+                      <stop offset="100%" stopColor="#ef4444" stopOpacity="0.1" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+              </span>
+            </h2>
+
+            <p className="text-base md:text-xl text-[#6b6b7b] max-w-2xl mx-auto leading-relaxed font-medium">
+              Fill out the form below and we'll get you enrolled in no time.
+            </p>
+
+            <div className="flex items-center justify-center gap-4 mt-6">
+              <div className="h-px w-16 bg-gradient-to-r from-transparent to-red-300" />
+              <div className="w-2 h-2 bg-red-400 rounded-full rotate-45" />
+              <div className="h-px w-16 bg-gradient-to-l from-transparent to-red-300" />
             </div>
           </div>
 
-          {/* Step content */}
-          <div className="p-6 sm:p-8 rounded-2xl card-premium bg-white">
+          <div ref={cardRef} className="max-w-xl mx-auto" style={{ transform: `translateY(${slideOffset}px)`, transition: "transform 0.3s ease-out" }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && e.target instanceof HTMLElement && e.target.tagName !== "TEXTAREA") {
+                e.preventDefault()
+                if (currentStep < 6) goNext()
+                else handleSubmit()
+              }
+            }}
+          >
             <div className="mb-6">
-              <h3 className="text-xl sm:text-2xl font-bold text-[#1a1a2e] mb-1">{STEPS[currentStep - 1].heading}</h3>
-              <p className="text-[#5a5a6e] text-sm">{STEPS[currentStep - 1].subtext}</p>
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-[11px] text-[#5a5a6e] font-mono tracking-wider uppercase">{STEPS[currentStep - 1].label}</span>
+                <span className="text-[11px] text-[#5a5a6e]/60">Step {currentStep} of {STEPS.length}</span>
+              </div>
+              <div className="h-1 bg-[#1a1a2e]/10 rounded-full overflow-hidden">
+                <div className="h-full bg-[#dc2626] rounded-full transition-all duration-500 ease-out" style={{ width: `${progress}%` }} />
+              </div>
             </div>
 
-            {/* Step 1: Personal Identity */}
-            {currentStep === 1 && (
-              <div className="space-y-4">
-                <div>
-                  <label className="label-text text-[#1a1a2e]/60 mb-2 block">Full Name *</label>
-                  <input type="text" placeholder="Enter your full name" value={form.name} autoFocus
-                    onChange={(e) => updateForm("name", e.target.value.replace(/[0-9]/g, ""))}
-                    className={`w-full px-5 py-4 rounded-xl bg-[#1a1a2e]/[0.04] border text-[#1a1a2e] placeholder-[#5a5a6e]/40 text-sm focus:outline-none focus:border-[#dc2626]/50 focus:bg-[#1a1a2e]/[0.06] transition-all duration-200 ${errors.name ? "border-red-500/50" : "border-[#1a1a2e]/10"}`} />
-                  {errors.name && <p id="err-name" className="text-red-500 text-xs mt-1">{errors.name}</p>}
-                </div>
+            <div className="p-6 sm:p-8 rounded-2xl card-premium bg-white">
+              <div className="mb-6">
+                <h3 className="text-xl sm:text-2xl font-bold text-[#1a1a2e] mb-1">{STEPS[currentStep - 1].heading}</h3>
+                <p className="text-[#5a5a6e] text-sm">{STEPS[currentStep - 1].subtext}</p>
               </div>
-            )}
 
-            {/* Step 2: Contact Details */}
-            {currentStep === 2 && (
-              <div className="space-y-4">
-                <div>
-                  <label className="label-text text-[#1a1a2e]/60 mb-2 block">Email Address *</label>
-                  <div className="relative">
-                    <input type="email" placeholder="Enter your email address" value={form.email} autoComplete="off"
-                      onChange={(e) => updateForm("email", e.target.value)}
-                      onFocus={() => setEmailFocused(true)}
-                      onBlur={(e) => { setEmailFocused(false); checkEmailDuplicate(e.target.value) }}
-                      disabled={emailChecking}
-                      className={`w-full px-5 py-4 rounded-xl bg-[#1a1a2e]/[0.04] border text-[#1a1a2e] placeholder-[#5a5a6e]/40 text-sm focus:outline-none focus:border-[#dc2626]/50 focus:bg-[#1a1a2e]/[0.06] transition-all duration-200 ${
-                        errors.email ? "border-red-500/50" : emailStatus.status === "duplicate" ? "border-red-500/50" : emailStatus.status === "available" ? "border-green-500/50" : "border-[#1a1a2e]/10"
-                      } ${emailChecking ? "opacity-70" : ""}`} />
-                    {emailStatus.status === "checking" && <div className="absolute right-4 top-1/2 -translate-y-1/2"><div className="w-4 h-4 border-2 border-[#dc2626]/30 border-t-[#dc2626] rounded-full animate-spin" /></div>}
-                    {emailStatus.status === "available" && <div className="absolute right-4 top-1/2 -translate-y-1/2 text-green-500 text-sm font-medium">✓</div>}
-                    {emailStatus.status === "duplicate" && <div className="absolute right-4 top-1/2 -translate-y-1/2 text-red-500 text-sm font-medium">✗</div>}
+              {currentStep === 1 && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="label-text text-[#1a1a2e]/60 mb-2 block">Full Name *</label>
+                    <input type="text" placeholder="Enter your full name" value={form.name} autoFocus
+                      onChange={(e) => updateForm("name", e.target.value.replace(/[0-9]/g, ""))}
+                      className={`w-full px-5 py-4 rounded-xl bg-[#1a1a2e]/[0.04] border text-[#1a1a2e] placeholder-[#5a5a6e]/40 text-sm focus:outline-none focus:border-[#dc2626]/50 focus:bg-[#1a1a2e]/[0.06] transition-all duration-200 ${errors.name ? "border-red-500/50" : "border-[#1a1a2e]/10"}`} />
+                    {errors.name && <p id="err-name" className="text-red-500 text-xs mt-1">{errors.name}</p>}
                   </div>
-                  {errors.email && <p id="err-email" className="text-red-500 text-xs mt-1">{errors.email}</p>}
-                  {emailStatus.status === "duplicate" && !errors.email && <p className="text-red-500/80 text-[11px] mt-1">{emailStatus.message}</p>}
-                  {emailStatus.status === "available" && <p className="text-[#dc2626]/70 text-[10px] mt-1">Note: If this email is wrong, you will not receive updates about your application, classes, or program activities.</p>}
-                  {emailFocused && emailStatus.status !== "available" && <p className="text-[#5a5a6e] text-[11px] mt-1">Please enter a valid email address that you actively use. Important updates will be sent to this email.</p>}
                 </div>
-                <div>
-                  <label className="label-text text-[#1a1a2e]/60 mb-2 block">WhatsApp Number *</label>
-                  <div className="flex gap-3">
-                    <div className="relative shrink-0" style={{ minWidth: "100px", maxWidth: "120px" }}>
-                      <select defaultValue="+234" onChange={(e) => updateForm("dialCode", e.target.value)}
-                        className="w-full px-2 py-4 pr-6 rounded-xl bg-white border border-[#1a1a2e]/10 text-[#1a1a2e]/70 text-xs sm:text-sm focus:outline-none focus:border-[#dc2626]/50 transition-all duration-200 appearance-none cursor-pointer">
-                        <option value="+234">+234 (NG)</option><option value="+1">+1 (US/CA)</option><option value="+44">+44 (GB)</option>
-                        <option value="+91">+91 (IN)</option><option value="+254">+254 (KE)</option><option value="+233">+233 (GH)</option>
-                        <option value="+27">+27 (ZA)</option><option value="+256">+256 (UG)</option><option value="+260">+260 (ZM)</option>
-                      </select>
-                      <svg className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-[#5a5a6e]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+              )}
+
+              {currentStep === 2 && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="label-text text-[#1a1a2e]/60 mb-2 block">Email Address *</label>
+                    <div className="relative">
+                      <input type="email" placeholder="Enter your email address" value={form.email} autoComplete="off"
+                        onChange={(e) => updateForm("email", e.target.value)}
+                        onFocus={() => setEmailFocused(true)}
+                        onBlur={(e) => { setEmailFocused(false); checkEmailDuplicate(e.target.value) }}
+                        disabled={emailChecking}
+                        className={`w-full px-5 py-4 rounded-xl bg-[#1a1a2e]/[0.04] border text-[#1a1a2e] placeholder-[#5a5a6e]/40 text-sm focus:outline-none focus:border-[#dc2626]/50 focus:bg-[#1a1a2e]/[0.06] transition-all duration-200 ${
+                          errors.email ? "border-red-500/50" : emailStatus.status === "duplicate" ? "border-red-500/50" : emailStatus.status === "available" ? "border-green-500/50" : "border-[#1a1a2e]/10"
+                        } ${emailChecking ? "opacity-70" : ""}`} />
+                      {emailStatus.status === "checking" && <div className="absolute right-4 top-1/2 -translate-y-1/2"><div className="w-4 h-4 border-2 border-[#dc2626]/30 border-t-[#dc2626] rounded-full animate-spin" /></div>}
+                      {emailStatus.status === "available" && <div className="absolute right-4 top-1/2 -translate-y-1/2 text-green-500 text-sm font-medium">✓</div>}
+                      {emailStatus.status === "duplicate" && <div className="absolute right-4 top-1/2 -translate-y-1/2 text-red-500 text-sm font-medium">✗</div>}
                     </div>
-                    <input type="tel" placeholder="Enter your active WhatsApp number" value={form.mobile} autoComplete="off"
-                      onChange={(e) => updateForm("mobile", e.target.value.replace(/\D/g, "").slice(0, 15))}
-                      onFocus={() => setWhatsappFocused(true)} onBlur={() => setWhatsappFocused(false)}
-                      inputMode="numeric" className={`flex-1 px-5 py-4 rounded-xl bg-[#1a1a2e]/[0.04] border text-[#1a1a2e] placeholder-[#5a5a6e]/40 text-sm focus:outline-none focus:border-[#dc2626]/50 focus:bg-[#1a1a2e]/[0.06] transition-all duration-200 ${errors.mobile ? "border-red-500/50" : "border-[#1a1a2e]/10"}`} />
+                    {errors.email && <p id="err-email" className="text-red-500 text-xs mt-1">{errors.email}</p>}
+                    {emailStatus.status === "duplicate" && !errors.email && <p className="text-red-500/80 text-[11px] mt-1">{emailStatus.message}</p>}
+                    {emailStatus.status === "available" && <p className="text-[#dc2626]/70 text-[10px] mt-1">Note: If this email is wrong, you will not receive updates about your application, classes, or program activities.</p>}
+                    {emailFocused && emailStatus.status !== "available" && <p className="text-[#5a5a6e] text-[11px] mt-1">Please enter a valid email address that you actively use. Important updates will be sent to this email.</p>}
                   </div>
-                  {errors.mobile && <p id="err-mobile" className="text-red-500 text-xs mt-1">{errors.mobile}</p>}
-                  {form.mobile.trim().length >= 7 && !errors.mobile && <p className="text-[#dc2626]/70 text-[10px] mt-1">Note: If this WhatsApp number is wrong, you will not receive updates about your application.</p>}
-                  {whatsappFocused && !(form.mobile.trim().length >= 7 && !errors.mobile) && <p className="text-[#5a5a6e] text-[11px] mt-1">Please provide a valid WhatsApp number that you actively use.</p>}
+                  <div>
+                    <label className="label-text text-[#1a1a2e]/60 mb-2 block">WhatsApp Number *</label>
+                    <div className="flex gap-3">
+                      <div className="relative shrink-0" style={{ minWidth: "100px", maxWidth: "120px" }}>
+                        <select defaultValue="+234" onChange={(e) => updateForm("dialCode", e.target.value)}
+                          className="w-full px-2 py-4 pr-6 rounded-xl bg-white border border-[#1a1a2e]/10 text-[#1a1a2e]/70 text-xs sm:text-sm focus:outline-none focus:border-[#dc2626]/50 transition-all duration-200 appearance-none cursor-pointer">
+                          <option value="+234">+234 (NG)</option><option value="+1">+1 (US/CA)</option><option value="+44">+44 (GB)</option>
+                          <option value="+91">+91 (IN)</option><option value="+254">+254 (KE)</option><option value="+233">+233 (GH)</option>
+                          <option value="+27">+27 (ZA)</option><option value="+256">+256 (UG)</option><option value="+260">+260 (ZM)</option>
+                        </select>
+                        <svg className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-[#5a5a6e]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                      </div>
+                      <input type="tel" placeholder="Enter your active WhatsApp number" value={form.mobile} autoComplete="off"
+                        onChange={(e) => updateForm("mobile", e.target.value.replace(/\D/g, "").slice(0, 15))}
+                        onFocus={() => setWhatsappFocused(true)} onBlur={() => setWhatsappFocused(false)}
+                        inputMode="numeric" className={`flex-1 px-5 py-4 rounded-xl bg-[#1a1a2e]/[0.04] border text-[#1a1a2e] placeholder-[#5a5a6e]/40 text-sm focus:outline-none focus:border-[#dc2626]/50 focus:bg-[#1a1a2e]/[0.06] transition-all duration-200 ${errors.mobile ? "border-red-500/50" : "border-[#1a1a2e]/10"}`} />
+                    </div>
+                    {errors.mobile && <p id="err-mobile" className="text-red-500 text-xs mt-1">{errors.mobile}</p>}
+                    {form.mobile.trim().length >= 7 && !errors.mobile && <p className="text-[#dc2626]/70 text-[10px] mt-1">Note: If this WhatsApp number is wrong, you will not receive updates about your application.</p>}
+                    {whatsappFocused && !(form.mobile.trim().length >= 7 && !errors.mobile) && <p className="text-[#5a5a6e] text-[11px] mt-1">Please provide a valid WhatsApp number that you actively use.</p>}
+                  </div>
                 </div>
+              )}
+
+              {currentStep === 3 && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="label-text text-[#1a1a2e]/60 mb-2 block">Sex *</label>
+                    <div className="relative">
+                      <select value={form.sex} onChange={(e) => updateForm("sex", e.target.value)}
+                        className={`w-full px-5 py-4 rounded-xl bg-white border text-[#1a1a2e]/70 text-sm focus:outline-none focus:border-[#dc2626]/50 transition-all duration-200 appearance-none cursor-pointer ${errors.sex ? "border-red-500/50" : "border-[#1a1a2e]/10"}`}>
+                        <option value="" disabled>Select your sex</option><option value="male">Male</option><option value="female">Female</option>
+                      </select>
+                      <svg className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5a5a6e]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                    </div>
+                    {errors.sex && <p id="err-sex" className="text-red-500 text-xs mt-1">{errors.sex}</p>}
+                  </div>
+                  <div>
+                    <label className="label-text text-[#1a1a2e]/60 mb-2 block">Country *</label>
+                    <div className="relative">
+                      <select value={form.country} onChange={(e) => { updateForm("country", e.target.value); updateForm("state", "") }}
+                        className={`w-full px-5 py-4 rounded-xl bg-white border text-[#1a1a2e]/70 text-sm focus:outline-none focus:border-[#dc2626]/50 transition-all duration-200 appearance-none cursor-pointer ${errors.country ? "border-red-500/50" : "border-[#1a1a2e]/10"}`}>
+                        <option value="" disabled>{loadingCountries ? "Loading..." : "Select country"}</option>
+                        {countries.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
+                      </select>
+                      <svg className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5a5a6e]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                    </div>
+                    {errors.country && <p id="err-country" className="text-red-500 text-xs mt-1">{errors.country}</p>}
+                  </div>
+                  {loadingStates && (
+                    <div><label className="label-text text-[#1a1a2e]/60 mb-2 block">State/Province</label>
+                    <select disabled className="w-full px-5 py-4 rounded-xl bg-[#1a1a2e]/[0.02] border border-[#1a1a2e]/5 text-[#5a5a6e]/40 text-sm cursor-not-allowed"><option>Loading states...</option></select></div>
+                  )}
+                  {!loadingStates && states.length > 0 && (
+                    <div><label className="label-text text-[#1a1a2e]/60 mb-2 block">State/Province *</label>
+                    <div className="relative">
+                      <select value={form.state} onChange={(e) => updateForm("state", e.target.value)}
+                        className="w-full px-5 py-4 rounded-xl bg-white border border-[#1a1a2e]/10 text-[#1a1a2e]/70 text-sm focus:outline-none focus:border-[#dc2626]/50 transition-all duration-200 appearance-none cursor-pointer">
+                        <option value="" disabled>Select state</option>
+                        {states.map(s => <option key={s.code} value={s.code}>{s.name}</option>)}
+                      </select>
+                      <svg className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5a5a6e]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                    </div></div>
+                  )}
+                  {!loadingStates && form.country && form.country !== "OTHER" && states.length === 0 && <p className="text-[#5a5a6e]/60 text-xs italic">This country has no states/provinces.</p>}
               </div>
             )}
 
-            {/* Step 3: Demographics */}
-            {currentStep === 3 && (
-              <div className="space-y-4">
-                <div>
-                  <label className="label-text text-[#1a1a2e]/60 mb-2 block">Sex *</label>
-                  <div className="relative">
-                    <select value={form.sex} onChange={(e) => updateForm("sex", e.target.value)}
-                      className={`w-full px-5 py-4 rounded-xl bg-white border text-[#1a1a2e]/70 text-sm focus:outline-none focus:border-[#dc2626]/50 transition-all duration-200 appearance-none cursor-pointer ${errors.sex ? "border-red-500/50" : "border-[#1a1a2e]/10"}`}>
-                      <option value="" disabled>Select your sex</option><option value="male">Male</option><option value="female">Female</option>
-                    </select>
-                    <svg className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5a5a6e]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
-                  </div>
-                  {errors.sex && <p id="err-sex" className="text-red-500 text-xs mt-1">{errors.sex}</p>}
-                </div>
-                <div>
-                  <label className="label-text text-[#1a1a2e]/60 mb-2 block">Country *</label>
-                  <div className="relative">
-                    <select value={form.country} onChange={(e) => { updateForm("country", e.target.value); updateForm("state", "") }}
-                      className={`w-full px-5 py-4 rounded-xl bg-white border text-[#1a1a2e]/70 text-sm focus:outline-none focus:border-[#dc2626]/50 transition-all duration-200 appearance-none cursor-pointer ${errors.country ? "border-red-500/50" : "border-[#1a1a2e]/10"}`}>
-                      <option value="" disabled>{loadingCountries ? "Loading..." : "Select country"}</option>
-                      {countries.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
-                    </select>
-                    <svg className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5a5a6e]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
-                  </div>
-                  {errors.country && <p id="err-country" className="text-red-500 text-xs mt-1">{errors.country}</p>}
-                </div>
-                {loadingStates && (
-                  <div><label className="label-text text-[#1a1a2e]/60 mb-2 block">State/Province</label>
-                  <select disabled className="w-full px-5 py-4 rounded-xl bg-[#1a1a2e]/[0.02] border border-[#1a1a2e]/5 text-[#5a5a6e]/40 text-sm cursor-not-allowed"><option>Loading states...</option></select></div>
-                )}
-                {!loadingStates && states.length > 0 && (
-                  <div><label className="label-text text-[#1a1a2e]/60 mb-2 block">State/Province *</label>
-                  <div className="relative">
-                    <select value={form.state} onChange={(e) => updateForm("state", e.target.value)}
-                      className="w-full px-5 py-4 rounded-xl bg-white border border-[#1a1a2e]/10 text-[#1a1a2e]/70 text-sm focus:outline-none focus:border-[#dc2626]/50 transition-all duration-200 appearance-none cursor-pointer">
-                      <option value="" disabled>Select state</option>
-                      {states.map(s => <option key={s.code} value={s.code}>{s.name}</option>)}
-                    </select>
-                    <svg className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5a5a6e]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
-                  </div></div>
-                )}
-                {!loadingStates && form.country && form.country !== "OTHER" && states.length === 0 && <p className="text-[#5a5a6e]/60 text-xs italic">This country has no states/provinces.</p>}
-              </div>
-            )}
-
-            {/* Step 4: Course Selection */}
             {currentStep === 4 && (
               <div className="space-y-4">
                 <div>
@@ -451,7 +502,6 @@ export default function Contact() {
               </div>
             )}
 
-            {/* Step 5: Motivation */}
             {currentStep === 5 && (
               <div className="space-y-4">
                 <div>
@@ -464,7 +514,6 @@ export default function Contact() {
               </div>
             )}
 
-            {/* Step 6: Review */}
             {currentStep === 6 && (
               <div className="space-y-4">
                 <div className="rounded-xl border border-[#1a1a2e]/10 bg-[#1a1a2e]/[0.02] divide-y divide-[#1a1a2e]/5">
@@ -495,7 +544,6 @@ export default function Contact() {
               </div>
             )}
 
-            {/* Navigation */}
             <div className="flex justify-between items-center mt-8 pt-4 border-t border-[#1a1a2e]/5">
               {currentStep > 1 ? (
                 <button onClick={goBack} className="flex items-center gap-2 px-5 py-2.5 rounded-lg border border-[#1a1a2e]/10 text-[#5a5a6e] text-sm hover:bg-[#1a1a2e]/5 transition">
@@ -518,7 +566,6 @@ export default function Contact() {
             </div>
           </div>
 
-          {/* Step dots */}
           <div className="flex justify-center gap-2 mt-6">
             {STEPS.map((s, i) => (
               <button key={s.id} onClick={() => {
@@ -533,8 +580,36 @@ export default function Contact() {
               />
             ))}
           </div>
+
+          {/* WhatsApp Group CTA */}
+          <div className="mt-10 flex flex-col items-center gap-3">
+            <p className="text-sm text-[#5a5a6e] text-center max-w-md">
+              Want to connect with other learners and get updates? Join our WhatsApp group below.
+            </p>
+            <a
+              href="https://chat.whatsapp.com/CQwV51o9q4ZHp9kRXDM9qQ?s=cl&p=i&mlu=0"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center px-6 py-3.5 bg-[#25D366] text-white font-semibold rounded-full shadow-lg hover:shadow-xl hover:shadow-[#25D366]/25 transition-all duration-300 transform hover:-translate-y-0.5"
+            >
+              <svg
+                className="w-5 h-5 mr-2"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.149-.67.149-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414-.074-.123-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.327-1.682a9.86 9.86 0 005.26 1.483h.004c5.45 0 9.884-4.434 9.884-9.884 0-2.64-1.03-5.122-2.898-6.988z"/>
+              </svg>
+              Join our WhatsApp Group
+            </a>
+          </div>
         </div>
       </div>
     </section>
+    </>
   )
 }
+
+
+
+
