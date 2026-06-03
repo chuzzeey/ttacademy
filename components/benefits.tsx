@@ -160,9 +160,9 @@ const Benefits = () => {
                 <div className="space-y-4 md:space-y-6">
                     {benefits.map((benefit, index) => (
                         <div
-                            key={index}
+                            key={benefit.title}
                             className={`group card-premium rounded-2xl p-5 md:p-7 flex items-start gap-4 md:gap-6 bg-white/90 backdrop-blur-sm ${isVisible ? 'animate-[slideInUp_0.6s_ease-out_forwards]' : 'opacity-0'}`}
-                            style={{ animationDelay: `${0.2 + (index * 0.15)}s` }}
+                            style={{ animationDelay: `${0.2 + index * 0.15}s` }}
                         >
                             <div className="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-[#dc2626] to-[#991b1b] rounded-xl flex items-center justify-center text-white flex-shrink-0 shadow-lg shadow-[#ef4444]/20 group-hover:shadow-xl group-hover:shadow-[#ef4444]/30 transition-shadow">
                                 {getIcon(benefit.icon)}
