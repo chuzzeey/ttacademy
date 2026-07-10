@@ -31,7 +31,12 @@ export function Header() {
 
   return (
     <header className="flex items-center justify-between mb-8">
-       
+      <Link href="/dashboard" className="flex items-center gap-2">
+        <div className="flex flex-col gap-1">
+          <div className="w-5 h-0.5 bg-foreground" />
+          <div className="w-5 h-0.5 bg-foreground" />
+          <div className="w-3 h-0.5 bg-foreground" />
+        </div>
         <span className="text-xl font-semibold">TT Academy</span>
       </Link>
 
