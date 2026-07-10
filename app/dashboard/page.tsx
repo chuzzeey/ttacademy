@@ -26,10 +26,10 @@ export default function DashboardPage() {
 
       {/* Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <MetricCard title="Total Students" value="$68,837" change="+2.4%" isPositiveOutcome={true} icon={DollarSign} />
-        <MetricCard title="Enrolled Students" value="12,485" change="+3.1%" isPositiveOutcome={true} icon={ShoppingCart} />
-        <MetricCard title="Total Revenue" value="4,263" change="+1.8%" isPositiveOutcome={true} icon={Users} />
-        <MetricCard title="This Week" value="1.5%" change="-0.6%" isPositiveOutcome={true} icon={RotateCcw} />
+        <MetricCard title="Total Students" value="68" icon={DollarSign} />
+        <MetricCard title="Enrolled Students" value="12" icon={ShoppingCart} />
+        <MetricCard title="Total Revenue" value="naira400,263" icon={Users} />
+        <MetricCard title="This Week" value="5" icon={RotateCcw} />
       </div>
 
       {/* Charts Row */}
