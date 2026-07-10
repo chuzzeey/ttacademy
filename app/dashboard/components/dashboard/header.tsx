@@ -1,8 +1,9 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Bell, ChevronDown } from "lucide-react"
+import { Bell, ChevronDown, Menu } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
 import { Button } from "../ui/button"
 import {
@@ -23,14 +24,26 @@ const navItems = [
 
 export function Header() {
   const pathname = usePathname()
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const isActive = (href: string) => {
     if (href === "/dashboard") return pathname === "/dashboard"
     return pathname.startsWith(href)
   }
 
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden"
+    } else {
+      document.body.style.overflow = "unset"
+    }
+    return () => {
+      document.body.style.overflow = "unset"
+    }
+  }, [mobileMenuOpen])
+
   return (
-    <header className="flex items-center justify-between mb-8">
+    <header className="flex items-center justify-between mb-8 relative">
       <Link href="/dashboard" className="flex items-center gap-2">
         <div className="flex flex-col gap-1">
           <div className="w-5 h-0.5 bg-foreground" />
@@ -40,6 +53,17 @@ export function Header() {
         <span className="text-xl font-semibold">TT Academy</span>
       </Link>
 
+      {/* Mobile Menu Button */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="md:hidden rounded-full"
+        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+      >
+        <Menu className="w-5 h-5" />
+      </Button>
+
+      {/* Desktop Navigation */}
       <nav className="hidden md:flex items-center bg-card rounded-full px-2 py-1.5 border border-border">
         {navItems.map((item) => (
           <Link
@@ -84,6 +108,51 @@ export function Header() {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      {/* Mobile Navigation Menu */}
+      <div
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-background border-r border-border transform transition-transform duration-300 ease-in-out md:hidden ${
+          mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-8">
+            <span className="text-xl font-semibold">TT Academy</span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <Menu className="w-5 h-5" />
+            </Button>
+          </div>
+          <nav className="space-y-2">
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className={`block px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                  isActive(item.href)
+                    ? "bg-green-100 text-green-800"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                }`}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
+      </div>
+
+      {/* Overlay */}
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden transition-opacity duration-300"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
     </header>
   )
 }
