@@ -29,7 +29,7 @@ const products = [
   },
 ]
 
-export function TopProducts() {
+export function RecentlyJoined() {
   return (
     <Card className="bg-card border-border h-full">
       <CardHeader className="flex flex-row items-center justify-between pb-2">

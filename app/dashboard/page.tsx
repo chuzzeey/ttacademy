@@ -2,7 +2,7 @@ import { MetricCard } from "./components/dashboard/metric-card"
 import { PageHeader } from "./components/dashboard/page-header"
 import { ProfitChart } from "./components/dashboard/profit-chart"
 import { MostRegisteredCourses } from "./components/dashboard/most-registered-courses"
-import { TopProducts } from "./components/dashboard/top-products"
+import { RecentlyJoined } from "./components/dashboard/recently-joined"
 import { RegionalInfo } from "./components/dashboard/regional-info"
 import { Button } from "./components/ui/button"
 import { Calendar, Upload, DollarSign, ShoppingCart, Users, RotateCcw } from "lucide-react"
@@ -38,7 +38,7 @@ export default function DashboardPage() {
           <ProfitChart />
         </div>
         <div>
-          <TopProducts />
+          <RecentlyJoined />
         </div>
       </div>
 
