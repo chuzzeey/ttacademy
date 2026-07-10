@@ -217,7 +217,7 @@ export default function Contact() {
               <div className="space-y-4">
                 <div>
                   <label className="label-text text-[#1a1a2e]/60 mb-2 block">Full Name *</label>
-                  <input type="text" placeholder="Enter your full name" value={form.name} autoFocus
+                  <input type="text" placeholder="Enter your full name" value={form.name}
                     onChange={(e) => updateForm("name", e.target.value.replace(/[0-9]/g, ""))}
                     className={`w-full px-5 py-4 rounded-xl bg-[#1a1a2e]/[0.04] border text-[#1a1a2e] placeholder-[#5a5a6e]/40 text-sm focus:outline-none focus:border-[#dc2626]/50 focus:bg-[#1a1a2e]/[0.06] transition-all duration-200 ${errors.name ? "border-red-500/50" : "border-[#1a1a2e]/10"}`} />
                   {errors.name && <p id="err-name" className="text-red-500 text-xs mt-1">{errors.name}</p>}
