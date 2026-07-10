@@ -1,7 +1,7 @@
 import { MetricCard } from "./components/dashboard/metric-card"
 import { PageHeader } from "./components/dashboard/page-header"
 import { ProfitChart } from "./components/dashboard/profit-chart"
-import { CustomerOrders } from "./components/dashboard/customer-orders"
+import { MostRegisteredCourses } from "./components/dashboard/most-registered-courses"
 import { TopProducts } from "./components/dashboard/top-products"
 import { RegionalInfo } from "./components/dashboard/regional-info"
 import { Button } from "./components/ui/button"
@@ -45,7 +45,7 @@ export default function DashboardPage() {
       {/* Bottom Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="h-full">
-          <CustomerOrders />
+          <MostRegisteredCourses />
         </div>
         <div className="lg:col-span-2 h-full">
           <RegionalInfo />

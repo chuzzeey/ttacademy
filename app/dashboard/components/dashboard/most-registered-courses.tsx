@@ -16,7 +16,7 @@ const data = [
   { month: "Dec", orders: 2000 },
 ]
 
-export function CustomerOrders() {
+export function MostRegisteredCourses() {
   return (
     <Card className="bg-card border-border h-full">
       <CardHeader className="flex flex-row items-center justify-between pb-2">

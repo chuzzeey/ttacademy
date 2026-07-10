@@ -6,10 +6,10 @@ import { ChevronDown } from "lucide-react"
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts"
 
 const countryData = [
-  { country: "United States", value: 1245680, color: "#3b82f6" },
-  { country: "Brazil", value: 684320, color: "#22c55e" },
-  { country: "Finland", value: 312450, color: "#8b5cf6" },
-  { country: "Bangladesh", value: 158970, color: "#f97316" },
+  { country: "Owerri", value: 1245680, color: "#3b82f6" },
+  { country: "Lagos", value: 684320, color: "#22c55e" },
+  { country: "Abia", value: 312450, color: "#8b5cf6" },
+  { country: "Anambra", value: 158970, color: "#f97316" },
 ]
 
 const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ payload: typeof countryData[0] }> }) => {
