@@ -47,7 +47,7 @@ export function Header() {
             href={item.href}
             className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
               isActive(item.href)
-                ? "bg-[var(--color-accent)] text-foreground"
+                ? "bg-green-100 text-green-800"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
