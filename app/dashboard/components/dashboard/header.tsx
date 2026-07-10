@@ -17,8 +17,8 @@ import {
 const navItems = [
   { label: "Dashboard", href: "/dashboard" },
   { label: "Students", href: "/dashboard/students" },
-  { label: "Payment", href: "/dashboard/payment" },
   { label: "Analytics", href: "/dashboard/analytics" },
+  { label: "Payment", href: "/dashboard/payment" },
   { label: "Settings", href: "/dashboard/settings" },
 ]
 
