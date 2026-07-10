@@ -1,5 +1,12 @@
+import { Noto_Sans } from "next/font/google";
 import type { Metadata } from "next";
 import "./globals.css";
+
+const notoSans = Noto_Sans({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-noto-sans",
+});
 
 export const metadata: Metadata = {
   title: "Tech Trailblazer Academy - We Tech Different",
@@ -160,7 +167,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body>
+      <body className={notoSans.variable}>
         {children}
       </body>
     </html>

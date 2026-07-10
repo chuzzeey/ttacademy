@@ -59,7 +59,7 @@
   body {
     background-color: #ffffff;
     color: #1a1a2e;
-    font-family: 'Aptos', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: var(--font-noto-sans), 'Aptos', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -81,28 +81,28 @@
 
   /* Typography Hierarchy - Premium Professional */
   h1, .h1 {
-    font-family: 'Aptos', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: var(--font-noto-sans), 'Aptos', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
     font-weight: 800;
     letter-spacing: -0.025em;
     line-height: 1.02;
   }
 
   h2, .h2 {
-    font-family: 'Aptos', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: var(--font-noto-sans), 'Aptos', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
     font-weight: 700;
     letter-spacing: -0.015em;
     line-height: 1.1;
   }
 
   h3, .h3 {
-    font-family: 'Aptos', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: var(--font-noto-sans), 'Aptos', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
     font-weight: 600;
     letter-spacing: -0.01em;
     line-height: 1.2;
   }
 
   p, .body-text {
-    font-family: 'Aptos', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: var(--font-noto-sans), 'Aptos', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
     font-weight: 400;
     line-height: 1.6;
     letter-spacing: 0em;
@@ -110,7 +110,7 @@
   }
 
   .small-text {
-    font-family: 'Aptos', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: var(--font-noto-sans), 'Aptos', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
     font-weight: 400;
     line-height: 1.4;
     letter-spacing: 0.01em;
@@ -118,7 +118,7 @@
   }
 
   .label-text {
-    font-family: 'Aptos', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: var(--font-noto-sans), 'Aptos', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
     font-weight: 600;
     line-height: 1.2;
     letter-spacing: 0.05em;
@@ -230,9 +230,14 @@
     animation: scroll-right 30s linear infinite;
   }
 
-/* Prevent iOS zoom on input focus */
+/* Prevent iOS zoom on input focus - keep 16px minimum */
 @media (max-width: 768px) {
   input, select, textarea {
+    font-size: 16px !important;
+  }
+
+  /* Override any Tailwind text-sm class on mobile inputs */
+  input.text-sm, select.text-sm, textarea.text-sm {
     font-size: 16px !important;
   }
 }

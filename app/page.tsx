@@ -11,9 +11,10 @@ import Footer from '@/components/footer'
 export default function HomePage() {
   return (
     <main>
-            <Contact />
+        
       <Home />
       <Benefits />
+          <Contact />
       <WhatYouGet />
 
       <Join />
@@ -43,3 +44,4 @@ export default function HomePage() {
     </main>
   );
 }
+
