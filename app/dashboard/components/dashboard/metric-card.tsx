@@ -5,9 +5,10 @@ interface MetricCardProps {
   title: string
   value: string
   icon: LucideIcon
+  description?: string
 }
 
-export function MetricCard({ title, value, icon: Icon }: MetricCardProps) {
+export function MetricCard({ title, value, icon: Icon, description }: MetricCardProps) {
   return (
     <Card className="bg-card border border-border cursor-pointer hover:shadow-md transition-shadow">
       <CardContent className="p-5">
@@ -18,6 +19,9 @@ export function MetricCard({ title, value, icon: Icon }: MetricCardProps) {
           </div>
         </div>
         <p className="text-3xl font-semibold">{value}</p>
+        {description && (
+          <p className="text-xs text-muted-foreground mt-1">{description}</p>
+        )}
       </CardContent>
     </Card>
   )

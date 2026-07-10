@@ -3,21 +3,15 @@
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
 import { MoreHorizontal } from "lucide-react"
 import { Button } from "../ui/button"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts"
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LabelList } from "recharts"
 
 const data = [
-  { month: "Jan", sales: 25000, revenue: 20000 },
-  { month: "Feb", sales: 35000, revenue: 28000 },
-  { month: "Mar", sales: 30000, revenue: 25000 },
-  { month: "Apr", sales: 45000, revenue: 38000 },
-  { month: "May", sales: 73940, revenue: 63773 },
-  { month: "Jun", sales: 55000, revenue: 48000 },
-  { month: "Jul", sales: 40000, revenue: 35000 },
-  { month: "Aug", sales: 48000, revenue: 42000 },
-  { month: "Sep", sales: 52000, revenue: 45000 },
-  { month: "Oct", sales: 38000, revenue: 32000 },
-  { month: "Nov", sales: 42000, revenue: 36000 },
-  { month: "Dec", sales: 50000, revenue: 44000 },
+  { month: "Sun 5", joined: 10, enrolled: 30 },
+  { month: "Mon 6", joined: 12, enrolled: 36 },
+  { month: "Tue 7", joined: 14, enrolled: 42 },
+  { month: "Wed 8", joined: 11, enrolled: 33 },
+  { month: "Thu 9", joined: 11, enrolled: 33 },
+  { month: "Fri 10", joined: 10, enrolled: 30 },
 ]
 
 export function ProfitChart() {
@@ -27,7 +21,7 @@ export function ProfitChart() {
         <div>
           <CardTitle className="text-base font-medium">Revenue  Overview</CardTitle>
           <div className="flex items-center gap-2 mt-1">
-            <span className="text-3xl font-semibold">naira 98,643.24</span>
+            <span className="text-3xl font-semibold">₦98,643.24</span>
             <span className="text-xs bg-[var(--color-accent)]/30 text-foreground px-2 py-0.5 rounded-full flex items-center gap-1">
               +8.4%
               <span className="text-[10px]">↗</span>
@@ -46,24 +40,19 @@ export function ProfitChart() {
             <div className="w-3 h-3 rounded-full bg-[var(--color-chart-orange)]" />
             <span className="text-xs text-muted-foreground">Total Revenue</span>
           </div>
-          <div className="ml-auto flex items-center gap-4">
-            <div className="flex items-center gap-2">
-
-
-            </div>
-
-          </div>
         </div>
         <div className="h-[200px]">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data} barGap={2}>
+            <BarChart data={data} barGap={-1}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e5e5" />
-              <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#737373" }} />
+              <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#737373" }} />
               <YAxis
                 axisLine={false}
                 tickLine={false}
                 tick={{ fontSize: 11, fill: "#737373" }}
-                tickFormatter={(value) => `${value / 1000}k`}
+                ticks={[10, 20, 30, 40]}
+                tickFormatter={(value) => `${value}`}
+                domain={[0, 50]}
               />
               <Tooltip
                 contentStyle={{
@@ -74,19 +63,19 @@ export function ProfitChart() {
                   fontSize: "12px",
                 }}
                 formatter={(value: number, name: string) => [
-                  name === "sales" ? value.toLocaleString() : `$${value.toLocaleString()}`,
-                  name === "sales" ? "Sales" : "Revenue",
+                  name === "joined" ? value.toLocaleString() : `₦${(value * 50000).toLocaleString()}`,
+                  name === "joined" ? "Joined" : "Revenue",
                 ]}
-                labelFormatter={(label) => `${label} 2026`}
+                labelFormatter={(label) => `${label}`}
               />
-              <Bar dataKey="sales" radius={[4, 4, 0, 0]} maxBarSize={20}>
+              <Bar dataKey="joined" radius={[4, 4, 0, 0]} maxBarSize={40}>
                 {data.map((entry, index) => (
-                  <Cell key={`sales-${index}`} fill={entry.month === "May" ? "#d4d4d4" : "#e5e5e5"} />
+                  <Cell key={`joined-${index}`} fill="#e5e5e5" />
                 ))}
               </Bar>
-              <Bar dataKey="revenue" radius={[4, 4, 0, 0]} maxBarSize={20}>
+              <Bar dataKey="enrolled" radius={[4, 4, 0, 0]} maxBarSize={40}>
                 {data.map((entry, index) => (
-                  <Cell key={`revenue-${index}`} fill={entry.month === "May" ? "#f97316" : "#fdba74"} />
+                  <Cell key={`enrolled-${index}`} fill={entry.enrolled === 0 ? "#fef3c7" : "#fdba74"} />
                 ))}
               </Bar>
             </BarChart>

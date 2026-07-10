@@ -30,7 +30,7 @@ export function MostRegisteredCourses() {
       </CardHeader>
       <CardContent>
         <div className="mb-4">
-          <p className="text-3xl font-semibold">45,6370</p>
+          <p className="text-3xl font-semibold">4</p>
           <div className="flex items-center gap-2 mt-1">
             <span className="text-xs bg-[var(--color-accent)]/30 text-foreground px-2 py-0.5 rounded-full">
               +9.4% ↗

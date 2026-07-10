@@ -18,7 +18,7 @@ const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<
     return (
       <div className="bg-card px-3 py-2 rounded-lg shadow-lg text-xs font-medium border border-border">
         <p className="font-semibold">{data.country}</p>
-        <p style={{ color: data.color }}>${data.value.toLocaleString()}</p>
+        <p style={{ color: data.color }}>₦{data.value.toLocaleString()}</p>
       </div>
     )
   }
@@ -52,7 +52,7 @@ export function RegionalInfo() {
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Total Revenue</p>
-              <p className="text-2xl font-semibold">naira{total.toLocaleString()}</p>
+              <p className="text-2xl font-semibold">₦{total.toLocaleString()}</p>
             </div>
           </div>
 

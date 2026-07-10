@@ -2,59 +2,57 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
 import { Button } from "../ui/button"
 import { MoreHorizontal } from "lucide-react"
 
-const products = [
+const recentJoined = [
   {
-    name: "Adidas Ultraboost 22",
-    category: "Running Shoes",
-    price: "$180",
-    image: "/adidas-ultraboost-running-shoe.jpg",
+    name: "Enoch Chukwudi",
+    course: "Fullstack Development",
+    sex: "Male",
+    image: "/avatar.png",
   },
   {
-    name: "Samsung Galaxy Watch 6",
-    category: "Smartwatch",
-    price: "$299",
-    image: "/samsung-galaxy-watch-smartwatch.jpg",
+    name: "Ngozi Kelechi",
+    course: "Fullstack Development",
+    sex: "Female",
+    image: "/avatar.png",
   },
   {
-    name: "Sony WH-1000XM5",
-    category: "Noise-Canceling Headphones",
-    price: "$399",
-    image: "/sony-wh1000xm5-headphones.jpg",
+    name: "John Abel",
+    course: "Fullstack Development",
+    sex: "Male",
+    image: "/avatar.png",
   },
   {
-    name: "Apple AirPods Pro (2nd G...",
-    category: "Wireless Earbuds",
-    price: "$249",
-    image: "/apple-airpods-pro-earbuds.jpg",
+    name: "Wisdom Nnamdi",
+    course: "Fullstack Development",
+    sex: "Male",
+    image: "/avatar.png",
   },
 ]
 
 export function RecentlyJoined() {
   return (
     <Card className="bg-card border-border h-full">
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
+      <CardHeader className="flex flex-row items-center justify-between border-b pb-2">
         <CardTitle className="text-base font-medium">Recently Joined Students</CardTitle>
-        <Button variant="ghost" size="icon" className="h-8 w-8">
-          <MoreHorizontal className="w-4 h-4" />
-        </Button>
+        <span className="text-sm font-medium ml-2">Sex</span>
       </CardHeader>
       <CardContent className="space-y-4">
-        {products.map((product, index) => (
+        {recentJoined.map((student, index) => (
           <div key={index} className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-lg bg-muted overflow-hidden">
                 <img
-                  src={product.image || "/placeholder.svg"}
-                  alt={product.name}
+                  src={student.image || "/placeholder.svg"}
+                  alt={student.name}
                   className="w-full h-full object-cover"
                 />
               </div>
               <div>
-                <p className="text-sm font-medium">{product.name}</p>
-                <p className="text-xs text-muted-foreground">{product.category}</p>
+                <p className="text-sm font-medium">{student.name}</p>
+                <p className="text-xs text-muted-foreground">{student.course}</p>
               </div>
             </div>
-            <span className="text-sm font-medium">{product.price}</span>
+            <span className="text-sm font-medium">{student.sex}</span>
           </div>
         ))}
       </CardContent>
