@@ -7,41 +7,41 @@ import { Calendar, Download, TrendingUp, DollarSign, ShoppingBag, CreditCard } f
 import { Bar, BarChart, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Line, LineChart } from "recharts"
 import Image from "next/image"
 
-const salesData = [
-  { month: "Jan", sales: 32000, revenue: 42000 },
-  { month: "Feb", sales: 28000, revenue: 38000 },
-  { month: "Mar", sales: 45000, revenue: 55000 },
-  { month: "Apr", sales: 52000, revenue: 62000 },
-  { month: "May", sales: 73940, revenue: 87373 },
-  { month: "Jun", sales: 58000, revenue: 68000 },
-  { month: "Jul", sales: 42000, revenue: 52000 },
-  { month: "Aug", sales: 48000, revenue: 58000 },
-  { month: "Sep", sales: 55000, revenue: 65000 },
-  { month: "Oct", sales: 62000, revenue: 72000 },
-  { month: "Nov", sales: 68000, revenue: 78000 },
-  { month: "Dec", sales: 75000, revenue: 85000 },
+const studentsData = [
+  { month: "Jan", joined: 32, enrolled: 42 },
+  { month: "Feb", joined: 28, enrolled: 38 },
+  { month: "Mar", joined: 45, enrolled: 55 },
+  { month: "Apr", joined: 52, enrolled: 62 },
+  { month: "May", joined: 73, enrolled: 87 },
+  { month: "Jun", joined: 58, enrolled: 68 },
+  { month: "Jul", joined: 42, enrolled: 52 },
+  { month: "Aug", joined: 48, enrolled: 58 },
+  { month: "Sep", joined: 55, enrolled: 65 },
+  { month: "Oct", joined: 62, enrolled: 72 },
+  { month: "Nov", joined: 68, enrolled: 78 },
+  { month: "Dec", joined: 75, enrolled: 85 },
 ]
 
-const topProducts = [
-  { name: "Adidas Ultraboost 22", category: "Running Shoes", price: "$180", sales: 1243, image: "/adidas-ultraboost-running-shoe.jpg" },
-  { name: "Samsung Galaxy Watch 6", category: "Smartwatch", price: "$299", sales: 892, image: "/samsung-galaxy-watch-smartwatch.jpg" },
-  { name: "Sony WH-1000XM5", category: "Noise-Canceling Headphones", price: "$399", sales: 756, image: "/sony-wh1000xm5-headphones.jpg" },
-  { name: "Apple AirPods Pro", category: "Wireless Earbuds", price: "$249", sales: 634, image: "/apple-airpods-pro-earbuds.jpg" },
+const topStudents = [
+  { name: "Enoch Chukwudi", course: "Fullstack Development", grade: "A", sales: 95, image: "/avatar.png" },
+  { name: "Ngozi Kelechi", course: "Fullstack Development", grade: "A+", sales: 98, image: "/avatar.png" },
+  { name: "John Abel", course: "Fullstack Development", grade: "B+", sales: 88, image: "/avatar.png" },
+  { name: "Wisdom Nnamdi", course: "Fullstack Development", grade: "A-", sales: 92, image: "/avatar.png" },
 ]
 
-const salesByChannel = [
-  { channel: "Direct Website", sales: 45200, percentage: 38 },
-  { channel: "Amazon", sales: 35800, percentage: 30 },
-  { channel: "Shopify", sales: 24500, percentage: 20 },
-  { channel: "Retail Partners", sales: 14500, percentage: 12 },
+const studentsByCourse = [
+  { course: "Fullstack Development", students: 45200, percentage: 38 },
+  { course: "Frontend Development", students: 35800, percentage: 30 },
+  { course: "Backend Development", students: 24500, percentage: 20 },
+  { course: "UI/UX Design", students: 14500, percentage: 12 },
 ]
 
-export default function SalesPage() {
+export default function StudentsPage() {
   return (
     <>
       <PageHeader
-        title="Sales Analytics"
-        description="Track your sales performance and product metrics."
+        title="Students Analytics"
+        description="Track your students performance and metrics."
       >
         <Button variant="outline" className="flex items-center gap-2 bg-transparent text-sm">
           <Calendar className="w-4 h-4" />
@@ -53,82 +53,82 @@ export default function SalesPage() {
         </Button>
       </PageHeader>
 
-      {/* Sales Stats */}
+      {/* Students Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <Card className="bg-card border border-border">
           <CardContent className="p-5">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-muted-foreground">Total Sales</span>
+              <span className="text-sm text-muted-foreground">Total Students</span>
               <div className="p-2 bg-muted rounded-lg">
                 <ShoppingBag className="w-4 h-4 text-muted-foreground" />
               </div>
             </div>
-            <p className="text-3xl font-semibold">$658,940</p>
+            <p className="text-3xl font-semibold">1,245</p>
             <p className="text-xs text-[var(--color-positive)] mt-1">+12.5% vs last year</p>
           </CardContent>
         </Card>
         <Card className="bg-card border border-border">
           <CardContent className="p-5">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-muted-foreground">Average Order Value</span>
+              <span className="text-sm text-muted-foreground">Active This Month</span>
               <div className="p-2 bg-muted rounded-lg">
                 <DollarSign className="w-4 h-4 text-muted-foreground" />
               </div>
             </div>
-            <p className="text-3xl font-semibold">$127.45</p>
-            <p className="text-xs text-[var(--color-positive)] mt-1">+5.2% vs last year</p>
+            <p className="text-3xl font-semibold">892</p>
+            <p className="text-xs text-[var(--color-positive)] mt-1">+5.2% vs last month</p>
           </CardContent>
         </Card>
         <Card className="bg-card border border-border">
           <CardContent className="p-5">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-muted-foreground">Conversion Rate</span>
+              <span className="text-sm text-muted-foreground">Completion Rate</span>
               <div className="p-2 bg-muted rounded-lg">
                 <TrendingUp className="w-4 h-4 text-muted-foreground" />
               </div>
             </div>
-            <p className="text-3xl font-semibold">3.24%</p>
-            <p className="text-xs text-[var(--color-positive)] mt-1">+0.8% vs last year</p>
+            <p className="text-3xl font-semibold">78%</p>
+            <p className="text-xs text-[var(--color-positive)] mt-1">+4.2% vs last month</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Sales Chart */}
+      {/* Students Chart */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
         <Card className="lg:col-span-2 bg-card border border-border">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium">Sales & Revenue Overview</CardTitle>
+            <CardTitle className="text-base font-medium">Students Enrollment Overview</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={salesData}>
+                <BarChart data={studentsData}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e5e5" />
                   <XAxis dataKey="month" axisLine={false} tickLine={false} fontSize={12} />
-                  <YAxis axisLine={false} tickLine={false} fontSize={12} tickFormatter={(value) => `$${value / 1000}k`} />
+                  <YAxis axisLine={false} tickLine={false} fontSize={12} tickFormatter={(value) => `${value}`} />
                   <Tooltip
                     contentStyle={{ backgroundColor: "#fff", border: "1px solid #e5e5e5", borderRadius: "8px" }}
-                    formatter={(value: number) => [`$${value.toLocaleString()}`, ""]}
+                    formatter={(value: number) => [value.toLocaleString(), ""]}
                   />
-                  <Bar dataKey="sales" fill="#B4D4A5" radius={[4, 4, 0, 0]} name="Sales" />
-                  <Bar dataKey="revenue" fill="#F97316" radius={[4, 4, 0, 0]} name="Revenue" />
+                  <Bar dataKey="joined" fill="#B4D4A5" radius={[4, 4, 0, 0]} name="Joined" />
+                  <Bar dataKey="enrolled" fill="#F97316" radius={[4, 4, 0, 0]} name="Enrolled" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
 
-        {/* Sales by Channel */}
+        {/* Students by Course */}
         <Card className="bg-card border border-border">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium">Sales by Channel</CardTitle>
+            <CardTitle className="text-base font-medium">Students by Course</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {salesByChannel.map((item) => (
-                <div key={item.channel}>
+              {studentsByCourse.map((item) => (
+                <div key={item.course}>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm">{item.channel}</span>
+                    <span className="text-sm">{item.course}</span>
                     <span className="text-sm font-medium">{item.percentage}%</span>
                   </div>
                   <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -137,7 +137,7 @@ export default function SalesPage() {
                       style={{ width: `${item.percentage}%` }}
                     />
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">${item.sales.toLocaleString()}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{item.students.toLocaleString()}</p>
                 </div>
               ))}
             </div>
@@ -145,39 +145,39 @@ export default function SalesPage() {
         </Card>
       </div>
 
-      {/* Top Products Table */}
+      {/* Top Students Table */}
       <Card className="bg-card border border-border">
         <CardHeader className="pb-2">
-          <CardTitle className="text-base font-medium">Top Selling Products</CardTitle>
+          <CardTitle className="text-base font-medium">Top Performing Students</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">Product</th>
-                  <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">Category</th>
-                  <th className="text-right py-3 px-2 text-sm font-medium text-muted-foreground">Price</th>
-                  <th className="text-right py-3 px-2 text-sm font-medium text-muted-foreground">Sales</th>
-                  <th className="text-right py-3 px-2 text-sm font-medium text-muted-foreground">Revenue</th>
+                  <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">Student</th>
+                  <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">Course</th>
+                  <th className="text-right py-3 px-2 text-sm font-medium text-muted-foreground">Grade</th>
+                  <th className="text-right py-3 px-2 text-sm font-medium text-muted-foreground">Score</th>
+                  <th className="text-right py-3 px-2 text-sm font-medium text-muted-foreground">Performance</th>
                 </tr>
               </thead>
               <tbody>
-                {topProducts.map((product) => (
-                  <tr key={product.name} className="border-b border-border last:border-0">
+                {topStudents.map((student) => (
+                  <tr key={student.name} className="border-b border-border last:border-0">
                     <td className="py-3 px-2">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-lg overflow-hidden bg-muted">
-                          <Image src={product.image || "/placeholder.svg"} alt={product.name} width={40} height={40} className="object-cover" />
+                          <Image src={student.image || "/placeholder.svg"} alt={student.name} width={40} height={40} className="object-cover" />
                         </div>
-                        <span className="text-sm font-medium">{product.name}</span>
+                        <span className="text-sm font-medium">{student.name}</span>
                       </div>
                     </td>
-                    <td className="py-3 px-2 text-sm text-muted-foreground">{product.category}</td>
-                    <td className="py-3 px-2 text-sm text-right">{product.price}</td>
-                    <td className="py-3 px-2 text-sm text-right">{product.sales.toLocaleString()}</td>
+                    <td className="py-3 px-2 text-sm text-muted-foreground">{student.course}</td>
+                    <td className="py-3 px-2 text-sm text-right">{student.grade}</td>
+                    <td className="py-3 px-2 text-sm text-right">{student.sales}%</td>
                     <td className="py-3 px-2 text-sm text-right font-medium">
-                      ${(product.sales * Number.parseFloat(product.price.replace("$", ""))).toLocaleString()}
+                      {student.sales}%
                     </td>
                   </tr>
                 ))}

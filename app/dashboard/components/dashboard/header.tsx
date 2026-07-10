@@ -15,10 +15,10 @@ import {
 
 const navItems = [
   { label: "Dashboard", href: "/dashboard" },
-  { label: "Sales", href: "/dashboard/sales" },
-  { label: "Customers", href: "/dashboard/customers" },
-  { label: "Reports", href: "/dashboard/reports" },
-  { label: "Orders", href: "/dashboard/orders" },
+  { label: "Students", href: "/dashboard/students" },
+  { label: "Payment", href: "/dashboard/payment" },
+  { label: "Analytics", href: "/dashboard/analytics" },
+  { label: "Settings", href: "/dashboard/settings" },
 ]
 
 export function Header() {
@@ -31,13 +31,8 @@ export function Header() {
 
   return (
     <header className="flex items-center justify-between mb-8">
-      <Link href="/dashboard" className="flex items-center gap-2">
-        <div className="flex flex-col gap-1">
-          <div className="w-5 h-0.5 bg-foreground" />
-          <div className="w-5 h-0.5 bg-foreground" />
-          <div className="w-3 h-0.5 bg-foreground" />
-        </div>
-        <span className="text-xl font-semibold">Rexora</span>
+       
+        <span className="text-xl font-semibold">TT Academy</span>
       </Link>
 
       <nav className="hidden md:flex items-center bg-card rounded-full px-2 py-1.5 border border-border">

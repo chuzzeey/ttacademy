@@ -47,20 +47,20 @@ const salesByCategory = [
 
 const availableReports = [
   { 
-    name: "Monthly Sales Report", 
-    description: "Complete breakdown of sales by product, region, and channel",
+    name: "Monthly Performance Report", 
+    description: "Complete breakdown of student performance and enrollment metrics",
     date: "Generated Jan 15, 2026",
     size: "2.4 MB"
   },
   { 
-    name: "Customer Analytics Report", 
-    description: "Customer acquisition, retention, and lifetime value metrics",
+    name: "Revenue Analytics Report", 
+    description: "Revenue analysis, trends, and forecasting data",
     date: "Generated Jan 14, 2026",
     size: "1.8 MB"
   },
   { 
-    name: "Inventory Status Report", 
-    description: "Stock levels, reorder alerts, and inventory turnover",
+    name: "Student Progress Report", 
+    description: "Individual student progress and course completion status",
     date: "Generated Jan 13, 2026",
     size: "956 KB"
   },
@@ -73,17 +73,17 @@ const availableReports = [
 ]
 
 const performanceMetrics = [
-  { label: "Conversion Rate", value: "3.24%", change: "+0.5%", isPositive: true },
-  { label: "Avg Order Value", value: "$127.50", change: "+$12.30", isPositive: true },
-  { label: "Cart Abandonment", value: "68.2%", change: "-2.1%", isPositive: true },
+  { label: "Enrollment Rate", value: "3.24%", change: "+0.5%", isPositive: true },
+  { label: "Avg Session Duration", value: "$127.50", change: "+$12.30", isPositive: true },
+  { label: "Dropout Rate", value: "68.2%", change: "-2.1%", isPositive: true },
   { label: "Return Rate", value: "4.8%", change: "+0.3%", isPositive: false },
 ]
 
-export default function ReportsPage() {
+export default function AnalyticsPage() {
   return (
     <>
       <PageHeader
-        title="Reports"
+        title="Analytics"
         description="Generate, view, and download detailed analytics reports."
       >
         <Button variant="outline" className="flex items-center gap-2 bg-transparent text-sm">
