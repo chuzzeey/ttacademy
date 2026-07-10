@@ -45,14 +45,17 @@ export function Header() {
   return (
     <header className="flex items-center justify-between mb-8 relative">
       <div className="flex items-center gap-2">
-        <Link href="/dashboard" className="flex items-center gap-2 md:hidden">
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="flex items-center gap-2 md:hidden"
+        >
           <div className="flex flex-col gap-1">
             <div className="w-5 h-0.5 bg-foreground" />
             <div className="w-5 h-0.5 bg-foreground" />
             <div className="w-3 h-0.5 bg-foreground" />
           </div>
           <span className="text-xl font-semibold">TT Academy</span>
-        </Link>
+        </button>
         <Link href="/dashboard" className="hidden md:flex items-center gap-2">
           <div className="flex flex-col gap-1">
             <div className="w-5 h-0.5 bg-foreground" />
@@ -61,16 +64,6 @@ export function Header() {
           </div>
           <span className="text-xl font-semibold">TT Academy</span>
         </Link>
-
-        {/* Mobile Menu Button */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="md:hidden rounded-full ml-auto"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        >
-          <Menu className="w-5 h-5" />
-        </Button>
       </div>
 
       {/* Desktop Navigation */}
