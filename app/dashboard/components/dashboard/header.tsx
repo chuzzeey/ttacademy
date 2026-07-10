@@ -44,24 +44,34 @@ export function Header() {
 
   return (
     <header className="flex items-center justify-between mb-8 relative">
-      <Link href="/dashboard" className="flex items-center gap-2">
-        <div className="flex flex-col gap-1">
-          <div className="w-5 h-0.5 bg-foreground" />
-          <div className="w-5 h-0.5 bg-foreground" />
-          <div className="w-3 h-0.5 bg-foreground" />
-        </div>
-        <span className="text-xl font-semibold">TT Academy</span>
-      </Link>
+      <div className="flex items-center gap-2">
+        <Link href="/dashboard" className="flex items-center gap-2 md:hidden">
+          <div className="flex flex-col gap-1">
+            <div className="w-5 h-0.5 bg-foreground" />
+            <div className="w-5 h-0.5 bg-foreground" />
+            <div className="w-3 h-0.5 bg-foreground" />
+          </div>
+          <span className="text-xl font-semibold">TT Academy</span>
+        </Link>
+        <Link href="/dashboard" className="hidden md:flex items-center gap-2">
+          <div className="flex flex-col gap-1">
+            <div className="w-5 h-0.5 bg-foreground" />
+            <div className="w-5 h-0.5 bg-foreground" />
+            <div className="w-3 h-0.5 bg-foreground" />
+          </div>
+          <span className="text-xl font-semibold">TT Academy</span>
+        </Link>
 
-      {/* Mobile Menu Button */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="md:hidden rounded-full"
-        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-      >
-        <Menu className="w-5 h-5" />
-      </Button>
+        {/* Mobile Menu Button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="md:hidden rounded-full ml-auto"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        >
+          <Menu className="w-5 h-5" />
+        </Button>
+      </div>
 
       {/* Desktop Navigation */}
       <nav className="hidden md:flex items-center bg-card rounded-full px-2 py-1.5 border border-border">
