@@ -28,7 +28,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <MetricCard title="Total Students" value="68" icon={DollarSign} />
         <MetricCard title="Enrolled Students" value="12" icon={ShoppingCart} />
-        <MetricCard title="Total Revenue" value="naira400,263" icon={Users} />
+        <MetricCard title="Total Revenue" value="₦400,263" icon={Users} />
         <MetricCard title="This Week" value="5" icon={RotateCcw} />
       </div>
 
