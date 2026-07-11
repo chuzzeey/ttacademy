@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, Suspense } from "react"
+import { useTheme } from "next-themes"
 import { PageHeader } from "../components/dashboard/page-header"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card"
 import { Button } from "../components/ui/button"
@@ -13,25 +14,19 @@ import {
   Settings as SettingsIcon,
   User,
   Bell,
-  Shield,
-  Palette,
+  Palette as PaletteIcon,
   Globe,
   Mail,
-  Save,
   Sun,
   Moon,
-  Monitor,
   ChevronRight,
   BookOpen,
-  Clock,
-  Languages,
-  Palette as PaletteIcon,
 } from "lucide-react"
 import Loading from "./loading"
 
 const generalSettings = {
   siteName: "Tech Trailblazer Academy",
-  siteDescription: "Learn without limits",
+  siteDescription: "Learn Succeed Grow",
   supportEmail: "support@techacademy.com",
   timezone: "Africa/Lagos",
   language: "English",
@@ -44,17 +39,18 @@ const notificationSettings = [
   { id: "weekly-reports", label: "Weekly Reports", description: "Get weekly analytics reports via email", enabled: false, icon: BookOpen },
 ]
 
-const securitySettings = [
-  { id: "two-factor", label: "Two-Factor Authentication", description: "Add extra security to your account", enabled: true },
-  { id: "session-timeout", label: "Session Timeout", description: "Auto-logout after 30 minutes of inactivity", enabled: true },
-  { id: "login-notifications", label: "Login Notifications", description: "Get notified of new login attempts", enabled: false },
-]
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("general")
   const [settings, setSettings] = useState(generalSettings)
   const [notifications, setNotifications] = useState(notificationSettings)
-  const [security, setSecurity] = useState(securitySettings)
+  const { theme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+
+  // Avoid hydration mismatch
+  useState(() => {
+    setMounted(true)
+  })
 
   const toggleNotification = (id: string) => {
     setNotifications(prev =>
@@ -64,18 +60,9 @@ export default function SettingsPage() {
     )
   }
 
-  const toggleSecurity = (id: string) => {
-    setSecurity(prev =>
-      prev.map(item =>
-        item.id === id ? { ...item, enabled: !item.enabled } : item
-      )
-    )
-  }
-
   const tabs = [
     { id: "general", label: "General", icon: SettingsIcon },
     { id: "notifications", label: "Notifications", icon: Bell },
-    { id: "security", label: "Security", icon: Shield },
     { id: "appearance", label: "Appearance", icon: PaletteIcon },
   ]
 
@@ -85,12 +72,7 @@ export default function SettingsPage() {
         <PageHeader
           title="Settings"
           description="Manage your application settings and preferences."
-        >
-          <Button className="bg-foreground text-background hover:bg-foreground/90 shadow-sm">
-            <Save className="w-4 h-4 mr-2" />
-            Save Changes
-          </Button>
-        </PageHeader>
+        />
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           {/* Settings Navigation - Sidebar */}
@@ -164,16 +146,7 @@ export default function SettingsPage() {
                     </div>
                     <Separator className="bg-border/40" />
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                      <div className="space-y-2">
-                        <Label htmlFor="supportEmail" className="text-xs font-medium">Support Email</Label>
-                        <Input
-                          id="supportEmail"
-                          type="email"
-                          value={settings.supportEmail}
-                          onChange={(e) => setSettings({ ...settings, supportEmail: e.target.value })}
-                          className="h-10 bg-muted/30 border-border/60 focus:bg-background transition-colors"
-                        />
-                      </div>
+                 
                       <div className="space-y-2">
                         <Label htmlFor="timezone" className="text-xs font-medium">Timezone</Label>
                         <Input
@@ -196,22 +169,7 @@ export default function SettingsPage() {
                   </CardContent>
                 </Card>
 
-                <Card className="bg-card border-border/60 shadow-sm">
-                  <CardContent className="p-5">
-                    <div className="flex items-center gap-4">
-                      <div className="p-2.5 rounded-full bg-primary/5">
-                        <Mail className="w-5 h-5 text-primary" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">Tech Trailblazer Academy</p>
-                        <p className="text-xs text-muted-foreground">support@techacademy.com · Learn without limits</p>
-                      </div>
-                      <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px] h-5">
-                        Active
-                      </Badge>
-                    </div>
-                  </CardContent>
-                </Card>
+             
               </>
             )}
 
@@ -264,53 +222,13 @@ export default function SettingsPage() {
               </Card>
             )}
 
-            {activeTab === "security" && (
-              <Card className="bg-card border-border/60 shadow-sm">
-                <CardHeader className="pb-4 border-b border-border/40">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-primary/5">
-                      <Shield className="w-4 h-4 text-primary" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-base font-semibold">Security Settings</CardTitle>
-                      <CardDescription className="text-xs mt-0.5">
-                        Manage your account security preferences
-                      </CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-2">
-                  {security.map((item, index) => (
-                    <div
-                      key={item.id}
-                      className={`flex items-center justify-between py-4 ${
-                        index < security.length - 1 ? "border-b border-border/30" : ""
-                      } group`}
-                    >
-                      <div className="space-y-0.5">
-                        <Label htmlFor={item.id} className="text-sm font-medium cursor-pointer">
-                          {item.label}
-                        </Label>
-                        <p className="text-xs text-muted-foreground">{item.description}</p>
-                      </div>
-                      <Switch
-                        id={item.id}
-                        checked={item.enabled}
-                        onCheckedChange={() => toggleSecurity(item.id)}
-                        className="data-[state=checked]:bg-primary"
-                      />
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            )}
 
             {activeTab === "appearance" && (
               <Card className="bg-card border-border/60 shadow-sm">
                 <CardHeader className="pb-4 border-b border-border/40">
                   <div className="flex items-center gap-3">
                     <div className="p-2 rounded-lg bg-primary/5">
-                      <Palette className="w-4 h-4 text-primary" />
+                      <PaletteIcon className="w-4 h-4 text-primary" />
                     </div>
                     <div>
                       <CardTitle className="text-base font-semibold">Appearance Settings</CardTitle>
@@ -323,29 +241,30 @@ export default function SettingsPage() {
                 <CardContent className="pt-6 space-y-6">
                   <div>
                     <Label className="text-xs font-medium mb-3 block">Theme Mode</Label>
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-2 gap-3">
                       {[
                         { id: "light", label: "Light", icon: Sun },
                         { id: "dark", label: "Dark", icon: Moon },
-                        { id: "system", label: "System", icon: Monitor },
-                      ].map((theme) => {
-                        const Icon = theme.icon
+                      ].map((themeOption) => {
+                        const Icon = themeOption.icon
+                        const isSelected = mounted && theme === themeOption.id
                         return (
                           <button
-                            key={theme.id}
+                            key={themeOption.id}
+                            onClick={() => setTheme(themeOption.id)}
                             className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all duration-200 ${
-                              theme.id === "light"
+                              isSelected
                                 ? "border-primary/30 bg-primary/5 shadow-sm"
                                 : "border-border/60 hover:border-border hover:bg-muted/30"
                             }`}
                           >
                             <Icon className={`w-5 h-5 ${
-                              theme.id === "light" ? "text-primary" : "text-muted-foreground"
+                              isSelected ? "text-primary" : "text-muted-foreground"
                             }`} />
                             <span className={`text-xs font-medium ${
-                              theme.id === "light" ? "text-primary" : "text-muted-foreground"
+                              isSelected ? "text-primary" : "text-muted-foreground"
                             }`}>
-                              {theme.label}
+                              {themeOption.label}
                             </span>
                           </button>
                         )
@@ -356,13 +275,6 @@ export default function SettingsPage() {
                   <Separator className="bg-border/40" />
 
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between py-1 group">
-                      <div className="space-y-0.5">
-                        <Label className="text-sm font-medium cursor-pointer">Compact Mode</Label>
-                        <p className="text-xs text-muted-foreground">Reduce spacing and padding for a denser view</p>
-                      </div>
-                      <Switch className="data-[state=checked]:bg-primary" />
-                    </div>
                     <div className="flex items-center justify-between py-1 group">
                       <div className="space-y-0.5">
                         <Label className="text-sm font-medium cursor-pointer">Animations</Label>
