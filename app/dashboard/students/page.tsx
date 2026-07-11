@@ -63,32 +63,35 @@ export default function StudentsPage() {
                 <ShoppingBag className="w-4 h-4 text-muted-foreground" />
               </div>
             </div>
-            <p className="text-3xl font-semibold">1,245</p>
-            <p className="text-xs text-[var(--color-positive)] mt-1">+12.5% vs last year</p>
+            <p className="text-3xl font-semibold">0</p>
+            <p className="text-xs text-[var(--color-positive)] mt-1">+12.5%</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Total registrations</p>
           </CardContent>
         </Card>
         <Card className="bg-card border border-border">
           <CardContent className="p-5">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-muted-foreground">Active This Month</span>
+              <span className="text-sm text-muted-foreground">Enrolled Students</span>
+              <div className="p-2 bg-muted rounded-lg">
+                <CreditCard className="w-4 h-4 text-muted-foreground" />
+              </div>
+            </div>
+            <p className="text-3xl font-semibold">0</p>
+            <p className="text-xs text-[var(--color-negative)] mt-1">-20%</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Acquisition needs attention</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-card border border-border">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-muted-foreground">Total Revenue</span>
               <div className="p-2 bg-muted rounded-lg">
                 <DollarSign className="w-4 h-4 text-muted-foreground" />
               </div>
             </div>
-            <p className="text-3xl font-semibold">892</p>
-            <p className="text-xs text-[var(--color-positive)] mt-1">+5.2% vs last month</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-card border border-border">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-muted-foreground">Completion Rate</span>
-              <div className="p-2 bg-muted rounded-lg">
-                <TrendingUp className="w-4 h-4 text-muted-foreground" />
-              </div>
-            </div>
-            <p className="text-3xl font-semibold">78%</p>
-            <p className="text-xs text-[var(--color-positive)] mt-1">+4.2% vs last month</p>
+            <p className="text-3xl font-semibold">₦0</p>
+            <p className="text-xs text-[var(--color-positive)] mt-1">+12.5%</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Total revenue collected</p>
           </CardContent>
         </Card>
       </div>
