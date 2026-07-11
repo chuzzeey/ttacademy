@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
 // Prisma client - only initialized if DATABASE_URL is set
 let prisma: any = null;
