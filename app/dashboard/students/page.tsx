@@ -388,7 +388,7 @@ export default function StudentsPage() {
                           </div>
                         </td>
                         <td className="py-3 px-2">
-                          <Select value={student.payment_status} onValueChange={(value) => {
+                          <Select value={student.payment_status.toLowerCase().replace(/ /g, "")} onValueChange={(value) => {
                             const statusMap: Record<string, string> = {
                               "notpaid": "Not Paid",
                               "fullypaid": "Fully Paid",
@@ -397,8 +397,11 @@ export default function StudentsPage() {
                             }
                             updatePaymentStatus(student.id, statusMap[value])
                           }}>
-                            <SelectTrigger className="h-8 w-[140px] text-xs">
-                              <SelectValue placeholder={student.payment_status} />
+                            <SelectTrigger className={`h-8 w-[140px] text-xs font-medium border-0 ${getPaymentColor(student.payment_status)} bg-transparent`}>
+                              <div className="flex items-center gap-1.5">
+                                {getPaymentIcon(student.payment_status)}
+                                <span>{student.payment_status}</span>
+                              </div>
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="notpaid">Not Paid</SelectItem>
@@ -459,7 +462,8 @@ export default function StudentsPage() {
                       </div>
                       <div className="text-xs text-muted-foreground text-right">{student.reg_date}</div>
                     </div>
-                    <div className="pt-1">
+                    <div className="flex items-center justify-between pt-1">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Payment Status</span>
                       <Select value={student.payment_status.toLowerCase().replace(/ /g, "")} onValueChange={(value) => {
                         const statusMap: Record<string, string> = {
                           "notpaid": "Not Paid",
@@ -469,8 +473,11 @@ export default function StudentsPage() {
                         }
                         updatePaymentStatus(student.id, statusMap[value])
                       }}>
-                        <SelectTrigger className="h-8 w-full text-xs">
-                          <SelectValue placeholder={student.payment_status} />
+                        <SelectTrigger className={`h-8 w-auto min-w-[130px] text-xs font-medium border border-border/60 ${getPaymentColor(student.payment_status)} bg-transparent`}>
+                          <div className="flex items-center gap-1.5">
+                            {getPaymentIcon(student.payment_status)}
+                            <span>{student.payment_status}</span>
+                          </div>
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="notpaid">Not Paid</SelectItem>
