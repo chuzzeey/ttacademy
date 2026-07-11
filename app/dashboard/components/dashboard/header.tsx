@@ -152,7 +152,7 @@ export function Header() {
           </button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-1 sm:gap-2 cursor-pointer p-1 pr-1.5 sm:pr-2.5 rounded-xl hover:bg-muted/50 transition-colors">
+              <button id="user-menu-trigger" className="flex items-center gap-1 sm:gap-2 cursor-pointer p-1 pr-1.5 sm:pr-2.5 rounded-xl hover:bg-muted/50 transition-colors">
                 <Avatar className="h-7 w-7 sm:h-8 sm:w-8 ring-2 ring-background shadow-sm">
                   <AvatarImage
                     className="object-cover"
