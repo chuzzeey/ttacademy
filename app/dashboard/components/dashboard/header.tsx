@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useTheme } from "next-themes"
-import { Bell, ChevronDown, Menu, X, LayoutDashboard, Users, BarChart3, CreditCard, Settings, User, Sun, Moon } from "lucide-react"
+import { Bell, ChevronDown, Menu, X, LayoutDashboard, Users, BarChart3, Mail, Settings, User, Sun, Moon } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
 import { Button } from "../ui/button"
 import {
@@ -19,7 +19,7 @@ const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Students", href: "/dashboard/students", icon: Users },
   { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
-  { label: "Payment", href: "/dashboard/payment", icon: CreditCard },
+  { label: "Email", href: "/dashboard/email", icon: Mail },
   { label: "Settings", href: "/dashboard/settings", icon: Settings },
 ]
 
@@ -84,7 +84,7 @@ export function Header() {
             )}
           </button>
           <Link href="/dashboard" className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-md shadow-primary/20 group-hover:shadow-lg group-hover:shadow-primary/30 transition-shadow">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center shadow-md shadow-amber-500/20 group-hover:shadow-lg group-hover:shadow-amber-500/30 transition-shadow">
               <span className="text-white font-bold text-xs">TT</span>
             </div>
             <span className="text-base font-semibold tracking-tight hidden sm:block">
@@ -95,23 +95,36 @@ export function Header() {
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center bg-card shadow-sm rounded-xl px-1 py-0.5 border border-border/60" style={{ marginTop: scrolled ? '12px' : '16px', marginBottom: scrolled ? '12px' : '24px' }}>
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`relative rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200 flex items-center gap-1.5 ${
-                isActive(item.href)
-                  ? "bg-primary/10 text-primary shadow-sm"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-              }`}
-            >
-              {isActive(item.href) && (
-                <span className="absolute inset-0 rounded-lg bg-gradient-to-r from-primary/5 to-primary/10 animate-in fade-in" />
-              )}
-              <item.icon className="w-3.5 h-3.5 relative z-10" />
-              <span className="relative z-10">{item.label}</span>
-            </Link>
-          ))}
+          {navItems.map((item) =>
+            item.label === "Analytics" ? (
+              <button
+                key={item.href}
+                onClick={() => alert("Analytics coming soon!")}
+                className={`relative rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200 flex items-center gap-1.5 ${
+                  "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                }`}
+              >
+                <item.icon className="w-3.5 h-3.5 relative z-10" />
+                <span className="relative z-10">{item.label}</span>
+              </button>
+            ) : (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`relative rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200 flex items-center gap-1.5 ${
+                  isActive(item.href)
+                    ? "bg-amber-500/10 text-amber-600 shadow-sm"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                }`}
+              >
+                {isActive(item.href) && (
+                  <span className="absolute inset-0 rounded-lg bg-gradient-to-r from-amber-500/5 to-amber-500/10 animate-in fade-in" />
+                )}
+                <item.icon className="w-3.5 h-3.5 relative z-10" />
+                <span className="relative z-10">{item.label}</span>
+              </Link>
+            )
+          )}
         </nav>
 
         {/* Right Section */}
@@ -122,7 +135,7 @@ export function Header() {
             className="rounded-full w-9 h-9 bg-muted/30 hover:bg-muted transition-colors relative"
           >
             <Bell className="w-3.5 h-3.5" />
-            <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-primary text-[8px] font-bold text-primary-foreground flex items-center justify-center shadow-sm shadow-primary/30">
+            <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-amber-500 text-[8px] font-bold text-white flex items-center justify-center shadow-sm shadow-amber-500/30">
               3
             </span>
           </Button>
@@ -146,9 +159,9 @@ export function Header() {
                     src="https://res.cloudinary.com/djdbcoyot/image/upload/v1783729773/gyit83lrhi65fpfrtsrg.jpg"
                     alt="Amah Precious"
                   />
-                  <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-xs font-medium">
-                    AP
-                  </AvatarFallback>
+          <AvatarFallback className="bg-gradient-to-br from-amber-500/20 to-amber-500/10 text-xs font-medium">
+            AP
+          </AvatarFallback>
                 </Avatar>
                 <div className="hidden sm:block text-left">
                   <p className="text-xs font-medium leading-tight">Amah Precious</p>
@@ -205,7 +218,7 @@ export function Header() {
         <div className="p-5 h-full flex flex-col">
           <div className="flex items-center justify-between mb-6">
             <Link href="/dashboard" className="flex items-center gap-2" onClick={() => setMobileMenuOpen(false)}>
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-md shadow-primary/20">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center shadow-md shadow-amber-500/20">
                 <span className="text-white font-bold text-xs">TT</span>
               </div>
               <span className="text-base font-semibold tracking-tight">TT Academy</span>
@@ -230,7 +243,7 @@ export function Header() {
                 src="https://res.cloudinary.com/djdbcoyot/image/upload/v1783729773/gyit83lrhi65fpfrtsrg.jpg"
                 alt="Amah Precious"
               />
-              <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-xs">AP</AvatarFallback>
+            <AvatarFallback className="bg-gradient-to-br from-amber-500/20 to-amber-500/10 text-xs">AP</AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate">Amah Precious</p>
@@ -240,29 +253,47 @@ export function Header() {
           </Link>
 
           <nav className="space-y-0.5 flex-1">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-                  isActive(item.href)
-                    ? "bg-primary/10 text-primary shadow-sm"
-                    : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                }`}
-              >
-                <div
-                  className={`p-1.5 rounded-lg ${
-                    isActive(item.href)
-                      ? "bg-primary/10"
-                      : "bg-muted/50"
+            {navItems.map((item) =>
+              item.label === "Analytics" ? (
+                <button
+                  key={item.href}
+                  onClick={() => {
+                    setMobileMenuOpen(false)
+                    alert("Analytics coming soon!")
+                  }}
+                  className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 w-full text-left ${
+                    "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                   }`}
                 >
-                  <item.icon className="w-3.5 h-3.5" />
-                </div>
-                {item.label}
-              </Link>
-            ))}
+                  <div className="p-1.5 rounded-lg bg-muted/50">
+                    <item.icon className="w-3.5 h-3.5" />
+                  </div>
+                  {item.label}
+                </button>
+              ) : (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    isActive(item.href)
+                      ? "bg-amber-500/10 text-amber-600 shadow-sm"
+                      : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                  }`}
+                >
+                  <div
+                    className={`p-1.5 rounded-lg ${
+                      isActive(item.href)
+                        ? "bg-amber-500/10"
+                        : "bg-muted/50"
+                    }`}
+                  >
+                    <item.icon className="w-3.5 h-3.5" />
+                  </div>
+                  {item.label}
+                </Link>
+              )
+            )}
           </nav>
 
           {/* Bottom section */}

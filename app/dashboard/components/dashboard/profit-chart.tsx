@@ -26,7 +26,7 @@ export function ProfitChart() {
           <CardTitle className="text-base font-medium">Revenue  Overview</CardTitle>
           <div className="flex items-center gap-2 mt-1">
             <span className="text-3xl font-semibold">₦98,643.24</span>
-            <span className="text-xs bg-[var(--color-accent)]/30 text-foreground px-2 py-0.5 rounded-full flex items-center gap-1">
+            <span className="text-xs bg-amber-500/30 text-foreground px-2 py-0.5 rounded-full flex items-center gap-1">
               +8.4%
               <span className="text-[10px]">↗</span>
             </span>
@@ -41,7 +41,7 @@ export function ProfitChart() {
             <span className="text-xs text-muted-foreground">Total Students</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-chart-1" />
+            <div className="w-3 h-3 rounded-full bg-amber-500" />
             <span className="text-xs text-muted-foreground">Total Revenue</span>
           </div>
         </div>

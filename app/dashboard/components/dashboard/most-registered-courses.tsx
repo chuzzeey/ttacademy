@@ -18,7 +18,7 @@ const data = [
 
 export function MostRegisteredCourses() {
   return (
-    <Card className="group bg-card border-border hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 h-full">
+    <Card className="group bg-card border-border hover:border-amber-500/20 hover:shadow-lg hover:shadow-amber-500/5 transition-all duration-300 h-full">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <div>
           <CardTitle className="text-base font-medium">Top Registered Courses </CardTitle>
@@ -32,7 +32,7 @@ export function MostRegisteredCourses() {
         <div className="mb-4">
           <p className="text-3xl font-semibold">4</p>
           <div className="flex items-center gap-2 mt-1">
-            <span className="text-xs bg-[var(--color-accent)]/30 text-foreground px-2 py-0.5 rounded-full">
+            <span className="text-xs bg-amber-500/30 text-foreground px-2 py-0.5 rounded-full">
               +9.4% ↗
             </span>
             <span className="text-xs text-muted-foreground">+245</span>
@@ -43,8 +43,8 @@ export function MostRegisteredCourses() {
             <AreaChart data={data}>
               <defs>
                 <linearGradient id="orderGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "var(--color-muted-foreground)" }} />
@@ -59,7 +59,7 @@ export function MostRegisteredCourses() {
                 }}
                 formatter={(value: number) => [value.toLocaleString(), "Orders"]}
               />
-              <Area type="monotone" dataKey="orders" stroke="#6366f1" strokeWidth={2} fill="url(#orderGradient)" />
+              <Area type="monotone" dataKey="orders" stroke="#f59e0b" strokeWidth={2} fill="url(#orderGradient)" />
             </AreaChart>
           </ResponsiveContainer>
         </div>

@@ -1,0 +1,121 @@
+[1mdiff --git a/app/dashboard/components/dashboard/header.tsx b/app/dashboard/components/dashboard/header.tsx[m
+[1mindex 12ad3a0..77c2154 100644[m
+[1m--- a/app/dashboard/components/dashboard/header.tsx[m
+[1m+++ b/app/dashboard/components/dashboard/header.tsx[m
+[36m@@ -4,7 +4,7 @@[m [mimport { useState, useEffect } from "react"[m
+ import Link from "next/link"[m
+ import { usePathname } from "next/navigation"[m
+ import { useTheme } from "next-themes"[m
+[31m-import { Bell, ChevronDown, Menu, X, LayoutDashboard, Users, BarChart3, CreditCard, Settings, User, Sun, Moon } from "lucide-react"[m
+[32m+[m[32mimport { Bell, ChevronDown, Menu, X, LayoutDashboard, Users, BarChart3, Mail, Settings, User, Sun, Moon } from "lucide-react"[m
+ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"[m
+ import { Button } from "../ui/button"[m
+ import {[m
+[36m@@ -19,7 +19,7 @@[m [mconst navItems = [[m
+   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },[m
+   { label: "Students", href: "/dashboard/students", icon: Users },[m
+   { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },[m
+[31m-  { label: "Payment", href: "/dashboard/payment", icon: CreditCard },[m
+[32m+[m[32m  { label: "Email", href: "/dashboard/email", icon: Mail },[m
+   { label: "Settings", href: "/dashboard/settings", icon: Settings },[m
+ ][m
+ [m
+[36m@@ -84,7 +84,7 @@[m [mexport function Header() {[m
+             )}[m
+           </button>[m
+           <Link href="/dashboard" className="flex items-center gap-2.5 group">[m
+[31m-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-md shadow-primary/20 group-hover:shadow-lg group-hover:shadow-primary/30 transition-shadow">[m
+[32m+[m[32m            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center shadow-md shadow-amber-500/20 group-hover:shadow-lg group-hover:shadow-amber-500/30 transition-shadow">[m
+               <span className="text-white font-bold text-xs">TT</span>[m
+             </div>[m
+             <span className="text-base font-semibold tracking-tight hidden sm:block">[m
+[36m@@ -95,23 +95,36 @@[m [mexport function Header() {[m
+ [m
+         {/* Desktop Navigation */}[m
+         <nav className="hidden md:flex items-center bg-card shadow-sm rounded-xl px-1 py-0.5 border border-border/60" style={{ marginTop: scrolled ? '12px' : '16px', marginBottom: scrolled ? '12px' : '24px' }}>[m
+[31m-          {navItems.map((item) => ([m
+[31m-            <Link[m
+[31m-              key={item.href}[m
+[31m-              href={item.href}[m
+[31m-              className={`relative rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200 flex items-center gap-1.5 ${[m
+[31m-                isActive(item.href)[m
+[31m-                  ? "bg-primary/10 text-primary shadow-sm"[m
+[31m-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"[m
+[31m-              }`}[m
+[31m-            >[m
+[31m-              {isActive(item.href) && ([m
+[31m-                <span className="absolute inset-0 rounded-lg bg-gradient-to-r from-primary/5 to-primary/10 animate-in fade-in" />[m
+[31m-              )}[m
+[31m-              <item.icon className="w-3.5 h-3.5 relative z-10" />[m
+[31m-              <span className="relative z-10">{item.label}</span>[m
+[31m-            </Link>[m
+[31m-          ))}[m
+[32m+[m[32m          {navItems.map((item) =>[m
+[32m+[m[32m            item.label === "Analytics" ? ([m
+[32m+[m[32m              <button[m
+[32m+[m[32m                key={item.href}[m
+[32m+[m[32m                onClick={() => alert("Analytics coming soon!")}[m
+[32m+[m[32m                className={`relative rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200 flex items-center gap-1.5 ${[m
+[32m+[m[32m                  "text-muted-foreground hover:text-foreground hover:bg-muted/50"[m
+[32m+[m[32m                }`}[m
+[32m+[m[32m              >[m
+[32m+[m[32m                <item.icon className="w-3.5 h-3.5 relative z-10" />[m
+[32m+[m[32m                <span className="relative z-10">{item.label}</span>[m
+[32m+[m[32m              </button>[m
+[32m+[m[32m            ) : ([m
+[32m+[m[32m              <Link[m
+[32m+[m[32m                key={item.href}[m
+[32m+[m[32m                href={item.href}[m
+[32m+[m[32m                className={`relative rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200 flex items-center gap-1.5 ${[m
+[32m+[m[32m                  isActive(item.href)[m
+[32m+[m[32m                    ? "bg-amber-500/10 text-amber-600 shadow-sm"[m
+[32m+[m[32m                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"[m
+[32m+[m[32m                }`}[m
+[32m+[m[32m              >[m
+[32m+[m[32m                {isActive(item.href) && ([m
+[32m+[m[32m                  <span className="absolute inset-0 rounded-lg bg-gradient-to-r from-amber-500/5 to-amber-500/10 animate-in fade-in" />[m
+[32m+[m[32m                )}[m
+[32m+[m[32m                <item.icon className="w-3.5 h-3.5 relative z-10" />[m
+[32m+[m[32m                <span className="relative z-10">{item.label}</span>[m
+[32m+[m[32m              </Link>[m
+[32m+[m[32m            )[m
+[32m+[m[32m          )}[m
+         </nav>[m
+ [m
+         {/* Right Section */}[m
+[36m@@ -122,7 +135,7 @@[m [mexport function Header() {[m
+             className="rounded-full w-9 h-9 bg-muted/30 hover:bg-muted transition-colors relative"[m
+           >[m
+             <Bell className="w-3.5 h-3.5" />[m
+[31m-            <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-primary text-[8px] font-bold text-primary-foreground flex items-center justify-center shadow-sm shadow-primary/30">[m
+[32m+[m[32m            <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-amber-500 text-[8px] font-bold text-white flex items-center justify-center shadow-sm shadow-amber-500/30">[m
+               3[m
+             </span>[m
+           </Button>[m
+[36m@@ -146,9 +159,9 @@[m [mexport function Header() {[m
+                     src="https://res.cloudinary.com/djdbcoyot/image/upload/v1783729773/gyit83lrhi65fpfrtsrg.jpg"[m
+                     alt="Amah Precious"[m
+                   />[m
+[31m-                  <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-xs font-medium">[m
+[31m-                    AP[m
+[31m-                  </AvatarFallback>[m
+[32m+[m[32m          <AvatarFallback className="bg-gradient-to-br from-amber-500/20 to-amber-500/10 text-xs font-medium">[m
+[32m+[m[32m            AP[m
+[32m+[m[32m          </AvatarFallback>[m
+                 </Avatar>[m
+                 <div className="hidden sm:block text-left">[m
+                   <p className="text-xs font-medium leading-tight">Amah Precious</p>[m
+[36m@@ -205,7 +218,7 @@[m [mexport function Header() {[m
+         <div className="p-5 h-full flex flex-col">[m
+           <div className="flex items-center justify-between mb-6">[m
+             <Link href="/dashboard" className="flex items-center gap-2" onClick={() => setMobileMenuOpen(false)}>[m
+[31m-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-md shadow-primary/20">[m
+[32m+[m[32m              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center shadow-md shadow-amber-500/20">[m
+                 <span className="text-white font-bold text-xs">TT</span>[m
+               </div>[m
+               <span className="text-base font-semibold tracking-tight">TT Academy</span>[m
+[36m@@ -230,7 +243,7 @@[m [mexport function Header() {[m
+                 src="https://res.cloudinary.com/djdbcoyot/image/upload/v1783729773/gyit83lrhi65fpfrtsrg.jpg"[m
+                 alt="Amah Precious"[m
+               />[m
+[
