@@ -69,6 +69,38 @@ export async function POST(request: NextRequest) {
   }
 }
 
+export async function PATCH(request: NextRequest) {
+  try {
+    const db = await getPrisma();
+    if (!db) {
+      return NextResponse.json({ error: "Database not configured. Please add DATABASE_URL to your .env file." }, { status: 500 });
+    }
+
+    const body = await request.json();
+    const { studentId, payment_status } = body;
+
+    if (!studentId || !payment_status) {
+      return NextResponse.json({ error: "Missing studentId or payment_status" }, { status: 400 });
+    }
+
+    const validStatuses = ["Not Paid", "Fully Paid", "1st Installment", "2nd Installment"];
+    if (!validStatuses.includes(payment_status)) {
+      return NextResponse.json({ error: "Invalid payment status" }, { status: 400 });
+    }
+
+    const updatedStudent = await db.student.update({
+      where: { id: studentId },
+      data: { payment_status },
+    });
+
+    return NextResponse.json({ message: "Payment status updated successfully", data: updatedStudent }, { status: 200 });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("Payment status update error:", message);
+    return NextResponse.json({ error: "Internal server error", details: message }, { status: 500 });
+  }
+}
+
 export async function GET() {
   try {
     const db = await getPrisma();
