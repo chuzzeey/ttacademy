@@ -5,7 +5,7 @@ import { PageHeader } from "../components/dashboard/page-header"
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Button } from "../components/ui/button"
 import { Input } from "../components/ui/input"
-import { Calendar, Download, DollarSign, ShoppingBag, CreditCard, Search, Eye, ChevronLeft, ChevronRight, User, X, Mail, BookOpen, Clock, CheckCircle, XCircle, ChevronDown, Briefcase, Monitor, Phone, MapPin } from "lucide-react"
+import { Calendar, Download, DollarSign, ShoppingBag, CreditCard, Search, Eye, ChevronLeft, ChevronRight, User, X, Mail, BookOpen, Clock, CheckCircle, XCircle, ChevronDown, Briefcase, Monitor, Phone, MapPin, Copy, Check } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select"
 
 const COURSES = [
@@ -50,7 +50,14 @@ export default function StudentsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [courseFilter, setCourseFilter] = useState("all")
   const [paymentFilter, setPaymentFilter] = useState("all")
+  const [copiedId, setCopiedId] = useState<string | null>(null)
   const itemsPerPage = 10
+
+  const copyToClipboard = (text: string, id: string) => {
+    navigator.clipboard.writeText(text)
+    setCopiedId(id)
+    setTimeout(() => setCopiedId(null), 2000)
+  }
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -538,17 +545,39 @@ export default function StudentsPage() {
                   </div>
                   <div className="flex items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-muted/30">
                     <div className="p-1.5 sm:p-2 rounded-lg bg-muted shrink-0"><Mail className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" /></div>
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <p className="text-[10px] sm:text-xs text-muted-foreground">Email Address</p>
                       <p className="text-xs sm:text-sm font-medium truncate">{selectedStudent.email}</p>
                     </div>
+                    <button
+                      onClick={() => copyToClipboard(selectedStudent.email, "email")}
+                      className="p-1.5 hover:bg-muted rounded-md transition-all duration-200 shrink-0"
+                      title="Copy email"
+                    >
+                      {copiedId === "email" ? (
+                        <Check className="w-3.5 h-3.5 text-green-500" />
+                      ) : (
+                        <Copy className="w-3.5 h-3.5 text-muted-foreground" />
+                      )}
+                    </button>
                   </div>
                   <div className="flex items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-muted/30">
                     <div className="p-1.5 sm:p-2 rounded-lg bg-muted shrink-0"><Phone className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" /></div>
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <p className="text-[10px] sm:text-xs text-muted-foreground">Phone/WhatsApp</p>
                       <p className="text-xs sm:text-sm font-medium truncate">{selectedStudent.phone}</p>
                     </div>
+                    <button
+                      onClick={() => copyToClipboard(selectedStudent.phone, "phone")}
+                      className="p-1.5 hover:bg-muted rounded-md transition-all duration-200 shrink-0"
+                      title="Copy phone"
+                    >
+                      {copiedId === "phone" ? (
+                        <Check className="w-3.5 h-3.5 text-green-500" />
+                      ) : (
+                        <Copy className="w-3.5 h-3.5 text-muted-foreground" />
+                      )}
+                    </button>
                   </div>
                   <div className="flex items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-muted/30">
                     <div className="p-1.5 sm:p-2 rounded-lg bg-muted shrink-0"><MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" /></div>
