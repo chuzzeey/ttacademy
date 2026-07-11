@@ -113,21 +113,21 @@ const Home = () => {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
                         {/* Hero Content */}
                         <div className="text-center md:text-left lg:text-left space-y-5 md:space-y-6 relative z-10 px-4 sm:px-6 md:px-8 lg:px-0">
-                            <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm border border-[#ef4444]/20 rounded-full px-4 py-1.5 animate-[fadeIn_1s_ease-out_forwards] opacity-0">
+                            <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm border border-[#ef4444]/20 rounded-full px-4 py-1.5">
                                 <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
                                 <span className="text-xs font-semibold text-red-500 tracking-wide">Education That Works</span>
                             </div>
                             <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold text-gray-900 leading-[1.02] tracking-tight">
-                                <span className="inline-block animate-[slideUp_0.6s_ease-out_forwards]">LEARN.</span>{' '}
-                                <span className="inline-block animate-[slideUp_0.6s_ease-out_0.15s_forwards]">GROW.</span><br/>
-                                <span className="inline-block bg-gradient-to-r from-red-500 to-red-600/80 bg-clip-text text-transparent animate-[slideUp_0.6s_ease-out_0.3s_forwards]">SUCCEED.</span>
+                                <span className="inline-block">LEARN.</span>{' '}
+                                <span className="inline-block">GROW.</span><br/>
+                                <span className="inline-block bg-gradient-to-r from-red-500 to-red-600/80 bg-clip-text text-transparent">SUCCEED.</span>
                             </h1>
-                            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-500 max-w-xl mx-auto md:mx-auto lg:mx-0 leading-relaxed animate-[slideUp_0.8s_ease-out_0.5s_forwards]">
+                            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-500 max-w-xl mx-auto md:mx-auto lg:mx-0 leading-relaxed">
                                 Learn from industry experts and gain the skills to advance your career.
                             </p>
                             <button
                                 onClick={scrollToFeaturedCourses}
-                                className="bg-gradient-to-r from-red-500 to-red-600/80 text-white hover:from-red-700 hover:to-red-800 px-8 lg:px-10 py-3.5 lg:py-4 text-base sm:text-lg lg:text-xl font-semibold rounded-full transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:shadow-red-500/25 transform hover:-translate-y-0.5 mx-auto lg:mx-0 animate-[slideUp_0.8s_ease-out_0.7s_forwards]"
+                                className="bg-gradient-to-r from-red-500 to-red-600/80 text-white hover:from-red-700 hover:to-red-800 px-8 lg:px-10 py-3.5 lg:py-4 text-base sm:text-lg lg:text-xl font-semibold rounded-full transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:shadow-red-500/25 transform hover:-translate-y-0.5 mx-auto lg:mx-0"
                             >
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />

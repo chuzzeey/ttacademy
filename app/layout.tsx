@@ -1,6 +1,7 @@
 import { Noto_Sans } from "next/font/google";
 import type { Metadata } from "next";
 import "./globals.css";
+import { SmoothScrollProvider } from "@/components/smooth-scroll";
 
 const notoSans = Noto_Sans({
   subsets: ["latin"],
@@ -95,7 +96,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
         <script
@@ -168,7 +169,9 @@ export default function RootLayout({
         />
       </head>
       <body className={notoSans.variable}>
-        {children}
+        <SmoothScrollProvider>
+          {children}
+        </SmoothScrollProvider>
       </body>
     </html>
   );
