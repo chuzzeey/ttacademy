@@ -1,12 +1,27 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { PageHeader } from "../components/dashboard/page-header"
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Button } from "../components/ui/button"
 import { Input } from "../components/ui/input"
 import { Calendar, Download, DollarSign, ShoppingBag, CreditCard, Search, Eye, ChevronLeft, ChevronRight, User, X, Mail, BookOpen, Clock, CheckCircle, XCircle, ChevronDown, Briefcase, Monitor, Phone, MapPin } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select"
+
+const COURSES = [
+  "Cybersecurity", "Data Science", "AI Automation", "Computer Networking",
+  "Ethical Hacking", "Graphic Design", "UI/UX Design", "Full Stack Development",
+  "Frontend Development", "Backend Development", "Web Development",
+  "Digital Marketing", "Cloud Computing", "Data Analysis",
+]
+
+const PAYMENT_STATUSES = [
+  { value: "all", label: "All Payments" },
+  { value: "Not Paid", label: "Not Paid" },
+  { value: "Fully Paid", label: "Fully Paid" },
+  { value: "1st Installment", label: "1st Installment" },
+  { value: "2nd Installment", label: "2nd Installment" },
+]
 
 interface Student {
   id: string
@@ -32,6 +47,9 @@ export default function StudentsPage() {
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
   const [panelOpen, setPanelOpen] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [courseFilter, setCourseFilter] = useState("all")
+  const [paymentFilter, setPaymentFilter] = useState("all")
   const itemsPerPage = 10
 
   useEffect(() => {
@@ -49,11 +67,46 @@ export default function StudentsPage() {
     fetchStudents()
   }, [])
 
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery, courseFilter, paymentFilter])
+
+  // Derive unique courses from actual student data, fallback to COURSES list
+  const availableCourses = useMemo(() => {
+    const fromData = [...new Set(students.map(s => s.course))].filter(Boolean)
+    if (fromData.length > 0) return fromData
+    return COURSES
+  }, [students])
+
+  // Filter students based on search + course + payment
+  const filteredStudents = useMemo(() => {
+    return students.filter(student => {
+      // Search filter
+      const searchLower = searchQuery.toLowerCase().trim()
+      const matchesSearch = !searchLower ||
+        student.name.toLowerCase().includes(searchLower) ||
+        student.email.toLowerCase().includes(searchLower) ||
+        student.course.toLowerCase().includes(searchLower) ||
+        student.phone.includes(searchLower)
+
+      // Course filter
+      const matchesCourse = courseFilter === "all" ||
+        student.course.toLowerCase() === courseFilter.toLowerCase()
+
+      // Payment filter
+      const matchesPayment = paymentFilter === "all" ||
+        student.payment_status === paymentFilter
+
+      return matchesSearch && matchesCourse && matchesPayment
+    })
+  }, [students, searchQuery, courseFilter, paymentFilter])
+
   const totalStudents = students.length
-  const totalPages = Math.ceil(totalStudents / itemsPerPage)
+  const totalPages = Math.ceil(filteredStudents.length / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage
-  const endIndex = Math.min(startIndex + itemsPerPage, totalStudents)
-  const currentStudents = students.slice(startIndex, endIndex)
+  const endIndex = Math.min(startIndex + itemsPerPage, filteredStudents.length)
+  const currentStudents = filteredStudents.slice(startIndex, endIndex)
 
   const getPageNumbers = () => {
     const pages: (number | "...")[] = []
@@ -121,6 +174,13 @@ export default function StudentsPage() {
 
   const getLaptopLabel = (val: string) => {
     return val === "yes" ? "Yes" : "No"
+  }
+
+  const formatCourseName = (course: string) => {
+    return course
+      .split(/(?<=[a-z])(?=[A-Z])|_|-| /)
+      .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+      .join(" ")
   }
 
   return (
@@ -191,36 +251,106 @@ export default function StudentsPage() {
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between mt-3 gap-3">
             <div className="relative w-full sm:w-[300px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input placeholder="Search students..." className="pl-9 w-full" />
+              <Input
+                placeholder="Search by name, email, course or phone..."
+                className="pl-9 w-full"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-              <Select name="course-filter">
+              <Select value={courseFilter} onValueChange={setCourseFilter}>
                 <SelectTrigger className="w-full sm:w-[180px]">
                   <SelectValue placeholder="Course(s)" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Courses</SelectItem>
+                  {availableCourses.map((course) => (
+                    <SelectItem key={course} value={course.toLowerCase()}>
+                      {formatCourseName(course)}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
-              <Select name="payment-filter">
+              <Select value={paymentFilter} onValueChange={setPaymentFilter}>
                 <SelectTrigger className="w-full sm:w-[180px]">
                   <SelectValue placeholder="Payment" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Payments</SelectItem>
-                  <SelectItem value="notpaid">Not Paid</SelectItem>
-                  <SelectItem value="fullypaid">Fully Paid</SelectItem>
-                  <SelectItem value="1stinstallment">1st Installment</SelectItem>
-                  <SelectItem value="2ndinstallment">2nd Installment</SelectItem>
+                  {PAYMENT_STATUSES.map((p) => (
+                    <SelectItem key={p.value} value={p.value}>
+                      {p.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
+
+          {/* Active filters indicator */}
+          {(searchQuery || courseFilter !== "all" || paymentFilter !== "all") && (
+            <div className="flex flex-wrap items-center gap-2 mt-3">
+              <span className="text-[11px] text-muted-foreground">Active filters:</span>
+              {searchQuery && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 text-[10px] font-medium">
+                  Search: "{searchQuery}"
+                  <button onClick={() => setSearchQuery("")}><X className="w-2.5 h-2.5" /></button>
+                </span>
+              )}
+              {courseFilter !== "all" && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 text-[10px] font-medium">
+                  Course: {formatCourseName(courseFilter)}
+                  <button onClick={() => setCourseFilter("all")}><X className="w-2.5 h-2.5" /></button>
+                </span>
+              )}
+              {paymentFilter !== "all" && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 text-[10px] font-medium">
+                  Payment: {PAYMENT_STATUSES.find(p => p.value === paymentFilter)?.label}
+                  <button onClick={() => setPaymentFilter("all")}><X className="w-2.5 h-2.5" /></button>
+                </span>
+              )}
+              <button
+                onClick={() => { setSearchQuery(""); setCourseFilter("all"); setPaymentFilter("all") }}
+                className="text-[10px] text-muted-foreground hover:text-foreground underline ml-1"
+              >
+                Clear all
+              </button>
+            </div>
+          )}
         </CardHeader>
         <CardContent>
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />
+            </div>
+          ) : filteredStudents.length === 0 ? (
+            <div className="py-12 text-center">
+              <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-muted flex items-center justify-center">
+                <Search className="w-5 h-5 text-muted-foreground" />
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {searchQuery || courseFilter !== "all" || paymentFilter !== "all"
+                  ? "No students match your filters. Try adjusting your search criteria."
+                  : "No students found. Fill out the contact form to add students."}
+              </p>
+              {(searchQuery || courseFilter !== "all" || paymentFilter !== "all") && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-3"
+                  onClick={() => { setSearchQuery(""); setCourseFilter("all"); setPaymentFilter("all") }}
+                >
+                  Clear filters
+                </Button>
+              )}
             </div>
           ) : (
             <>
@@ -250,7 +380,7 @@ export default function StudentsPage() {
                           </div>
                         </td>
                         <td className="py-3 px-2 text-sm text-muted-foreground">{student.email}</td>
-                        <td className="py-3 px-2 text-sm text-muted-foreground">{student.course}</td>
+                        <td className="py-3 px-2 text-sm text-muted-foreground">{formatCourseName(student.course)}</td>
                         <td className="py-3 px-2">
                           <div className="flex items-center gap-2">
                             {getPaymentIcon(student.payment_status)}
@@ -294,13 +424,6 @@ export default function StudentsPage() {
                         </td>
                       </tr>
                     ))}
-                    {currentStudents.length === 0 && (
-                      <tr>
-                        <td colSpan={7} className="py-12 text-center text-sm text-muted-foreground">
-                          No students found. Fill out the contact form to add students.
-                        </td>
-                      </tr>
-                    )}
                   </tbody>
                 </table>
               </div>
@@ -327,7 +450,7 @@ export default function StudentsPage() {
                     <div className="flex items-center gap-2 text-xs">
                       <BookOpen className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                       <span className="text-muted-foreground">Course:</span>
-                      <span className="font-medium">{student.course}</span>
+                      <span className="font-medium">{formatCourseName(student.course)}</span>
                     </div>
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5">
@@ -359,37 +482,37 @@ export default function StudentsPage() {
                     </div>
                   </div>
                 ))}
-                {currentStudents.length === 0 && (
-                  <div className="py-12 text-center text-sm text-muted-foreground">
-                    No students found. Fill out the contact form to add students.
-                  </div>
-                )}
               </div>
 
-              {/* Pagination */}
+              {/* Results count & Pagination */}
               <div className="flex flex-col sm:flex-row items-center justify-between mt-4 pt-4 border-t border-border gap-3">
                 <p className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
-                  Showing {startIndex + 1}-{endIndex} of {totalStudents} students
-                </p>
-                <div className="flex items-center gap-1.5 sm:gap-2">
-                  <Button variant="outline" size="sm" className="h-8 w-8 p-0" disabled={currentPage === 1} onClick={() => goToPage(currentPage - 1)}>
-                    <ChevronLeft className="w-4 h-4" />
-                  </Button>
-                  {getPageNumbers().map((page, idx) =>
-                    page === "..." ? (
-                      <span key={`ellipsis-${idx}`} className="text-xs sm:text-sm text-muted-foreground px-1">...</span>
-                    ) : (
-                      <Button key={page} variant="outline" size="sm"
-                        className={`h-8 w-8 p-0 text-xs sm:text-sm ${currentPage === page ? "bg-muted font-medium" : ""}`}
-                        onClick={() => goToPage(page)}>
-                        {page}
-                      </Button>
-                    )
+                  Showing {startIndex + 1}-{endIndex} of {filteredStudents.length} student{filteredStudents.length !== 1 ? "s" : ""}
+                  {filteredStudents.length !== students.length && (
+                    <span className="text-muted-foreground/60"> (filtered from {students.length} total)</span>
                   )}
-                  <Button variant="outline" size="sm" className="h-8 w-8 p-0" disabled={currentPage === totalPages} onClick={() => goToPage(currentPage + 1)}>
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
-                </div>
+                </p>
+                {totalPages > 1 && (
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    <Button variant="outline" size="sm" className="h-8 w-8 p-0" disabled={currentPage === 1} onClick={() => goToPage(currentPage - 1)}>
+                      <ChevronLeft className="w-4 h-4" />
+                    </Button>
+                    {getPageNumbers().map((page, idx) =>
+                      page === "..." ? (
+                        <span key={`ellipsis-${idx}`} className="text-xs sm:text-sm text-muted-foreground px-1">...</span>
+                      ) : (
+                        <Button key={page} variant="outline" size="sm"
+                          className={`h-8 w-8 p-0 text-xs sm:text-sm ${currentPage === page ? "bg-muted font-medium" : ""}`}
+                          onClick={() => goToPage(page)}>
+                          {page}
+                        </Button>
+                      )
+                    )}
+                    <Button variant="outline" size="sm" className="h-8 w-8 p-0" disabled={currentPage === totalPages} onClick={() => goToPage(currentPage + 1)}>
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  </div>
+                )}
               </div>
             </>
           )}
@@ -460,7 +583,7 @@ export default function StudentsPage() {
                     <div className="p-1.5 sm:p-2 rounded-lg bg-muted shrink-0"><BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" /></div>
                     <div className="min-w-0">
                       <p className="text-[10px] sm:text-xs text-muted-foreground">Enrolled Course</p>
-                      <p className="text-xs sm:text-sm font-medium">{selectedStudent.course}</p>
+                      <p className="text-xs sm:text-sm font-medium">{formatCourseName(selectedStudent.course)}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-muted/30">
