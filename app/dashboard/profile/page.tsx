@@ -58,12 +58,7 @@ export default function ProfilePage() {
       <PageHeader
         title="Profile"
         description="Manage your account settings and preferences."
-      >
-        <Button className="bg-foreground text-background hover:bg-foreground/90 shadow-sm">
-          <Edit2 className="w-4 h-4 mr-2" />
-          Edit Profile
-        </Button>
-      </PageHeader>
+      />
 
       <Tabs defaultValue="profile" className="space-y-6">
         <TabsList className="bg-muted/60 p-1 rounded-xl">
@@ -213,64 +208,47 @@ export default function ProfilePage() {
                 <CardContent className="pt-6 space-y-5">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div className="space-y-2">
-                      <Label htmlFor="firstName" className="text-xs font-medium">
+                      <Label className="text-xs font-medium text-muted-foreground">
                         First Name
                       </Label>
-                      <Input
-                        id="firstName"
-                        defaultValue="Amah"
-                        className="h-10 bg-muted/30 border-border/60 focus:bg-background transition-colors"
-                      />
+                      <p className="text-sm font-medium py-2 px-3 rounded-lg bg-muted/20 border border-border/40">
+                        Amah
+                      </p>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="lastName" className="text-xs font-medium">
+                      <Label className="text-xs font-medium text-muted-foreground">
                         Last Name
                       </Label>
-                      <Input
-                        id="lastName"
-                        defaultValue="Precious"
-                        className="h-10 bg-muted/30 border-border/60 focus:bg-background transition-colors"
-                      />
+                      <p className="text-sm font-medium py-2 px-3 rounded-lg bg-muted/20 border border-border/40">
+                        Precious
+                      </p>
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="email" className="text-xs font-medium">
+                    <Label className="text-xs font-medium text-muted-foreground">
                       Email Address
                     </Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      defaultValue="amahchibu@gmail.com"
-                      className="h-10 bg-muted/30 border-border/60 focus:bg-background transition-colors"
-                    />
+                    <p className="text-sm font-medium py-2 px-3 rounded-lg bg-muted/20 border border-border/40">
+                      amahchibu@gmail.com
+                    </p>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div className="space-y-2">
-                      <Label htmlFor="phone" className="text-xs font-medium">
+                      <Label className="text-xs font-medium text-muted-foreground">
                         Phone Number
                       </Label>
-                      <Input
-                        id="phone"
-                        type="tel"
-                        defaultValue="+2348034826276"
-                        className="h-10 bg-muted/30 border-border/60 focus:bg-background transition-colors"
-                      />
+                      <p className="text-sm font-medium py-2 px-3 rounded-lg bg-muted/20 border border-border/40">
+                        +2348034826276
+                      </p>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="location" className="text-xs font-medium">
+                      <Label className="text-xs font-medium text-muted-foreground">
                         Location
                       </Label>
-                      <Input
-                        id="location"
-                        defaultValue="Ph, Nigeria"
-                        className="h-10 bg-muted/30 border-border/60 focus:bg-background transition-colors"
-                      />
+                      <p className="text-sm font-medium py-2 px-3 rounded-lg bg-muted/20 border border-border/40">
+                        Ph, Nigeria
+                      </p>
                     </div>
-                  </div>
-                  <div className="flex justify-end pt-2">
-                    <Button className="bg-foreground text-background hover:bg-foreground/90 shadow-sm">
-                      Save Changes
-                    </Button>
                   </div>
                 </CardContent>
               </Card>
