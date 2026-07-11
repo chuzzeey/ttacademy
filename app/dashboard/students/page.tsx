@@ -82,7 +82,6 @@ export default function StudentsPage() {
   // Filter students based on search + course + payment
   const filteredStudents = useMemo(() => {
     return students.filter(student => {
-      // Search filter
       const searchLower = searchQuery.toLowerCase().trim()
       const matchesSearch = !searchLower ||
         student.name.toLowerCase().includes(searchLower) ||
@@ -90,11 +89,9 @@ export default function StudentsPage() {
         student.course.toLowerCase().includes(searchLower) ||
         student.phone.includes(searchLower)
 
-      // Course filter
       const matchesCourse = courseFilter === "all" ||
         student.course.toLowerCase() === courseFilter.toLowerCase()
 
-      // Payment filter
       const matchesPayment = paymentFilter === "all" ||
         student.payment_status === paymentFilter
 
@@ -138,18 +135,27 @@ export default function StudentsPage() {
     setTimeout(() => setSelectedStudent(null), 300)
   }
 
-  const getPaymentIcon = (payment: string) => {
-    if (payment === "Not Paid") return <XCircle className="w-5 h-5 text-red-500" />
-    if (payment === "Fully Paid") return <CheckCircle className="w-5 h-5 text-green-500" />
-    if (payment === "1st Installment") return <Clock className="w-5 h-5 text-yellow-500" />
-    return <Clock className="w-5 h-5 text-blue-500" />
-  }
-
+  // For the Payment column - color only, no background
   const getPaymentColor = (payment: string) => {
     if (payment === "Not Paid") return "text-red-500"
     if (payment === "Fully Paid") return "text-green-500"
     if (payment === "1st Installment") return "text-yellow-500"
     return "text-blue-500"
+  }
+
+  // For the Update Payment Status button - background + white text
+  const getPaymentButtonClass = (payment: string) => {
+    if (payment === "Not Paid") return "bg-red-500 text-white"
+    if (payment === "Fully Paid") return "bg-green-500 text-white"
+    if (payment === "1st Installment") return "bg-yellow-500 text-white"
+    return "bg-blue-500 text-white"
+  }
+
+  const getPaymentIcon = (payment: string) => {
+    if (payment === "Not Paid") return <XCircle className="w-5 h-5 text-white" />
+    if (payment === "Fully Paid") return <CheckCircle className="w-5 h-5 text-white" />
+    if (payment === "1st Installment") return <Clock className="w-5 h-5 text-white" />
+    return <Clock className="w-5 h-5 text-white" />
   }
 
   const updatePaymentStatus = async (studentId: string, payment_status: string) => {
@@ -383,7 +389,6 @@ export default function StudentsPage() {
                         <td className="py-3 px-2 text-sm text-muted-foreground">{formatCourseName(student.course)}</td>
                         <td className="py-3 px-2">
                           <div className="flex items-center gap-2">
-                            {getPaymentIcon(student.payment_status)}
                             <span className={`text-sm ${getPaymentColor(student.payment_status)}`}>{student.payment_status}</span>
                           </div>
                         </td>
@@ -397,11 +402,11 @@ export default function StudentsPage() {
                             }
                             updatePaymentStatus(student.id, statusMap[value])
                           }}>
-                            <SelectTrigger className={`h-8 w-[140px] text-xs font-medium border-0 ${getPaymentColor(student.payment_status)} bg-transparent`}>
-                              <div className="flex items-center gap-1.5">
+                            <SelectTrigger className={`h-8 w-[140px] text-xs font-medium border-0 rounded-md ${getPaymentButtonClass(student.payment_status)}`}>
+                              <span className="flex items-center gap-1.5">
                                 {getPaymentIcon(student.payment_status)}
                                 <span>{student.payment_status}</span>
-                              </div>
+                              </span>
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="notpaid">Not Paid</SelectItem>
@@ -457,7 +462,6 @@ export default function StudentsPage() {
                     </div>
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5">
-                        {getPaymentIcon(student.payment_status)}
                         <span className={`text-xs font-medium ${getPaymentColor(student.payment_status)}`}>{student.payment_status}</span>
                       </div>
                       <div className="text-xs text-muted-foreground text-right">{student.reg_date}</div>
@@ -473,11 +477,11 @@ export default function StudentsPage() {
                         }
                         updatePaymentStatus(student.id, statusMap[value])
                       }}>
-                        <SelectTrigger className={`h-8 w-auto min-w-[130px] text-xs font-medium border border-border/60 ${getPaymentColor(student.payment_status)} bg-transparent`}>
-                          <div className="flex items-center gap-1.5">
+                        <SelectTrigger className={`h-8 w-auto min-w-[130px] text-xs font-medium border-0 rounded-md ${getPaymentButtonClass(student.payment_status)}`}>
+                          <span className="flex items-center gap-1.5">
                             {getPaymentIcon(student.payment_status)}
                             <span>{student.payment_status}</span>
-                          </div>
+                          </span>
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="notpaid">Not Paid</SelectItem>
@@ -630,12 +634,9 @@ export default function StudentsPage() {
               <div className="space-y-3 sm:space-y-4">
                 <h3 className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-muted-foreground">Payment Status</h3>
                 <div className="flex items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-muted/30">
-                  <div className="p-1.5 sm:p-2 rounded-lg bg-muted shrink-0">
-                    {getPaymentIcon(selectedStudent.payment_status)}
-                  </div>
                   <div>
                     <p className="text-[10px] sm:text-xs text-muted-foreground">Current Status</p>
-                    <p className={`text-xs sm:text-sm font-medium ${getPaymentColor(selectedStudent.payment_status)}`}>
+                    <p className={`text-xs sm:text-sm font-medium ${getPaymentColor(student.payment_status)}`}>
                       {selectedStudent.payment_status}
                     </p>
                   </div>
