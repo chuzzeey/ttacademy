@@ -39,6 +39,13 @@ export default function Contact() {
   const [emailFocused, setEmailFocused] = useState(false)
   const [whatsappFocused, setWhatsappFocused] = useState(false)
   const formRef = useRef<HTMLDivElement>(null)
+  const successRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (submitted && successRef.current) {
+      successRef.current.scrollIntoView({ behavior: "smooth", block: "center" })
+    }
+  }, [submitted])
 
 
   useEffect(() => {
@@ -132,7 +139,7 @@ export default function Contact() {
 
   if (submitted) {
     return (
-      <section id="contact" className="w-full px-4 md:px-8 lg:px-16 py-16 md:py-24 bg-white relative overflow-hidden">
+      <section ref={successRef} id="contact" className="w-full px-4 md:px-8 lg:px-16 py-16 md:py-24 bg-white relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-br from-[#ef4444]/5 to-transparent rounded-full blur-3xl" />
         </div>
