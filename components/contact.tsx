@@ -9,15 +9,25 @@ const COURSES = [
   "Digital Marketing", "Cloud Computing", "Data Analysis",
 ]
 
+const AFRICAN_COUNTRIES = [
+  { code: "NG", name: "Nigeria", dial: "+234" },
+  { code: "ZA", name: "South Africa", dial: "+27" },
+  { code: "EG", name: "Egypt", dial: "+20" },
+  { code: "KE", name: "Kenya", dial: "+254" },
+  { code: "MA", name: "Morocco", dial: "+212" },
+  { code: "ET", name: "Ethiopia", dial: "+251" },
+  { code: "DZ", name: "Algeria", dial: "+213" },
+]
+
 export default function Contact() {
   const [form, setForm] = useState({
     name: "", email: "", mobile: "", dialCode: "+234", sex: "", country: "", state: "",
     course: "", employment: "", laptop: "", reason: "",
   })
 
-  const [countries, setCountries] = useState<{ code: string; name: string }[]>([])
+  const [countries] = useState<{ code: string; name: string; dial: string }[]>(AFRICAN_COUNTRIES)
   const [states, setStates] = useState<{ code: string; name: string }[]>([])
-  const [loadingCountries, setLoadingCountries] = useState(true)
+  const [loadingCountries] = useState(false)
   const [loadingStates, setLoadingStates] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
@@ -30,22 +40,6 @@ export default function Contact() {
   const [whatsappFocused, setWhatsappFocused] = useState(false)
   const formRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    const fetchCountries = async () => {
-      try {
-        const res = await fetch("https://restcountries.com/v3.1/all?fields=cca2,name")
-        const data = await res.json()
-        setCountries(data.map((c: any) => ({ code: c.cca2, name: c.name.common })).sort((a: any, b: any) => a.name.localeCompare(b.name)))
-      } catch {
-        setCountries([
-          { code: "NG", name: "Nigeria" }, { code: "US", name: "United States" }, { code: "GB", name: "United Kingdom" },
-          { code: "CA", name: "Canada" }, { code: "AU", name: "Australia" }, { code: "DE", name: "Germany" },
-          { code: "KE", name: "Kenya" }, { code: "GH", name: "Ghana" }, { code: "OTHER", name: "Other" },
-        ])
-      } finally { setLoadingCountries(false) }
-    }
-    fetchCountries()
-  }, [])
 
   useEffect(() => {
     const fetchStates = async () => {
@@ -251,11 +245,11 @@ export default function Contact() {
                   <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">WhatsApp Number *</label>
                   <div className="flex flex-row gap-2">
                     <div className="relative shrink-0" style={{ width: "90px" }}>
-                      <select defaultValue="+234" onChange={(e) => updateForm("dialCode", e.target.value)}
+                      <select value={form.dialCode} onChange={(e) => updateForm("dialCode", e.target.value)}
                         className="w-full px-2 py-4 pr-5 rounded-xl bg-white border border-gray-200 text-gray-600 text-xs focus:outline-none focus:border-red-400/50 transition-all duration-200 appearance-none cursor-pointer">
-                        <option value="+234">+234</option><option value="+1">+1</option><option value="+44">+44</option>
-                        <option value="+91">+91</option><option value="+254">+254</option><option value="+233">+233</option>
-                        <option value="+27">+27</option><option value="+256">+256</option><option value="+260">+260</option>
+                        {AFRICAN_COUNTRIES.map(c => (
+                          <option key={c.dial} value={c.dial}>{c.dial}</option>
+                        ))}
                       </select>
                       <svg className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
                     </div>
@@ -289,9 +283,14 @@ export default function Contact() {
                 <div>
                   <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Country *</label>
                   <div className="relative">
-                    <select value={form.country} onChange={(e) => { updateForm("country", e.target.value); updateForm("state", "") }}
+                    <select value={form.country} onChange={(e) => {
+                      updateForm("country", e.target.value)
+                      updateForm("state", "")
+                      const country = AFRICAN_COUNTRIES.find(c => c.code === e.target.value)
+                      if (country) updateForm("dialCode", country.dial)
+                    }}
                       className={`w-full px-5 py-4 rounded-xl bg-white border text-gray-600 text-sm focus:outline-none focus:border-red-400/50 transition-all duration-200 appearance-none cursor-pointer ${errors.country ? "border-red-500/50" : "border-gray-200"}`}>
-                      <option value="" disabled>{loadingCountries ? "Loading..." : "Select country"}</option>
+                      <option value="" disabled>Select country</option>
                       {countries.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
                     </select>
                     <svg className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>

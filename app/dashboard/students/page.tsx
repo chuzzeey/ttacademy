@@ -88,10 +88,6 @@ export default function StudentsPage() {
         description="View and manage student database with payment and registration activity."
       >
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <Button variant="outline" className="flex items-center gap-2 bg-transparent text-sm w-full sm:w-auto">
-            <Calendar className="w-4 h-4" />
-            This Year
-          </Button>
           <Button variant="outline" className="flex items-center gap-2 bg-transparent w-full sm:w-auto">
             <Download className="w-4 h-4" />
             Export
@@ -182,8 +178,8 @@ export default function StudentsPage() {
           </div>
         </CardHeader>
         <CardContent>
-          {/* Desktop Table - hidden on mobile */}
-          <div className="hidden md:block overflow-x-auto">
+          {/* Desktop Table - hidden on tablet and mobile */}
+          <div className="hidden lg:block overflow-x-auto">
             <table className="w-full min-w-[700px]">
               <thead>
                 <tr className="border-b border-border">
@@ -250,8 +246,8 @@ export default function StudentsPage() {
             </table>
           </div>
 
-          {/* Mobile Cards - shown on mobile and md, hidden on lg+ */}
-          <div className="md:hidden space-y-3">
+          {/* Mobile/Tablet Cards - shown on tablet and mobile */}
+          <div className="lg:hidden space-y-3">
             {currentStudents.map((student) => (
               <div key={student.name} className="border border-border rounded-lg p-3 sm:p-4 space-y-3">
                 {/* Student Name & Email */}
