@@ -295,6 +295,17 @@ html {
   color-scheme: light;
 }
 
+/* Force light mode for admin login and landing pages */
+html:has(body[data-admin-login]),
+html:has(body[data-landing-page]) {
+  color-scheme: light !important;
+}
+
+html:has(body[data-admin-login]) *,
+html:has(body[data-landing-page]) * {
+  color-scheme: light !important;
+}
+
 /* Lenis smooth scroll */
 html.lenis,
 html.lenis body {
@@ -328,4 +339,24 @@ html.lenis body {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Custom Loader Animation */
+.loader {
+  width: 35px;
+  aspect-ratio: 1;
+  --_g: no-repeat radial-gradient(circle closest-side, #000 90%, #0000);
+  background: 
+    var(--_g) 0    0,
+    var(--_g) 0    100%,
+    var(--_g) 100% 100%;
+  background-size: 40% 40%;
+  animation: l11 1s infinite linear;
+}
+
+@keyframes l11 {
+  25% { background-position: 100% 0   , 0 100%, 100% 100% }
+  50% { background-position: 100% 0   , 0 0   , 100% 100% }
+  75% { background-position: 100% 0   , 0 0   , 0    100% }
+  100%{ background-position: 100% 100%, 0 0   , 0    100% }
 }

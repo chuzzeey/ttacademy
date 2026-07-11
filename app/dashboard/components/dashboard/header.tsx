@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
-import { Bell, ChevronDown, Menu, X, LayoutDashboard, Users, BarChart3, Mail, Settings, User, Sun, Moon } from "lucide-react"
+import { Bell, ChevronDown, Menu, X, LayoutDashboard, Users, BarChart3, Mail, Settings, User, Sun, Moon, LogOut } from "lucide-react"
+import { createClient } from "@/lib/supabase/client"
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
 import { Button } from "../ui/button"
+import { toast } from "sonner"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,8 +27,29 @@ const navItems = [
 
 export function Header() {
   const pathname = usePathname()
+  const router = useRouter()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const supabase = createClient()
+
+  const handleLogout = async () => {
+    const confirmed = window.confirm(
+      "Are you sure you want to log out? You will be redirected to the login page."
+    )
+    
+    if (!confirmed) return
+
+    try {
+      await supabase.auth.signOut()
+      // Force light mode before redirecting
+      localStorage.setItem('theme', 'light')
+      toast.success("Logged out successfully")
+      router.push('/admin-login')
+      router.refresh()
+    } catch (error) {
+      toast.error("Error logging out")
+    }
+  }
 
   const isActive = (href: string) => {
     if (href === "/dashboard") return pathname === "/dashboard"
@@ -190,7 +213,13 @@ export function Header() {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-border/40" />
-                <DropdownMenuItem className="rounded-lg cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10 flex items-center gap-2.5">
+                <DropdownMenuItem 
+                  onClick={handleLogout}
+                  className="rounded-lg cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10 flex items-center gap-2.5"
+                >
+                  <div className="p-1.5 rounded-md bg-destructive/5">
+                    <LogOut className="w-3.5 h-3.5" />
+                  </div>
                   Log out
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -307,11 +336,12 @@ export function Header() {
 
               {/* Bottom */}
               <div className="px-3 py-3 border-t border-border/40 bg-muted/10">
-                <button className="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium text-destructive hover:bg-destructive/5 transition-colors w-full">
+              <button 
+                onClick={handleLogout}
+                className="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium text-destructive hover:bg-destructive/5 transition-colors w-full"
+              >
                   <div className="p-1.5 rounded-lg bg-destructive/5 shrink-0">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
+                    <LogOut className="w-4 h-4" />
                   </div>
                   Log out
                 </button>
