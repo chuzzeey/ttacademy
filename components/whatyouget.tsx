@@ -169,7 +169,7 @@ const WhatYouGet = () => {
     }, [])
 
     return (
-        <div ref={sectionRef} id="featured-courses" className="w-full px-4 md:px-8 lg:px-12 xl:px-20 py-20 md:py-28 bg-[#fafafa] relative overflow-hidden">
+        <div ref={sectionRef} id="featured-courses" className="w-full px-4 md:px-8 lg:px-12 xl:px-20 py-20 md:py-28 bg-background relative overflow-hidden">
             {/* Top fade from previous section */}
             <div className="absolute top-0 left-0 right-0 h-24 md:h-32 bg-gradient-to-b from-white via-white/90 to-transparent pointer-events-none z-20" />
             
@@ -205,7 +205,7 @@ const WhatYouGet = () => {
                         <span className="text-xs font-semibold text-red-600 tracking-wide uppercase">Our Programs</span>
                     </div>
                     
-                    <h2 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-[#1a1a2e] mb-4 tracking-tight leading-[1.05]">
+                    <h2 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-foreground mb-4 tracking-tight leading-[1.05]">
                         FEATURED{" "}
                         <span className="relative inline-block">
                             <span className="bg-gradient-to-r from-red-600 via-rose-500 to-red-700 bg-clip-text text-transparent">
@@ -224,7 +224,7 @@ const WhatYouGet = () => {
                         </span>
                     </h2>
                     
-                    <p className="text-base md:text-xl text-[#6b6b7b] max-w-2xl mx-auto leading-relaxed font-medium">
+                    <p className="text-base md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed font-medium">
                         Industry-relevant curriculum designed for your success
                     </p>
                     
@@ -280,13 +280,13 @@ const WhatYouGet = () => {
 
                             {/* Details Section - Always visible */}
                             <div className="p-3 md:p-4">
-                                <p className="text-xs md:text-sm text-[#5a5a6e] leading-relaxed mb-3 line-clamp-2">
+                                <p className="text-xs md:text-sm text-muted-foreground leading-relaxed mb-3 line-clamp-2">
                                     {course.description}
                                 </p>
                                 
                                 {/* Lessons pill */}
                                 <div className="flex flex-wrap gap-2 mb-3">
-                                    <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#4a4a5a] bg-gray-50 border border-gray-200 rounded-full px-2.5 py-1">
+                                    <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-foreground bg-muted border border-border rounded-full px-2.5 py-1">
                                         <svg className="w-3 h-3 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                                         </svg>

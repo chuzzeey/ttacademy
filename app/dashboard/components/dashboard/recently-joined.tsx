@@ -31,7 +31,7 @@ const recentJoined = [
 
 export function RecentlyJoined() {
   return (
-    <Card className="bg-card border-border h-full">
+    <Card className="group bg-card border-border hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 h-full">
       <CardHeader className="flex flex-row items-center justify-between border-b pb-2">
         <CardTitle className="text-base font-medium">Recently Joined Students</CardTitle>
         <span className="text-sm font-medium ml-2">Sex</span>

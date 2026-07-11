@@ -16,7 +16,7 @@ export default function DashboardPage() {
   return (
     <>
       <PageHeader
-        title="Welcome, Precious 👋"
+        title='Welcome, Precious <span class="animate-wave">👋</span>'
         description="An overview of students insights, and revenue analytics."
       >
         <Button variant="outline" className="flex items-center gap-2 bg-transparent" onClick={() => setShowPopup(true)}>
@@ -26,7 +26,7 @@ export default function DashboardPage() {
       </PageHeader>
 
       {/* Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6">
         <MetricCard title="Total Students" value="68" icon={Users} description="Total registrations" />
         <MetricCard title="Enrolled Students" value="12" icon={AlertCircle} description="Acquisition needs attention" />
         <MetricCard title="Total Revenue" value="₦400,263" icon={DollarSign} description="Total revenue collected" />
@@ -43,7 +43,7 @@ export default function DashboardPage() {
       )}
 
       {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 mb-6">
         <div className="lg:col-span-2">
           <ProfitChart />
         </div>
@@ -53,7 +53,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Bottom Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
         <div className="h-full">
           <MostRegisteredCourses />
         </div>

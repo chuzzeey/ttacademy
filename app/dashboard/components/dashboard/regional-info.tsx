@@ -29,7 +29,7 @@ export function RegionalInfo() {
   const total = countryData.reduce((sum, item) => sum + item.value, 0)
 
   return (
-    <Card className="bg-card border-border h-full">
+    <Card className="group bg-card border-border hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 h-full">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <div>
           <CardTitle className="text-base font-medium">Student Registration Regions</CardTitle>

@@ -18,7 +18,7 @@ const data = [
 
 export function MostRegisteredCourses() {
   return (
-    <Card className="bg-card border-border h-full">
+    <Card className="group bg-card border-border hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 h-full">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <div>
           <CardTitle className="text-base font-medium">Top Registered Courses </CardTitle>
@@ -47,14 +47,14 @@ export function MostRegisteredCourses() {
                   <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#737373" }} />
+              <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "var(--color-muted-foreground)" }} />
               <YAxis hide />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "#1a1a1a",
-                  border: "none",
+                  backgroundColor: "var(--color-card)",
+                  border: "1px solid var(--color-border)",
                   borderRadius: "8px",
-                  color: "#fff",
+                  color: "var(--color-foreground)",
                   fontSize: "12px",
                 }}
                 formatter={(value: number) => [value.toLocaleString(), "Orders"]}

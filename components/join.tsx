@@ -68,12 +68,12 @@ const Join = () => {
 
                 {/* Content */}
                 <div className={`text-center mb-6 md:mb-10 ${isVisible ? 'animate-[scaleIn_0.8s_ease-out_forwards]' : 'opacity-0'}`}>
-                    <span className="label-text text-[#dc2626] mb-3 block">Community</span>
-                    <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-[#1a1a2e] mb-4 leading-tight">
+                    <span className="text-[10px] md:text-xs font-semibold text-red-600 tracking-wide uppercase mb-3 block">Community</span>
+                    <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4 leading-tight">
                         JOIN 8,000+ LEARNERS<br />
-                        <span className="gradient-text">TODAY!</span>
+                        <span className="bg-gradient-to-r from-red-600 to-red-800 bg-clip-text text-transparent">TODAY!</span>
                     </h2>
-                    <p className="text-base sm:text-lg md:text-xl text-[#5a5a6e] mb-6 md:mb-8">
+                    <p className="text-base sm:text-lg md:text-xl text-gray-500 mb-6 md:mb-8">
                         Start your learning journey now!
                     </p>
                     <TelegramButton />

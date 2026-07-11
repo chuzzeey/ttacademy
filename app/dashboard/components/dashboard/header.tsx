@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Bell, ChevronDown, Menu, X, LayoutDashboard, Users, BarChart3, CreditCard, Settings, User } from "lucide-react"
+import { useTheme } from "next-themes"
+import { Bell, ChevronDown, Menu, X, LayoutDashboard, Users, BarChart3, CreditCard, Settings, User, Sun, Moon } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
 import { Button } from "../ui/button"
 import {
@@ -49,6 +50,17 @@ export function Header() {
     }
   }, [mobileMenuOpen])
 
+  const { theme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const toggleTheme = () => {
+    setTheme(theme === "dark" ? "light" : "dark")
+  }
+
   return (
     <header
       className={`sticky top-0 z-30 transition-all duration-300 ${
@@ -57,7 +69,7 @@ export function Header() {
           : "bg-transparent"
       }`}
     >
-      <div className="max-w-6xl mx-auto flex items-center justify-between px-4 md:px-6 lg:px-8 transition-all duration-300">
+      <div className="flex items-center justify-between px-4 md:px-8 lg:px-12 transition-all duration-300">
         {/* Left Section: Logo & Mobile Toggle */}
         <div className="flex items-center gap-3" style={{ paddingTop: scrolled ? '12px' : '16px', paddingBottom: scrolled ? '12px' : '24px' }}>
           <button
@@ -114,6 +126,17 @@ export function Header() {
               3
             </span>
           </Button>
+          <button
+            onClick={toggleTheme}
+            className="flex items-center justify-center w-9 h-9 rounded-full bg-muted/30 hover:bg-muted transition-colors"
+            aria-label={mounted && theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            {mounted && theme === "dark" ? (
+              <Sun className="w-3.5 h-3.5" />
+            ) : (
+              <Moon className="w-3.5 h-3.5" />
+            )}
+          </button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-2 cursor-pointer p-1 pr-2.5 rounded-xl hover:bg-muted/50 transition-colors">
