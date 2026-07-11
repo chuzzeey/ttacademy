@@ -91,7 +91,7 @@ export function MostRegisteredCourses() {
   const isPositive = change >= 0
 
   return (
-    <Card className="group bg-card border-border hover:border-amber-500/20 hover:shadow-lg hover:shadow-amber-500/5 transition-all duration-300 h-full">
+    <Card className="dashboard-card h-full">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <div>
           <CardTitle className="text-base font-medium">Top Registered Courses </CardTitle>

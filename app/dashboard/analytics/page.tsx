@@ -99,7 +99,7 @@ export default function AnalyticsPage() {
       {/* Performance Metrics */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {performanceMetrics.map((metric) => (
-          <Card key={metric.label} className="bg-card border border-border">
+          <Card key={metric.label} className="dashboard-card">
             <CardContent className="p-4">
               <p className="text-sm text-muted-foreground mb-1">{metric.label}</p>
               <div className="flex items-end justify-between">
@@ -119,7 +119,7 @@ export default function AnalyticsPage() {
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
         {/* Revenue Comparison Chart */}
-        <Card className="lg:col-span-2 bg-card border border-border">
+        <Card className="lg:col-span-2 dashboard-card">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <div>
@@ -181,7 +181,7 @@ export default function AnalyticsPage() {
         </Card>
 
         {/* Sales by Category */}
-        <Card className="bg-card border border-border">
+        <Card className="dashboard-card">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-medium flex items-center gap-2">
               <PieChart className="w-4 h-4" />
@@ -232,7 +232,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Available Reports */}
-      <Card className="bg-card border border-border">
+      <Card className="dashboard-card">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <div>

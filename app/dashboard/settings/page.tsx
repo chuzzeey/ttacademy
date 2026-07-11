@@ -76,7 +76,7 @@ export default function SettingsPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           {/* Settings Navigation - Sidebar */}
-          <Card className="lg:col-span-1 bg-card border-border/60 shadow-sm h-fit">
+          <Card className="lg:col-span-1 dashboard-card h-fit">
             <CardContent className="p-3">
               <nav className="space-y-1">
                 {tabs.map((tab) => {
@@ -111,7 +111,7 @@ export default function SettingsPage() {
           <div className="lg:col-span-4 space-y-6">
             {activeTab === "general" && (
               <>
-                <Card className="bg-card border-border/60 shadow-sm">
+                <Card className="dashboard-card">
                   <CardHeader className="pb-4 border-b border-border/40">
                     <div className="flex items-center gap-3">
                       <div className="p-2 rounded-lg bg-primary/5">
@@ -174,7 +174,7 @@ export default function SettingsPage() {
             )}
 
             {activeTab === "notifications" && (
-              <Card className="bg-card border-border/60 shadow-sm">
+              <Card className="dashboard-card">
                 <CardHeader className="pb-4 border-b border-border/40">
                   <div className="flex items-center gap-3">
                     <div className="p-2 rounded-lg bg-primary/5">
@@ -224,7 +224,7 @@ export default function SettingsPage() {
 
 
             {activeTab === "appearance" && (
-              <Card className="bg-card border-border/60 shadow-sm">
+              <Card className="dashboard-card">
                 <CardHeader className="pb-4 border-b border-border/40">
                   <div className="flex items-center gap-3">
                     <div className="p-2 rounded-lg bg-primary/5">

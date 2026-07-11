@@ -95,7 +95,7 @@ export function ProfitChart() {
 
   if (loading) {
     return (
-      <Card className="bg-card border-border">
+    <Card className="dashboard-card">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <div>
             <CardTitle className="text-base font-medium">Revenue Overview</CardTitle>
@@ -107,7 +107,7 @@ export function ProfitChart() {
   }
 
   return (
-    <Card className="bg-card border-border">
+    <Card className="dashboard-card">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <div>
           <CardTitle className="text-base font-medium">Revenue Overview</CardTitle>
@@ -165,7 +165,7 @@ export function ProfitChart() {
               </Bar>
               <Bar dataKey="enrolled" radius={[4, 4, 0, 0]} maxBarSize={40}>
                 {chartData.map((entry, index) => (
-                  <Cell key={`enrolled-${index}`} fill="var(--color-chart-1)" fillOpacity={0.8} />
+                  <Cell key={`enrolled-${index}`} fill="#f59e0b" fillOpacity={0.8} />
                 ))}
               </Bar>
             </BarChart>

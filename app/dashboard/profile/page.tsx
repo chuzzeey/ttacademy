@@ -55,7 +55,7 @@ export default function ProfilePage() {
         <TabsContent value="profile" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Profile Card */}
-            <Card className="bg-card border-border/60 shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+            <Card className="dashboard-card hover:shadow-md transition-shadow duration-300 overflow-hidden">
               <div className="h-24 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent" />
               <CardContent className="p-6 -mt-12">
                 <div className="flex flex-col items-center text-center">
@@ -177,7 +177,7 @@ export default function ProfilePage() {
 
             {/* Personal Information */}
             <div className="lg:col-span-2 space-y-6">
-              <Card className="bg-card border-border/60 shadow-sm hover:shadow-md transition-shadow duration-300">
+              <Card className="dashboard-card hover:shadow-md transition-shadow duration-300">
                 <CardHeader className="pb-4 border-b border-border/40">
                   <div className="flex items-center justify-between">
                     <div>
@@ -244,7 +244,7 @@ export default function ProfilePage() {
 
         {/* Notifications Tab */}
         <TabsContent value="notifications" className="space-y-6">
-          <Card className="bg-card border-border/60 shadow-sm hover:shadow-md transition-shadow duration-300">
+          <Card className="dashboard-card hover:shadow-md transition-shadow duration-300">
             <CardHeader className="pb-4 border-b border-border/40">
               <div>
                 <CardTitle className="text-base font-semibold">Notification Preferences</CardTitle>

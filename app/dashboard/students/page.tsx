@@ -135,27 +135,12 @@ export default function StudentsPage() {
     setTimeout(() => setSelectedStudent(null), 300)
   }
 
-  // For the Payment column - color only, no background
+  // For the Payment column - subtle color only
   const getPaymentColor = (payment: string) => {
-    if (payment === "Not Paid") return "text-red-500"
-    if (payment === "Fully Paid") return "text-green-500"
-    if (payment === "1st Installment") return "text-yellow-500"
-    return "text-blue-500"
-  }
-
-  // For the Update Payment Status button - background + white text
-  const getPaymentButtonClass = (payment: string) => {
-    if (payment === "Not Paid") return "bg-red-500 text-white"
-    if (payment === "Fully Paid") return "bg-green-500 text-white"
-    if (payment === "1st Installment") return "bg-yellow-500 text-white"
-    return "bg-blue-500 text-white"
-  }
-
-  const getPaymentIcon = (payment: string) => {
-    if (payment === "Not Paid") return <XCircle className="w-5 h-5 text-white" />
-    if (payment === "Fully Paid") return <CheckCircle className="w-5 h-5 text-white" />
-    if (payment === "1st Installment") return <Clock className="w-5 h-5 text-white" />
-    return <Clock className="w-5 h-5 text-white" />
+    if (payment === "Not Paid") return "text-red-400"
+    if (payment === "Fully Paid") return "text-green-400"
+    if (payment === "1st Installment") return "text-amber-400"
+    return "text-blue-400"
   }
 
   const updatePaymentStatus = async (studentId: string, payment_status: string) => {
@@ -203,7 +188,7 @@ export default function StudentsPage() {
 
       {/* Students Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
-        <Card className="bg-card border border-border">
+        <Card className="dashboard-card">
           <CardContent className="p-4 sm:p-5">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs sm:text-sm text-muted-foreground">Total Students</span>
@@ -215,7 +200,7 @@ export default function StudentsPage() {
             <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">Total registrations</p>
           </CardContent>
         </Card>
-        <Card className="bg-card border border-border">
+        <Card className="dashboard-card">
           <CardContent className="p-4 sm:p-5">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs sm:text-sm text-muted-foreground">Enrolled Students</span>
@@ -227,7 +212,7 @@ export default function StudentsPage() {
             <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">Students with payments</p>
           </CardContent>
         </Card>
-        <Card className="bg-card border border-border">
+        <Card className="dashboard-card">
           <CardContent className="p-4 sm:p-5">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs sm:text-sm text-muted-foreground">Not Paid</span>
@@ -242,7 +227,7 @@ export default function StudentsPage() {
       </div>
 
       {/* Student Records */}
-      <Card className="bg-card border border-border">
+      <Card className="dashboard-card">
         <CardHeader className="pb-2">
           <CardTitle className="text-base font-medium">Student Records</CardTitle>
           <p className="text-xs sm:text-sm text-muted-foreground mt-1">View and manage student database with payment and registration activity.</p>
@@ -396,11 +381,8 @@ export default function StudentsPage() {
                             }
                             updatePaymentStatus(student.id, statusMap[value])
                           }}>
-                            <SelectTrigger className={`h-8 w-[140px] text-xs font-medium border-0 rounded-md ${getPaymentButtonClass(student.payment_status)}`}>
-                              <span className="flex items-center gap-1.5">
-                                {getPaymentIcon(student.payment_status)}
-                                <span>{student.payment_status}</span>
-                              </span>
+                            <SelectTrigger className="h-8 w-[140px] text-xs font-medium border border-border/60 rounded-md bg-transparent">
+                              <span>{student.payment_status}</span>
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="notpaid">Not Paid</SelectItem>
@@ -471,11 +453,8 @@ export default function StudentsPage() {
                         }
                         updatePaymentStatus(student.id, statusMap[value])
                       }}>
-                        <SelectTrigger className={`h-8 w-auto min-w-[130px] text-xs font-medium border-0 rounded-md ${getPaymentButtonClass(student.payment_status)}`}>
-                          <span className="flex items-center gap-1.5">
-                            {getPaymentIcon(student.payment_status)}
-                            <span>{student.payment_status}</span>
-                          </span>
+                        <SelectTrigger className="h-8 w-auto min-w-[130px] text-xs font-medium border border-border/60 rounded-md bg-transparent">
+                          <span>{student.payment_status}</span>
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="notpaid">Not Paid</SelectItem>

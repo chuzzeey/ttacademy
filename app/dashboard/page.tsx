@@ -12,7 +12,6 @@ import { Users, AlertCircle, DollarSign, Calendar, RefreshCw } from "lucide-reac
 
 export default function DashboardPage() {
   const [showPopup, setShowPopup] = useState(false)
-  const [refreshing, setRefreshing] = useState(false)
   const [timeAgo, setTimeAgo] = useState("")
   const lastUpdatedRef = useRef<Date | null>(null)
   const [totalStudents, setTotalStudents] = useState("0")
@@ -86,13 +85,8 @@ export default function DashboardPage() {
     }
   }
 
-  const handleRefresh = async () => {
-    setRefreshing(true)
-    await fetchMetrics()
-    const now = new Date()
-    lastUpdatedRef.current = now
-    updateTimeAgo()
-    setTimeout(() => setRefreshing(false), 500)
+  const handleRefresh = () => {
+    window.location.reload()
   }
 
   useEffect(() => {
@@ -118,8 +112,8 @@ export default function DashboardPage() {
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           {timeAgo && <span>Last updated: {timeAgo}</span>}
         </div>
-        <Button variant="outline" className="flex items-center gap-2 bg-transparent" onClick={handleRefresh} disabled={refreshing}>
-          <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
+        <Button variant="outline" className="flex items-center gap-2 bg-transparent" onClick={handleRefresh}>
+          <RefreshCw className="w-4 h-4" />
           Refresh
         </Button>
         <Button variant="outline" className="flex items-center gap-2 bg-transparent" onClick={() => setShowPopup(true)}>

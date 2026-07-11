@@ -174,7 +174,7 @@ export default function EmailPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
-        <Card className="bg-card border border-border">
+        <Card className="dashboard-card">
           <CardContent className="p-4 sm:p-5">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs sm:text-sm text-muted-foreground">Total Students</span>
@@ -186,7 +186,7 @@ export default function EmailPage() {
             <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">Available for email</p>
           </CardContent>
         </Card>
-        <Card className="bg-card border border-border">
+        <Card className="dashboard-card">
           <CardContent className="p-4 sm:p-5">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs sm:text-sm text-muted-foreground">New Students</span>
@@ -200,7 +200,7 @@ export default function EmailPage() {
             <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">Recently joined</p>
           </CardContent>
         </Card>
-        <Card className="bg-card border border-border">
+        <Card className="dashboard-card">
           <CardContent className="p-4 sm:p-5">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs sm:text-sm text-muted-foreground">Courses</span>
@@ -214,7 +214,7 @@ export default function EmailPage() {
             <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">Active courses</p>
           </CardContent>
         </Card>
-        <Card className="bg-card border border-border">
+        <Card className="dashboard-card">
           <CardContent className="p-4 sm:p-5">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs sm:text-sm text-muted-foreground">Emails Sent</span>
@@ -239,7 +239,7 @@ export default function EmailPage() {
 
       {/* Sent Emails Section */}
       {sentEmails.length > 0 && (
-        <Card className="bg-card border border-border mb-4 sm:mb-6">
+        <Card className="dashboard-card mb-4 sm:mb-6">
           <CardHeader className="pb-4 border-b border-border/40">
             <CardTitle className="text-base font-medium">Sent Emails</CardTitle>
             <p className="text-xs sm:text-sm text-muted-foreground mt-1">
@@ -294,7 +294,7 @@ export default function EmailPage() {
       )}
 
       {/* Students Table */}
-      <Card className="bg-card border border-border">
+      <Card className="dashboard-card">
         <CardHeader className="pb-2">
           <CardTitle className="text-base font-medium">Student Directory</CardTitle>
           <p className="text-xs sm:text-sm text-muted-foreground mt-1">

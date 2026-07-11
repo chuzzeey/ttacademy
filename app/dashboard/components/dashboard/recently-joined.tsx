@@ -8,6 +8,7 @@ import { MoreHorizontal } from "lucide-react"
 interface RecentStudent {
   name: string
   course: string
+  joined: string
   sex: string
   image: string
 }
@@ -33,6 +34,7 @@ export function RecentlyJoined() {
           const mapped = json.data.map((s: any) => ({
             name: s.name,
             course: formatCourseName(s.course),
+            joined: s.reg_date && s.reg_time ? `${s.reg_date} ${s.reg_time}` : s.createdAt ? new Date(s.createdAt).toLocaleDateString() : "N/A",
             sex: s.sex ? s.sex.charAt(0).toUpperCase() + s.sex.slice(1).toLowerCase() : "N/A",
             image: "/avatar.png",
           }))
@@ -51,10 +53,10 @@ export function RecentlyJoined() {
   }, [])
 
   return (
-    <Card className="group bg-card border-border hover:border-amber-500/20 hover:shadow-lg hover:shadow-amber-500/5 transition-all duration-300 h-full">
+    <Card className="dashboard-card h-full">
       <CardHeader className="flex flex-row items-center justify-between border-b pb-2">
         <CardTitle className="text-base font-medium">Recently Joined Students</CardTitle>
-        <span className="text-sm font-medium ml-2">Sex</span>
+        <span className="text-sm font-medium ml-2">Joined</span>
       </CardHeader>
       <CardContent className="space-y-4">
         {students.length === 0 ? (
@@ -70,12 +72,15 @@ export function RecentlyJoined() {
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <div>
-                  <p className="text-sm font-medium">{student.name}</p>
-                  <p className="text-xs text-muted-foreground">{student.course}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">
+                    {student.name}
+                    <span className="text-xs text-muted-foreground ml-1.5">({student.sex})</span>
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate">{student.course}</p>
                 </div>
               </div>
-              <span className="text-sm font-medium">{student.sex}</span>
+              <span className="text-xs text-muted-foreground text-right">{student.joined}</span>
             </div>
           ))
         )}
