@@ -195,16 +195,10 @@ export default function StudentsPage() {
         title="Student Records"
         description="View and manage student database with payment and registration activity."
       >
-        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <Button variant="outline" className="flex items-center gap-2 bg-transparent text-sm w-full sm:w-auto">
-            <Calendar className="w-4 h-4" />
-            This Year
-          </Button>
-          <Button variant="outline" className="flex items-center gap-2 bg-transparent w-full sm:w-auto">
-            <Download className="w-4 h-4" />
-            Export
-          </Button>
-        </div>
+        <Button variant="outline" className="flex items-center gap-2 bg-transparent w-full sm:w-auto">
+          <Download className="w-4 h-4" />
+          Export
+        </Button>
       </PageHeader>
 
       {/* Students Stats */}
@@ -636,7 +630,7 @@ export default function StudentsPage() {
                 <div className="flex items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-muted/30">
                   <div>
                     <p className="text-[10px] sm:text-xs text-muted-foreground">Current Status</p>
-                    <p className={`text-xs sm:text-sm font-medium ${getPaymentColor(student.payment_status)}`}>
+                    <p className={`text-xs sm:text-sm font-medium ${getPaymentColor(selectedStudent.payment_status)}`}>
                       {selectedStudent.payment_status}
                     </p>
                   </div>
