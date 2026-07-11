@@ -16,7 +16,7 @@ export default function DashboardPage() {
   return (
     <>
       <PageHeader
-        title="Welcome, Sajibur 👋"
+        title="Welcome, Precious 👋"
         description="An overview of students insights, and revenue analytics."
       >
         <Button variant="outline" className="flex items-center gap-2 bg-transparent" onClick={() => setShowPopup(true)}>

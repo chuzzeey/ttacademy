@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Bell, ChevronDown, Menu } from "lucide-react"
+import { Bell, ChevronDown, Menu, X, LayoutDashboard, Users, BarChart3, CreditCard, Settings, User } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
 import { Button } from "../ui/button"
 import {
@@ -15,21 +15,28 @@ import {
 } from "../ui/dropdown-menu"
 
 const navItems = [
-  { label: "Dashboard", href: "/dashboard" },
-  { label: "Students", href: "/dashboard/students" },
-  { label: "Analytics", href: "/dashboard/analytics" },
-  { label: "Payment", href: "/dashboard/payment" },
-  { label: "Settings", href: "/dashboard/settings" },
+  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Students", href: "/dashboard/students", icon: Users },
+  { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
+  { label: "Payment", href: "/dashboard/payment", icon: CreditCard },
+  { label: "Settings", href: "/dashboard/settings", icon: Settings },
 ]
 
 export function Header() {
   const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
 
   const isActive = (href: string) => {
     if (href === "/dashboard") return pathname === "/dashboard"
     return pathname.startsWith(href)
   }
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 10)
+    window.addEventListener("scroll", handleScroll, { passive: true })
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
 
   useEffect(() => {
     if (mobileMenuOpen) {
@@ -43,119 +50,206 @@ export function Header() {
   }, [mobileMenuOpen])
 
   return (
-    <header className="flex items-center justify-between mb-8 relative">
-      <div className="flex items-center gap-2">
-        <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="flex items-center gap-2 md:hidden"
-        >
-          <div className="flex flex-col gap-1">
-            <div className="w-5 h-0.5 bg-foreground" />
-            <div className="w-5 h-0.5 bg-foreground" />
-            <div className="w-3 h-0.5 bg-foreground" />
-          </div>
-          <span className="text-xl font-semibold">TT Academy</span>
-        </button>
-        <Link href="/dashboard" className="hidden md:flex items-center gap-2">
-          <div className="flex flex-col gap-1">
-            <div className="w-5 h-0.5 bg-foreground" />
-            <div className="w-5 h-0.5 bg-foreground" />
-            <div className="w-3 h-0.5 bg-foreground" />
-          </div>
-          <span className="text-xl font-semibold">TT Academy</span>
-        </Link>
-      </div>
-
-      {/* Desktop Navigation */}
-      <nav className="hidden md:flex items-center bg-card rounded-full px-2 py-1.5 border border-border">
-        {navItems.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-              isActive(item.href)
-                ? "bg-green-100 text-green-800"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
+    <header
+      className={`sticky top-0 z-30 transition-all duration-300 ${
+        scrolled
+          ? "bg-background/80 backdrop-blur-xl shadow-sm border-b border-border/40"
+          : "bg-transparent"
+      }`}
+    >
+      <div className="max-w-6xl mx-auto flex items-center justify-between px-4 md:px-6 lg:px-8 transition-all duration-300">
+        {/* Left Section: Logo & Mobile Toggle */}
+        <div className="flex items-center gap-3" style={{ paddingTop: scrolled ? '12px' : '16px', paddingBottom: scrolled ? '12px' : '24px' }}>
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="flex items-center justify-center w-9 h-9 rounded-xl bg-muted/50 hover:bg-muted transition-colors md:hidden"
+            aria-label="Toggle menu"
           >
-            {item.label}
+            {mobileMenuOpen ? (
+              <X className="w-4 h-4" />
+            ) : (
+              <Menu className="w-4 h-4" />
+            )}
+          </button>
+          <Link href="/dashboard" className="flex items-center gap-2.5 group">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-md shadow-primary/20 group-hover:shadow-lg group-hover:shadow-primary/30 transition-shadow">
+              <span className="text-white font-bold text-xs">TT</span>
+            </div>
+            <span className="text-base font-semibold tracking-tight hidden sm:block">
+              Tech Trailblazer
+            </span>
           </Link>
-        ))}
-      </nav>
+        </div>
 
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" className="rounded-full">
-          <Bell className="w-5 h-5" />
-        </Button>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 cursor-pointer">
-              <Avatar className="h-9 w-9">
-                <AvatarImage src="/professional-man-avatar.png" />
-                <AvatarFallback>OS</AvatarFallback>
-              </Avatar>
-              <div className="hidden sm:block text-left">
-                <p className="text-sm font-medium">Oripio Sajib</p>
-                <p className="text-xs text-muted-foreground">Admin</p>
+        {/* Desktop Navigation */}
+        <nav className="hidden md:flex items-center bg-card shadow-sm rounded-xl px-1 py-0.5 border border-border/60" style={{ marginTop: scrolled ? '12px' : '16px', marginBottom: scrolled ? '12px' : '24px' }}>
+          {navItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`relative rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200 flex items-center gap-1.5 ${
+                isActive(item.href)
+                  ? "bg-primary/10 text-primary shadow-sm"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              }`}
+            >
+              {isActive(item.href) && (
+                <span className="absolute inset-0 rounded-lg bg-gradient-to-r from-primary/5 to-primary/10 animate-in fade-in" />
+              )}
+              <item.icon className="w-3.5 h-3.5 relative z-10" />
+              <span className="relative z-10">{item.label}</span>
+            </Link>
+          ))}
+        </nav>
+
+        {/* Right Section */}
+        <div className="flex items-center gap-2" style={{ paddingTop: scrolled ? '12px' : '16px', paddingBottom: scrolled ? '12px' : '24px' }}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-full w-9 h-9 bg-muted/30 hover:bg-muted transition-colors relative"
+          >
+            <Bell className="w-3.5 h-3.5" />
+            <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-primary text-[8px] font-bold text-primary-foreground flex items-center justify-center shadow-sm shadow-primary/30">
+              3
+            </span>
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-2 cursor-pointer p-1 pr-2.5 rounded-xl hover:bg-muted/50 transition-colors">
+                <Avatar className="h-8 w-8 ring-2 ring-background shadow-sm">
+                  <AvatarImage
+                    className="object-cover"
+                    src="https://res.cloudinary.com/djdbcoyot/image/upload/v1783729773/gyit83lrhi65fpfrtsrg.jpg"
+                    alt="Amah Precious"
+                  />
+                  <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-xs font-medium">
+                    AP
+                  </AvatarFallback>
+                </Avatar>
+                <div className="hidden sm:block text-left">
+                  <p className="text-xs font-medium leading-tight">Amah Precious</p>
+                  <p className="text-[10px] text-muted-foreground">Admin</p>
+                </div>
+                <ChevronDown className="w-3 h-3 text-muted-foreground hidden sm:block" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52 p-1.5 rounded-xl shadow-lg border-border/60">
+              <div className="px-3 py-2 mb-1">
+                <p className="text-sm font-medium">Amah Precious</p>
+                <p className="text-xs text-muted-foreground">amahchibu@gmail.com</p>
               </div>
-              <ChevronDown className="w-4 h-4 text-muted-foreground hidden sm:block" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem asChild>
-              <Link href="/dashboard/profile">Profile</Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem>Settings</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive">Log out</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+              <DropdownMenuSeparator className="bg-border/40" />
+              <DropdownMenuItem asChild className="rounded-lg cursor-pointer">
+                <Link href="/dashboard/profile" className="flex items-center gap-2.5">
+                  <div className="p-1.5 rounded-md bg-muted/50">
+                    <User className="w-3.5 h-3.5" />
+                  </div>
+                  Profile
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild className="rounded-lg cursor-pointer">
+                <Link href="/dashboard/settings" className="flex items-center gap-2.5">
+                  <div className="p-1.5 rounded-md bg-muted/50">
+                    <Settings className="w-3.5 h-3.5" />
+                  </div>
+                  Settings
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator className="bg-border/40" />
+              <DropdownMenuItem className="rounded-lg cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10 flex items-center gap-2.5">
+                Log out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
+
+      {/* Mobile Navigation Overlay */}
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 md:hidden animate-in fade-in duration-200"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
 
       {/* Mobile Navigation Menu */}
       <div
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-background border-r border-border transform transition-transform duration-300 ease-in-out md:hidden ${
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-background/95 backdrop-blur-xl border-r border-border/60 transform transition-all duration-300 ease-out md:hidden shadow-2xl ${
           mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-8">
-            <span className="text-xl font-semibold">TT Academy</span>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="rounded-full"
+        <div className="p-5 h-full flex flex-col">
+          <div className="flex items-center justify-between mb-6">
+            <Link href="/dashboard" className="flex items-center gap-2" onClick={() => setMobileMenuOpen(false)}>
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-md shadow-primary/20">
+                <span className="text-white font-bold text-xs">TT</span>
+              </div>
+              <span className="text-base font-semibold tracking-tight">TT Academy</span>
+            </Link>
+            <button
               onClick={() => setMobileMenuOpen(false)}
+              className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-muted transition-colors"
             >
-              <Menu className="w-5 h-5" />
-            </Button>
+              <X className="w-3.5 h-3.5" />
+            </button>
           </div>
-          <nav className="space-y-2">
+
+          {/* User card */}
+          <Link
+            href="/dashboard/profile"
+            onClick={() => setMobileMenuOpen(false)}
+            className="flex items-center gap-2.5 p-2.5 rounded-xl bg-gradient-to-r from-primary/5 to-transparent border border-primary/10 mb-5 group"
+          >
+            <Avatar className="h-9 w-9 ring-2 ring-background shadow-sm">
+              <AvatarImage
+                className="object-cover"
+                src="https://res.cloudinary.com/djdbcoyot/image/upload/v1783729773/gyit83lrhi65fpfrtsrg.jpg"
+                alt="Amah Precious"
+              />
+              <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-xs">AP</AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate">Amah Precious</p>
+              <p className="text-[11px] text-muted-foreground truncate">amahchibu@gmail.com</p>
+            </div>
+            <ChevronDown className="w-3.5 h-3.5 text-muted-foreground rotate-[-90deg] group-hover:translate-x-0.5 transition-transform shrink-0" />
+          </Link>
+
+          <nav className="space-y-0.5 flex-1">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`block px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
                   isActive(item.href)
-                    ? "bg-green-100 text-green-800"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    ? "bg-primary/10 text-primary shadow-sm"
+                    : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                 }`}
               >
+                <div
+                  className={`p-1.5 rounded-lg ${
+                    isActive(item.href)
+                      ? "bg-primary/10"
+                      : "bg-muted/50"
+                  }`}
+                >
+                  <item.icon className="w-3.5 h-3.5" />
+                </div>
                 {item.label}
               </Link>
             ))}
           </nav>
+
+          {/* Bottom section */}
+          <div className="pt-4 border-t border-border/40 mt-auto">
+            <button className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-medium text-destructive hover:bg-destructive/5 transition-colors w-full">
+              Log out
+            </button>
+          </div>
         </div>
       </div>
-
-      {/* Overlay */}
-      {mobileMenuOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40 md:hidden transition-opacity duration-300"
-          onClick={() => setMobileMenuOpen(false)}
-        />
-      )}
     </header>
   )
 }
