@@ -1,20 +1,19 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Eye, EyeOff, LogIn, ArrowLeft } from 'lucide-react'
 import { ForceLightMode } from '@/components/force-light-mode'
 
-export default function AdminLoginPage() {
+function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
-  const searchParams = useSearchParams()
   const supabase = createClient()
 
   useEffect(() => {
@@ -41,7 +40,7 @@ export default function AdminLoginPage() {
       if (error) throw error
 
       if (data.session) {
-        router.push(searchParams.get('redirect') || '/dashboard')
+        router.push('/dashboard')
         router.refresh()
       }
     } catch (err: any) {
@@ -197,5 +196,17 @@ export default function AdminLoginPage() {
         </div>
       </div>
     </>
+  )
+}
+
+export default function AdminLoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white via-red-50/20 to-white">
+        <div className="loader"></div>
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   )
 }
