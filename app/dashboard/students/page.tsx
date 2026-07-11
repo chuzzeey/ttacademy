@@ -345,7 +345,6 @@ export default function StudentsPage() {
                   <thead>
                     <tr className="border-b border-border">
                       <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">Student</th>
-                      <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">Email</th>
                       <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">Course(s)</th>
                       <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">Payment</th>
                       <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">Update Payment Status</th>
@@ -361,10 +360,12 @@ export default function StudentsPage() {
                             <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
                               <User className="w-4 h-4 text-muted-foreground" />
                             </div>
-                            <span className="text-sm font-medium">{student.name}</span>
+                            <div>
+                              <span className="text-sm font-medium">{student.name}</span>
+                              <p className="text-xs text-muted-foreground">{student.email}</p>
+                            </div>
                           </div>
                         </td>
-                        <td className="py-3 px-2 text-sm text-muted-foreground">{student.email}</td>
                         <td className="py-3 px-2 text-sm text-muted-foreground">{formatCourseName(student.course)}</td>
                         <td className="py-3 px-2">
                           <div className="flex items-center gap-2">
