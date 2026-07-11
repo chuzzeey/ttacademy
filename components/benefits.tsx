@@ -126,7 +126,7 @@ const Benefits = () => {
                         <span className="text-xs font-semibold text-red-600 tracking-wide uppercase">Why Choose Us</span>
                     </div>
                     
-                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-foreground mb-4 tracking-tight leading-[1.05]">
+                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-gray-900 mb-4 tracking-tight leading-[1.05]">
                         Why Choose{" "}
                         <span className="relative inline-block">
                             <span className="bg-gradient-to-r from-red-600 via-rose-500 to-red-700 bg-clip-text text-transparent">
@@ -145,7 +145,7 @@ const Benefits = () => {
                         </span>
                     </h2>
                     
-                    <p className="text-base md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed font-medium">
+                    <p className="text-base md:text-xl text-gray-500 max-w-2xl mx-auto leading-relaxed font-medium">
                         Real results, not just certificates
                     </p>
                     
@@ -168,10 +168,10 @@ const Benefits = () => {
                                 {getIcon(benefit.icon)}
                             </div>
                             <div className="flex-1">
-                                <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground mb-1.5 md:mb-2">
+                                <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-1.5 md:mb-2">
                                     {benefit.title}
                                 </h3>
-                                <p className="text-muted-foreground text-sm sm:text-base md:text-lg leading-relaxed">
+                                <p className="text-gray-500 text-sm sm:text-base md:text-lg leading-relaxed">
                                     {benefit.description}
                                 </p>
                             </div>
@@ -181,14 +181,14 @@ const Benefits = () => {
 
                 {/* WhatsApp Group CTA */}
                 <div className={`mt-10 md:mt-14 flex flex-col items-center gap-3 ${isVisible ? 'animate-[slideInUp_0.6s_ease-out_forwards]' : 'opacity-0'}`} style={{ animationDelay: '0.8s' }}>
-                    <p className="text-sm md:text-base text-muted-foreground text-center max-w-md">
+                    <p className="text-sm md:text-base text-gray-500 text-center max-w-md">
                         Want to connect with our mentors and other learners? Join our WhatsApp group below.
                     </p>
                     <a
                         href="https://chat.whatsapp.com/CQwV51o9q4ZHp9kRXDM9qQ?s=cl&p=i&mlu=0"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center px-6 py-3.5 bg-whatsapp text-white font-semibold rounded-full shadow-lg hover:shadow-xl hover:shadow-whatsapp/25 transition-all duration-300 transform hover:-translate-y-0.5"
+                        className="inline-flex items-center justify-center px-6 py-3.5 bg-green-500 text-white font-semibold rounded-full shadow-lg hover:shadow-xl hover:shadow-green-500/25 transition-all duration-300 transform hover:-translate-y-0.5"
                     >
                         <svg
                             className="w-5 h-5 mr-2"

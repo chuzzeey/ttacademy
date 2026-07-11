@@ -7,7 +7,7 @@ const TelegramButton = () => {
         href="https://t.me/techblazeracademy"
         target="_blank"
       rel="noopener noreferrer"
-        className="inline-flex items-center justify-center px-6 py-3.5 bg-telegram text-white font-semibold rounded-full shadow-lg hover:shadow-xl hover:shadow-telegram/25 transition-all duration-300 transform hover:-translate-y-0.5"
+        className="inline-flex items-center justify-center px-6 py-3.5 bg-sky-500 text-white font-semibold rounded-full shadow-lg hover:shadow-xl hover:shadow-sky-500/25 transition-all duration-300 transform hover:-translate-y-0.5"
       >
         <svg
           className="w-5 h-5 mr-2"

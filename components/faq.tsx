@@ -72,7 +72,7 @@ const FAQ = () => {
                         <span className="text-xs font-semibold text-red-600 tracking-wide uppercase">Support</span>
                     </div>
                     
-                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-foreground mb-4 tracking-tight leading-[1.05]">
+                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-gray-900 mb-4 tracking-tight leading-[1.05]">
                         FREQUENTLY ASKED<br />
                         <span className="relative inline-block">
                             <span className="bg-gradient-to-r from-red-600 via-rose-500 to-red-700 bg-clip-text text-transparent">
@@ -91,7 +91,7 @@ const FAQ = () => {
                         </span>
                     </h2>
                     
-                    <p className="text-base md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed font-medium">
+                    <p className="text-base md:text-xl text-gray-500 max-w-2xl mx-auto leading-relaxed font-medium">
                         Everything you need to know
                     </p>
                     
@@ -114,7 +114,7 @@ const FAQ = () => {
                                 className="w-full text-left p-4 md:p-6 flex justify-between items-center gap-4 bg-transparent border-none cursor-pointer"
                                 onClick={() => toggleFAQ(index)}
                             >
-                                <span className="text-sm sm:text-base md:text-lg font-semibold text-foreground flex-1">
+                                <span className="text-sm sm:text-base md:text-lg font-semibold text-gray-900 flex-1">
                                     {faq.question}
                                 </span>
                                 <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-[#dc2626] to-[#991b1b] flex items-center justify-center flex-shrink-0 transition-transform duration-300 ${openIndex === index ? 'rotate-45' : ''}`}>
@@ -126,7 +126,7 @@ const FAQ = () => {
                             <div className={`overflow-hidden transition-all duration-400 ease-in-out ${openIndex === index ? 'max-h-48' : 'max-h-0'}`}>
                                 <div className="px-4 md:px-6 pb-4 md:pb-6">
                                     <div className="w-full h-px bg-gradient-to-r from-[#ef4444]/30 to-transparent mb-4" />
-                                    <p className="text-muted-foreground text-sm sm:text-base">
+                                    <p className="text-gray-500 text-sm sm:text-base">
                                         {faq.answer}
                                     </p>
                                 </div>
