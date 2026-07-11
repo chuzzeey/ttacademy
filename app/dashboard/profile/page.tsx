@@ -32,7 +32,7 @@ export default function ProfilePage() {
     if (type === "email") {
       setCopiedEmail(true)
       setTimeout(() => setCopiedEmail(false), 2000)
-    } else {ne
+    } else {
       setCopiedPhone(true)
       setTimeout(() => setCopiedPhone(false), 2000)
     }
