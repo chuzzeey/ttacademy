@@ -2,8 +2,6 @@
 
 import { PageHeader } from "../components/dashboard/page-header"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card"
-import { Button } from "../components/ui/button"
-import { Input } from "../components/ui/input"
 import { Label } from "../components/ui/label"
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar"
 import { Badge } from "../components/ui/badge"
@@ -18,29 +16,19 @@ import {
   MapPin,
   Building,
   Calendar,
-  Key,
-  Shield,
   Copy,
   Check,
   Github,
   Linkedin,
   Twitter,
   Globe,
-  Edit2,
   Bell,
   Lock,
-  Eye,
-  EyeOff,
-  Smartphone,
-  Monitor,
-  LogOut,
-  Trash2,
 } from "lucide-react"
 
 export default function ProfilePage() {
   const [copiedEmail, setCopiedEmail] = useState(false)
   const [copiedPhone, setCopiedPhone] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
 
   const copyToClipboard = (text: string, type: "email" | "phone") => {
     navigator.clipboard.writeText(text)
@@ -63,9 +51,7 @@ export default function ProfilePage() {
       <Tabs defaultValue="profile" className="space-y-6">
         <TabsList className="bg-muted/60 p-1 rounded-xl">
           <TabsTrigger value="profile" className="rounded-lg data-[state=active]:shadow-sm">Profile</TabsTrigger>
-          <TabsTrigger value="security" className="rounded-lg data-[state=active]:shadow-sm">Security</TabsTrigger>
           <TabsTrigger value="notifications" className="rounded-lg data-[state=active]:shadow-sm">Notifications</TabsTrigger>
-          <TabsTrigger value="sessions" className="rounded-lg data-[state=active]:shadow-sm">Sessions</TabsTrigger>
         </TabsList>
 
         {/* Profile Tab */}
@@ -189,7 +175,7 @@ export default function ProfilePage() {
               </CardContent>
             </Card>
 
-            {/* Personal Information & Activity */}
+            {/* Personal Information */}
             <div className="lg:col-span-2 space-y-6">
               <Card className="bg-card border-border/60 shadow-sm hover:shadow-md transition-shadow duration-300">
                 <CardHeader className="pb-4 border-b border-border/40">
@@ -252,220 +238,7 @@ export default function ProfilePage() {
                   </div>
                 </CardContent>
               </Card>
-
-              <Card className="bg-card border-border/60 shadow-sm hover:shadow-md transition-shadow duration-300">
-                <CardHeader className="pb-4 border-b border-border/40">
-                  <div>
-                    <CardTitle className="text-base font-semibold">Recent Activity</CardTitle>
-                    <CardDescription className="text-xs mt-0.5">
-                      Your latest account activities and changes
-                    </CardDescription>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  <div className="space-y-0">
-                    {[
-                      {
-                        action: "Updated profile picture",
-                        time: "2 hours ago",
-                        type: "update",
-                      },
-                      {
-                        action: "Changed account password",
-                        time: "3 days ago",
-                        type: "security",
-                      },
-                      {
-                        action: "Logged in from new device",
-                        time: "1 week ago",
-                        type: "login",
-                      },
-                      {
-                        action: "Updated email preferences",
-                        time: "2 weeks ago",
-                        type: "settings",
-                      },
-                      {
-                        action: "Completed profile verification",
-                        time: "1 month ago",
-                        type: "verification",
-                      },
-                    ].map((activity, index) => (
-                      <div
-                        key={index}
-                        className="flex items-start gap-4 py-3.5 border-b border-border/30 last:border-0 group hover:bg-muted/20 -mx-2 px-2 rounded-lg transition-colors"
-                      >
-                        <div className="p-2 rounded-full bg-primary/5 group-hover:bg-primary/10 transition-colors mt-0.5">
-                          <div
-                            className={`w-2 h-2 rounded-full ${
-                              activity.type === "update"
-                                ? "bg-blue-500"
-                                : activity.type === "security"
-                                  ? "bg-amber-500"
-                                  : activity.type === "login"
-                                    ? "bg-green-500"
-                                    : activity.type === "settings"
-                                      ? "bg-purple-500"
-                                      : "bg-emerald-500"
-                            }`}
-                          />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium">{activity.action}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">{activity.time}</p>
-                        </div>
-                        <Badge
-                          variant="secondary"
-                          className="text-[10px] px-2 py-0 h-5 capitalize bg-muted/50"
-                        >
-                          {activity.type}
-                        </Badge>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
             </div>
-          </div>
-        </TabsContent>
-
-        {/* Security Tab */}
-        <TabsContent value="security" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <Card className="bg-card border-border/60 shadow-sm hover:shadow-md transition-shadow duration-300 lg:col-span-2">
-              <CardHeader className="pb-4 border-b border-border/40">
-                <div>
-                  <CardTitle className="text-base font-semibold">Password & Authentication</CardTitle>
-                  <CardDescription className="text-xs mt-0.5">
-                    Update your password and manage authentication methods
-                  </CardDescription>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-6 space-y-6">
-                <div className="space-y-4">
-                  <Label className="text-xs font-medium">Current Password</Label>
-                  <div className="relative">
-                    <Input
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Enter current password"
-                      className="h-10 bg-muted/30 border-border/60 focus:bg-background transition-colors pr-10"
-                    />
-                    <button
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-4">
-                    <Label className="text-xs font-medium">New Password</Label>
-                    <Input
-                      type="password"
-                      placeholder="Enter new password"
-                      className="h-10 bg-muted/30 border-border/60 focus:bg-background transition-colors"
-                    />
-                  </div>
-                  <div className="space-y-4">
-                    <Label className="text-xs font-medium">Confirm New Password</Label>
-                    <Input
-                      type="password"
-                      placeholder="Confirm new password"
-                      className="h-10 bg-muted/30 border-border/60 focus:bg-background transition-colors"
-                    />
-                  </div>
-                </div>
-                <div className="flex justify-end pt-2">
-                  <Button className="bg-foreground text-background hover:bg-foreground/90 shadow-sm">
-                    Update Password
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-card border-border/60 shadow-sm hover:shadow-md transition-shadow duration-300">
-              <CardHeader className="pb-4 border-b border-border/40">
-                <div>
-                  <CardTitle className="text-base font-semibold">Security Status</CardTitle>
-                  <CardDescription className="text-xs mt-0.5">
-                    Your account security overview
-                  </CardDescription>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-6 space-y-4">
-                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-full bg-green-100">
-                      <Shield className="w-4 h-4 text-green-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Password</p>
-                      <p className="text-xs text-muted-foreground">Strong</p>
-                    </div>
-                  </div>
-                  <Badge className="bg-green-100 text-green-700 border-green-200 text-[10px]">
-                    Active
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-full bg-amber-100">
-                      <Smartphone className="w-4 h-4 text-amber-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">2FA</p>
-                      <p className="text-xs text-muted-foreground">Not enabled</p>
-                    </div>
-                  </div>
-                  <Badge className="bg-amber-100 text-amber-700 border-amber-200 text-[10px]">
-                    Inactive
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-full bg-blue-100">
-                      <Monitor className="w-4 h-4 text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Sessions</p>
-                      <p className="text-xs text-muted-foreground">3 active</p>
-                    </div>
-                  </div>
-                  <Badge className="bg-blue-100 text-blue-700 border-blue-200 text-[10px]">
-                    Active
-                  </Badge>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-card border-border/60 shadow-sm hover:shadow-md transition-shadow duration-300 lg:col-span-3">
-              <CardHeader className="pb-4 border-b border-border/40">
-                <div>
-                  <CardTitle className="text-base font-semibold">Two-Factor Authentication</CardTitle>
-                  <CardDescription className="text-xs mt-0.5">
-                    Add an extra layer of security to your account
-                  </CardDescription>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between p-4 rounded-lg bg-muted/20 border border-border/40">
-                  <div className="flex items-start gap-4">
-                    <div className="p-2.5 rounded-full bg-primary/5">
-                      <Shield className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Enable Two-Factor Authentication</p>
-                      <p className="text-xs text-muted-foreground mt-0.5 max-w-md">
-                        Secure your account with an additional authentication method. You'll need to verify
-                        your identity using a code from your authenticator app.
-                      </p>
-                    </div>
-                  </div>
-                  <Switch className="data-[state=checked]:bg-primary" />
-                </div>
-              </CardContent>
-            </Card>
           </div>
         </TabsContent>
 
@@ -523,106 +296,6 @@ export default function ProfilePage() {
                   <Switch defaultChecked={item.defaultChecked} className="data-[state=checked]:bg-primary" />
                 </div>
               ))}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Sessions Tab */}
-        <TabsContent value="sessions" className="space-y-6">
-          <Card className="bg-card border-border/60 shadow-sm hover:shadow-md transition-shadow duration-300">
-            <CardHeader className="pb-4 border-b border-border/40">
-              <div>
-                <CardTitle className="text-base font-semibold">Active Sessions</CardTitle>
-                <CardDescription className="text-xs mt-0.5">
-                  Manage your active sessions across devices
-                </CardDescription>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-6 space-y-0">
-              {[
-                {
-                  device: "MacBook Pro - Chrome",
-                  location: "Port Harcourt, Nigeria",
-                  ip: "192.168.1.1",
-                  lastActive: "Active now",
-                  isCurrent: true,
-                  icon: Monitor,
-                },
-                {
-                  device: "iPhone 15 - Safari",
-                  location: "Port Harcourt, Nigeria",
-                  ip: "192.168.1.2",
-                  lastActive: "2 hours ago",
-                  isCurrent: false,
-                  icon: Smartphone,
-                },
-                {
-                  device: "Windows PC - Firefox",
-                  location: "Lagos, Nigeria",
-                  ip: "192.168.1.3",
-                  lastActive: "3 days ago",
-                  isCurrent: false,
-                  icon: Monitor,
-                },
-              ].map((session, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between py-4 border-b border-border/30 last:border-0 group hover:bg-muted/20 -mx-2 px-2 rounded-lg transition-colors"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="p-2.5 rounded-lg bg-muted/50 group-hover:bg-muted transition-colors">
-                      <session.icon className="w-4 h-4 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium">{session.device}</p>
-                        {session.isCurrent && (
-                          <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px] h-5">
-                            Current
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        {session.location} · {session.ip}
-                      </p>
-                      <p className="text-xs text-muted-foreground">{session.lastActive}</p>
-                    </div>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-muted-foreground hover:text-red-500 hover:bg-red-50 transition-colors"
-                  >
-                    <LogOut className="w-3.5 h-3.5 mr-1.5" />
-                    End
-                  </Button>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card border-destructive/20 border shadow-sm">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="p-2.5 rounded-full bg-destructive/5">
-                    <Trash2 className="w-5 h-5 text-destructive" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-destructive">Danger Zone</p>
-                    <p className="text-xs text-muted-foreground">
-                      Permanently delete your account and all associated data
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground transition-colors"
-                >
-                  Delete Account
-                </Button>
-              </div>
             </CardContent>
           </Card>
         </TabsContent>
