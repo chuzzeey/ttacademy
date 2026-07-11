@@ -397,8 +397,8 @@ export default function StudentsPage() {
       </Card>
 
       {/* Slide-in Panel */}
-      <div className={`fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-all duration-300 ease-in-out ${panelOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`} onClick={closePanel} />
-      <div className={`fixed top-0 right-0 z-50 h-full w-full max-w-sm sm:max-w-md bg-background border-l border-border/60 shadow-2xl transform transition-all duration-300 ease-in-out ${panelOpen ? "translate-x-0" : "translate-x-full"}`}>
+      <div className={`fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm transition-all duration-300 ease-in-out ${panelOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`} onClick={closePanel} />
+      <div className={`fixed top-0 right-0 z-[70] h-full w-full max-w-sm sm:max-w-md bg-background border-l border-border/60 shadow-2xl transform transition-all duration-300 ease-in-out ${panelOpen ? "translate-x-0" : "translate-x-full"}`}>
         {selectedStudent && (
           <div className="h-full flex flex-col">
             <div className="flex items-center justify-between px-4 sm:px-6 py-4 sm:py-5 border-b border-border/40">

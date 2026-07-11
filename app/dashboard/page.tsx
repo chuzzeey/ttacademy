@@ -34,7 +34,7 @@ export default function DashboardPage() {
       </div>
 
       {showPopup && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-[80]">
           <div className="bg-card border border-border rounded-lg p-6 max-w-sm">
             <p className="text-sm font-medium">Feature coming soon!</p>
             <Button className="mt-4 w-full" onClick={() => setShowPopup(false)}>Close</Button>
