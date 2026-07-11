@@ -66,6 +66,20 @@ function LoginForm() {
           Back to Home
         </Link>
 
+        {/* Refresh Button */}
+        <div className="absolute top-6 right-6 flex items-center gap-3 z-10">
+          <span className="text-xs text-gray-500">Last updated: Just now</span>
+          <button
+            onClick={() => window.location.reload()}
+            className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg transition-all hover:shadow-sm"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Refresh
+          </button>
+        </div>
+
         {/* Loader Overlay */}
         {loading && (
           <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center">
