@@ -5,13 +5,12 @@ let prisma: any = null;
 
 async function getPrisma() {
   if (prisma) return prisma;
-  try {
-    const { PrismaClient } = await import("@prisma/client");
-    prisma = new PrismaClient();
-    return prisma;
-  } catch {
-    return null;
-  }
+
+  const { PrismaClient } = await import("@prisma/client");
+
+  prisma = new PrismaClient();
+
+  return prisma;
 }
 
 export async function POST(request: NextRequest) {
@@ -112,6 +111,10 @@ export async function GET() {
     return NextResponse.json({ data: students }, { status: 200 });
   } catch (err) {
     console.error("Registration fetch error:", err);
-    return NextResponse.json({ data: [], error: "Internal server error" }, { status: 200 });
+
+    return NextResponse.json(
+      { error: "Database fetch failed" },
+      { status: 500 }
+    );
   }
 }
