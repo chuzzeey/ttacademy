@@ -102,10 +102,11 @@ export default function DashboardPage() {
           </div>
           
             <div className="min-w-0">
-            <h1 className="text-base font-semibold text-gray-100 leading-tight truncate">
+            <h1 className="text-sm font-semibold text-gray-100 leading-tight truncate">
               {courseData.title}
             </h1>
-            <p className="text-xs text-gray-300 leading-relaxed">
+             <p className="text-xs text-gray-300 leading-relaxed inline-flex items-center gap-1.5">
+                <span className="w-2 h-2 bg-green-500 rounded-full shrink-0"></span>
                 online
               </p>
           </div>
@@ -133,8 +134,6 @@ export default function DashboardPage() {
             <div className="bg-[#1c2b33] rounded-lg px-4 py-3 text-center max-w-md shadow-lg">
               <p className="text-xs text-gray-300 leading-relaxed">
                 {dashboard.welcomeMessage}
-                <span className="inline-block w-2 h-2 bg-green-500 rounded-full ml-2 align-middle"></span>
-                <span className="text-[10px] text-green-400 ml-1">online</span>
               </p>
            
               <p className="text-[9px] text-gray-500 mt-2 ">
@@ -151,32 +150,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* ===== MESSAGE INPUT ===== */}
-      <div className="bg-[#202c33] border-t border-[#2a3942] px-4 py-3">
-        <div className="max-w-4xl mx-auto flex items-center gap-2">
-          <button className="w-9 h-9 rounded-full hover:bg-[#2a3942] flex items-center justify-center text-gray-400 hover:text-gray-200 transition-all shrink-0">
-            <Send className="w-5 h-5 rotate-90" />
-          </button>
-          
-          <div className="flex-1 relative">
-            <input
-              type="text"
-              value={messageInput}
-              onChange={(e) => setMessageInput(e.target.value)}
-              placeholder="Type a message..."
-              className="w-full bg-[#2a3942] text-gray-200 text-sm rounded-full px-4 py-2.5 pr-10 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#00a884] transition-all"
-            />
-            <button className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full hover:bg-[#3a4a52] flex items-center justify-center text-gray-400 hover:text-gray-200 transition-all">
-              <Send className="w-4 h-4" />
-            </button>
-          </div>
-
-          <button className="w-9 h-9 rounded-full hover:bg-[#2a3942] flex items-center justify-center text-gray-400 hover:text-gray-200 transition-all shrink-0">
-            <Bell className="w-5 h-5" />
-          </button>
-        </div>
-      </div>
-
+      
       {/* ===== SIDEBAR OVERLAY (mobile) ===== */}
       {sidebarOpen && (
         <div
