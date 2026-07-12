@@ -222,30 +222,6 @@ export default function DashboardPage() {
               <FileText className="w-4 h-4" />
               Assignments
             </button>
-
-            <button
-              onClick={() => { setActiveSection('announcements'); setSidebarOpen(false) }}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
-                activeSection === 'announcements'
-                  ? 'bg-[#2a3942] text-gray-100 font-semibold'
-                  : 'text-gray-400 hover:bg-[#2a3942] hover:text-gray-200 font-medium'
-              }`}
-            >
-              <Bell className="w-4 h-4" />
-              Announcements
-            </button>
-
-            <button
-              onClick={() => { setActiveSection('activity'); setSidebarOpen(false) }}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
-                activeSection === 'activity'
-                  ? 'bg-[#2a3942] text-gray-100 font-semibold'
-                  : 'text-gray-400 hover:bg-[#2a3942] hover:text-gray-200 font-medium'
-              }`}
-            >
-              <Activity className="w-4 h-4" />
-              Recent Activity
-            </button>
           </nav>
 
           {/* Sidebar footer: profile */}
