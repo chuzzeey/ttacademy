@@ -84,7 +84,7 @@ export default function CourseOverviewPage() {
                       {courseData.title}
                     </h1>
                     
-                    <p className="text-base sm:text-lg text-white/80 max-w-2xl leading-relaxed">
+                    <p className="text-base sm:text-lg text-white/80 max-w-2xl leading-relaxed" suppressHydrationWarning>
                       {courseData.description}
                     </p>
 
