@@ -101,11 +101,11 @@ export default function DashboardPage() {
             <GraduationCap className="w-5 h-5 text-white" />
           </div>
           
-          <div className="min-w-0">
+            <div className="min-w-0">
             <h1 className="text-base font-semibold text-gray-100 leading-tight truncate">
               {courseData.title}
             </h1>
-            <p className="text-[8px] text-gray-400 mt-0.5 leading-relaxed">
+            <p className="text-[6px] sm:text-[7px] md:text-[8px] text-gray-400 mt-0.5 leading-relaxed">
               Important Notice: Messages in this channel are broadcast for your information and do not support replies.
             </p>
           </div>
