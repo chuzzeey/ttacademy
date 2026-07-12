@@ -1,496 +1,433 @@
 'use client'
 
-import { useParams, useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { ArrowLeft, BookOpen, Calendar, CheckCircle2, Clock, FileText, GraduationCap, Megaphone, MessageSquare, PlayCircle, Award, Bell, Search, Menu, X, User, Settings, Lock, LogOut, ChevronRight, Home, BookMarked, BarChart3 } from 'lucide-react'
+import { useParams, useRouter } from 'next/navigation'
+import Image from 'next/image'
+import {
+  ArrowRight, BookOpen, Clock, Shield, Award, Star, Users, CheckCircle,
+  Calendar, BarChart, Target, ChevronDown, ChevronUp, GraduationCap,
+  Sparkles, Trophy, Zap, Layers, FileText, Code, TrendingUp,
+  Globe, Lock, PlayCircle, Download, Share2, MessageSquare, HelpCircle
+} from 'lucide-react'
+import { getCourseData } from '@/lib/mock-data'
 
-const courseData: Record<string, {
-  title: string
-  color: string
-  gradient: string
-  iconBg: string
-  iconColor: string
-  borderColor: string
-  accent: string
-  weeks: { title: string; content: string; topics: string[] }[]
-}> = {
-  'cybersecurity': {
-    title: 'Cybersecurity',
-    color: 'from-red-600 to-red-800',
-    gradient: 'from-red-500/20 via-red-600/10 to-red-800/20',
-    iconBg: 'bg-red-100',
-    iconColor: 'text-red-600',
-    borderColor: 'border-red-200',
-    accent: 'red',
-    weeks: [
-      { title: 'Introduction to Cybersecurity', content: 'Learn the fundamentals of cybersecurity, threat landscape, and security principles.', topics: ['Security Basics', 'Threat Types', 'Defense Strategies'] },
-      { title: 'Network Security', content: 'Deep dive into network security protocols, firewalls, and intrusion detection systems.', topics: ['Firewalls', 'IDS/IPS', 'VPNs'] },
-      { title: 'Ethical Hacking', content: 'Master penetration testing methodologies and ethical hacking techniques.', topics: ['Reconnaissance', 'Exploitation', 'Reporting'] },
-      { title: 'Cryptography', content: 'Understand encryption algorithms, PKI, and cryptographic protocols.', topics: ['Symmetric/Asymmetric', 'Hash Functions', 'Digital Signatures'] },
-      { title: 'Incident Response', content: 'Learn to detect, respond to, and recover from security incidents.', topics: ['Detection', 'Containment', 'Recovery'] },
-      { title: 'Security Auditing', content: 'Master compliance frameworks, security assessments, and audit techniques.', topics: ['Compliance', 'Risk Assessment', 'Audit Reports'] },
-    ]
-  },
-  'data-science': {
-    title: 'Data Science',
-    color: 'from-emerald-600 to-emerald-800',
-    gradient: 'from-emerald-500/20 via-emerald-600/10 to-emerald-800/20',
-    iconBg: 'bg-emerald-100',
-    iconColor: 'text-emerald-600',
-    borderColor: 'border-emerald-200',
-    accent: 'emerald',
-    weeks: [
-      { title: 'Statistics & Probability', content: 'Foundation of statistical methods and probability theory for data analysis.', topics: ['Descriptive Stats', 'Probability Distributions', 'Hypothesis Testing'] },
-      { title: 'Python for Data Science', content: 'Learn Python programming with libraries like Pandas, NumPy, and Matplotlib.', topics: ['Pandas', 'NumPy', 'Data Visualization'] },
-      { title: 'Machine Learning', content: 'Build predictive models using supervised and unsupervised learning algorithms.', topics: ['Regression', 'Classification', 'Clustering'] },
-      { title: 'Data Visualization', content: 'Create compelling visualizations to communicate data insights effectively.', topics: ['Matplotlib', 'Seaborn', 'Dashboard Design'] },
-      { title: 'Big Data Analytics', content: 'Work with large datasets using distributed computing and big data tools.', topics: ['Spark', 'Hadoop', 'Data Pipelines'] },
-      { title: 'Deep Learning', content: 'Explore neural networks and advanced deep learning architectures.', topics: ['Neural Networks', 'CNN', 'RNN'] },
-    ]
-  },
-  'ai-automation': {
-    title: 'AI Automation',
-    color: 'from-amber-600 to-amber-800',
-    gradient: 'from-amber-500/20 via-amber-600/10 to-amber-800/20',
-    iconBg: 'bg-amber-100',
-    iconColor: 'text-amber-600',
-    borderColor: 'border-amber-200',
-    accent: 'amber',
-    weeks: [
-      { title: 'AI Fundamentals', content: 'Introduction to artificial intelligence concepts and applications.', topics: ['AI History', 'Problem Solving', 'Search Algorithms'] },
-      { title: 'Prompt Engineering', content: 'Master techniques for effective prompt design and optimization.', topics: ['Prompt Design', 'Chain-of-Thought', 'Few-Shot Learning'] },
-      { title: 'Workflow Automation', content: 'Build automated workflows using AI-powered tools and platforms.', topics: ['Automation Tools', 'Workflow Design', 'Integration'] },
-      { title: 'AI Agents & Tools', content: 'Develop intelligent agents that can perform complex tasks autonomously.', topics: ['Agent Architecture', 'Tool Use', 'Memory Systems'] },
-      { title: 'Natural Language Processing', content: 'Process and analyze human language using NLP techniques.', topics: ['Text Processing', 'Sentiment Analysis', 'Translation'] },
-      { title: 'Computer Vision', content: 'Build systems that can interpret and understand visual information.', topics: ['Image Recognition', 'Object Detection', 'Video Analysis'] },
-    ]
-  },
-  'computer-networking': {
-    title: 'Computer Networking',
-    color: 'from-cyan-600 to-cyan-800',
-    gradient: 'from-cyan-500/20 via-cyan-600/10 to-cyan-800/20',
-    iconBg: 'bg-cyan-100',
-    iconColor: 'text-cyan-600',
-    borderColor: 'border-cyan-200',
-    accent: 'cyan',
-    weeks: [
-      { title: 'Network Protocols', content: 'Understand the fundamental protocols that power modern networks.', topics: ['TCP/IP', 'HTTP/HTTPS', 'DNS'] },
-      { title: 'Routing & Switching', content: 'Learn how data moves across networks and how to configure network devices.', topics: ['Routing Protocols', 'Switching', 'VLANs'] },
-      { title: 'Network Security', content: 'Secure network infrastructure against threats and vulnerabilities.', topics: ['Access Control', 'Network Segmentation', 'Security Policies'] },
-      { title: 'TCP/IP', content: 'Deep dive into the TCP/IP protocol suite and its layers.', topics: ['IP Addressing', 'Subnetting', 'Transport Layer'] },
-      { title: 'Wireless Networking', content: 'Configure and manage wireless networks for optimal performance.', topics: ['Wi-Fi Standards', 'Wireless Security', 'Troubleshooting'] },
-      { title: 'Network Design', content: 'Design scalable and resilient network architectures.', topics: ['Network Topology', 'Redundancy', 'Performance'] },
-    ]
-  },
-  'full-stack-development': {
-    title: 'Full Stack Development',
-    color: 'from-blue-600 to-blue-800',
-    gradient: 'from-blue-500/20 via-blue-600/10 to-blue-800/20',
-    iconBg: 'bg-blue-100',
-    iconColor: 'text-blue-600',
-    borderColor: 'border-blue-200',
-    accent: 'blue',
-    weeks: [
-      { title: 'React & Next.js', content: 'Build modern frontend applications with React and Next.js framework.', topics: ['Components', 'Hooks', 'Server Components'] },
-      { title: 'Node.js & Express', content: 'Create robust backend services using Node.js and Express.', topics: ['REST APIs', 'Middleware', 'Authentication'] },
-      { title: 'Databases', content: 'Work with SQL and NoSQL databases for data persistence.', topics: ['PostgreSQL', 'MongoDB', 'ORM/ODM'] },
-      { title: 'API Development', content: 'Design and build RESTful and GraphQL APIs.', topics: ['REST Principles', 'GraphQL', 'API Documentation'] },
-      { title: 'DevOps & Deployment', content: 'Deploy applications using CI/CD pipelines and cloud services.', topics: ['Docker', 'CI/CD', 'Cloud Deployment'] },
-      { title: 'Testing & Security', content: 'Write tests and secure your applications against common vulnerabilities.', topics: ['Unit Testing', 'Integration Testing', 'Security Best Practices'] },
-    ]
-  },
-}
-
-export default function StudentDashboard() {
+export default function CourseOverviewPage() {
   const params = useParams()
   const router = useRouter()
-  const course = courseData[params.course as string]
-  const [currentWeek, setCurrentWeek] = useState(0)
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [weekSearch, setWeekSearch] = useState('')
-  const [activeTab, setActiveTab] = useState('dashboard')
+  const courseSlug = params?.course as string
+  const courseData = getCourseData(courseSlug)
 
-  if (!course) {
-    return (
-      <main className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Course Not Found</h1>
-          <p className="text-gray-600 mb-8">The course you are looking for does not exist.</p>
-          <button onClick={() => router.push('/classroom')} className="inline-flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors font-semibold">
-            <ArrowLeft className="w-4 h-4" /> Back to Classroom
-          </button>
-        </div>
-      </main>
-    )
+  const [activeFaq, setActiveFaq] = useState<number | null>(null)
+  const [expandedRoadmap, setExpandedRoadmap] = useState<string | null>(null)
+
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case 'Beginner': return 'bg-emerald-100 text-emerald-700'
+      case 'Intermediate': return 'bg-amber-100 text-amber-700'
+      case 'Advanced': return 'bg-red-100 text-red-700'
+      default: return 'bg-gray-100 text-gray-700'
+    }
   }
 
-  const weeks = course.weeks
-  const currentWeekData = weeks[currentWeek]
-
-  const filteredWeeks = weekSearch
-    ? weeks.map((w, i) => ({ ...w, index: i })).filter(w => 
-        w.title.toLowerCase().includes(weekSearch.toLowerCase())
-      )
-    : weeks.map((w, i) => ({ ...w, index: i }))
-
-  const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: Home },
-    { id: 'courses', label: 'My Courses', icon: BookMarked },
-    { id: 'progress', label: 'Progress', icon: BarChart3 },
-    { id: 'profile', label: 'Profile', icon: User },
-    { id: 'settings', label: 'Settings', icon: Settings },
-  ]
-
   return (
-    <main className="min-h-screen bg-gray-50" style={{ fontFamily: 'var(--font-noto-sans)' }}>
-      {/* Mobile Overlay */}
-      {sidebarOpen && (
-        <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
-      )}
+    <main className="min-h-screen bg-gradient-to-br from-white via-gray-50/30 to-white">
+      {/* Decorative Elements */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-bl from-red-500/5 to-transparent rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-red-500/5 to-transparent rounded-full blur-3xl" />
+      </div>
 
-      {/* Sidebar */}
-      <aside className={`fixed top-0 left-0 z-50 h-full w-72 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
-        {/* Sidebar Header */}
-        <div className="shrink-0 flex items-center gap-3 px-5 h-16 border-b border-gray-100">
-          <div className={`p-2 rounded-lg ${course.iconBg} ${course.iconColor}`}>
-            <GraduationCap className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-sm font-bold text-gray-900">{course.title}</p>
-            <p className="text-[11px] text-gray-400 tracking-wide">Student Dashboard</p>
-          </div>
-          <button onClick={() => setSidebarOpen(false)} className="lg:hidden ml-auto p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
-            <X className="w-4 h-4 text-gray-500" />
-          </button>
-        </div>
+      <div className="relative">
+        {/* ===== HERO SECTION ===== */}
+        <section className="relative overflow-hidden">
+          <div className="relative h-[70vh] min-h-[500px] max-h-[700px]">
+            <Image
+              src={courseData.banner}
+              alt={courseData.title}
+              fill
+              className="object-cover"
+              priority
+              sizes="100vw"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/30" />
+            
+            {/* Pattern Overlay */}
+            <div className="absolute inset-0 opacity-10" 
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+              }}
+            />
 
-        {/* User Profile */}
-        <div className="shrink-0 px-5 py-4 border-b border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center text-white font-bold text-base shrink-0">
-              E
-            </div>
-            <div className="min-w-0">
-              <p className="font-semibold text-gray-900 text-sm truncate">Enoch</p>
-              <p className="text-[11px] text-gray-400 truncate">enoch@example.com</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto p-3 space-y-0.5">
-          {navItems.map((item) => {
-            const Icon = item.icon
-            return (
-              <button
-                key={item.id}
-                onClick={() => { setActiveTab(item.id); setSidebarOpen(false) }}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-                  activeTab === item.id
-                    ? `bg-gradient-to-r ${course.gradient} ${course.borderColor} border ${course.iconColor}`
-                    : 'text-gray-600 hover:bg-gray-50'
-                }`}
-              >
-                <Icon className={`w-4.5 h-4.5 ${activeTab === item.id ? course.iconColor : 'text-gray-400'}`} />
-                {item.label}
-              </button>
-            )
-          })}
-        </nav>
-
-        {/* Logout */}
-        <div className="shrink-0 p-3 border-t border-gray-100">
-          <button className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition-all duration-200">
-            <LogOut className="w-4.5 h-4.5" />
-            Sign Out
-          </button>
-        </div>
-      </aside>
-
-      {/* Main Content Area */}
-      <div className="lg:ml-72 min-h-screen flex flex-col">
-        {/* Top Bar */}
-        <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-gray-200">
-          <div className="flex items-center justify-between h-16 px-6 sm:px-8 lg:px-8 xl:px-10">
-            <div className="flex items-center gap-3">
-              <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 -ml-2 rounded-lg hover:bg-gray-100 transition-colors">
-                <Menu className="w-5 h-5 text-gray-600" />
-              </button>
-              <button onClick={() => router.push('/classroom')} className="hidden sm:inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors font-medium">
-                <ArrowLeft className="w-4 h-4" />
-                <span>Back</span>
-              </button>
-            </div>
-            <div className="flex items-center gap-3">
-              <button className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors">
-                <Bell className="w-5 h-5 text-gray-500" />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 ring-2 ring-white" />
-              </button>
-              <div className="flex items-center gap-2.5 pl-3 border-l border-gray-200">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center text-white font-bold text-xs">
-                  E
+            <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8 md:p-12 lg:p-16">
+              <div className="max-w-5xl mx-auto">
+                {/* Breadcrumb */}
+                <div className="flex items-center gap-2 text-sm text-white/70 mb-4">
+                  <BookOpen className="w-4 h-4" />
+                  <span>Classroom</span>
+                  <span className="text-white/30">/</span>
+                  <span className="text-white/90">{courseData.title}</span>
                 </div>
-                <span className="text-sm font-medium text-gray-700 hidden sm:block">Enoch</span>
+
+                <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${getDifficultyColor(courseData.difficulty)}`}>
+                        {courseData.difficulty}
+                      </span>
+                      <span className="flex items-center gap-1.5 text-white/80 text-sm">
+                        <Clock className="w-4 h-4" />
+                        {courseData.duration}
+                      </span>
+                    </div>
+
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-3">
+                      {courseData.title}
+                    </h1>
+                    
+                    <p className="text-base sm:text-lg text-white/80 max-w-2xl leading-relaxed">
+                      {courseData.description}
+                    </p>
+
+                    {/* Stats Row */}
+                    <div className="flex flex-wrap items-center gap-4 sm:gap-6 mt-5">
+                      <div className="flex items-center gap-2 text-white/70 text-sm">
+                        <Users className="w-4 h-4" />
+                        <span>{courseData.studentStats.enrolled.toLocaleString()} Students</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-white/70 text-sm">
+                        <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                        <span>{courseData.studentStats.rating} Rating</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-white/70 text-sm">
+                        <Award className="w-4 h-4" />
+                        <span>Certificate</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </header>
+        </section>
 
-        {/* Page Content */}
-        <div className="flex-1 px-6 sm:px-8 lg:px-8 xl:px-10 2xl:px-12 py-8 lg:pt-0 lg:pb-6 xl:pt-0 xl:pb-8 max-w-[1600px] mx-auto w-full">
-          {activeTab === 'dashboard' && (
-            <div className="space-y-8 lg:space-y-10 xl:space-y-12">
-              {/* Welcome Banner */}
-              <div className={`bg-gradient-to-br ${course.gradient} rounded-2xl border ${course.borderColor} p-6 sm:p-8 lg:p-10 xl:p-12`}>
-                <div className="flex items-start gap-4">
-                  <div className={`p-3 rounded-xl bg-white/90 backdrop-blur-sm ${course.iconColor} shrink-0`}>
-                    <Award className="w-6 h-6" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
+          {/* ===== INSTRUCTOR & PROGRESS ===== */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
+            <div className="lg:col-span-2">
+              <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+                <h2 className="text-lg font-bold text-gray-900 mb-4">Your Instructor</h2>
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
+                    <Image
+                      src={courseData.instructorAvatar}
+                      alt={courseData.instructor}
+                      width={64}
+                      height={64}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                   <div>
-                    <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-gray-900">
-                      Welcome back, Enoch
-                    </h1>
-                    <p className="mt-1.5 text-gray-600 text-sm sm:text-base">
-                      You are in <strong>Week {currentWeek + 1}</strong> of {course.title}. Keep up the great work!
-                    </p>
+                    <h3 className="font-semibold text-gray-900">{courseData.instructor}</h3>
+                    <p className="text-sm text-gray-500">{courseData.title} Lead Instructor</p>
+                    <div className="flex items-center gap-1 mt-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star key={star} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                      ))}
+                      <span className="text-xs text-gray-500 ml-1">4.9 (2.1k reviews)</span>
+                    </div>
                   </div>
                 </div>
+                <p className="text-sm text-gray-600 mt-4 leading-relaxed">
+                  With over 15 years of industry experience, {courseData.instructor} has helped thousands of students 
+                  master {courseData.title}. Known for practical, hands-on teaching methods and real-world applications.
+                </p>
               </div>
+            </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-8 xl:gap-10">
-                {/* Week Sidebar */}
-                <div className="lg:col-span-3 xl:col-span-3 2xl:col-span-3">
-                  <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm lg:sticky lg:top-28">
-                    <div className="p-4 border-b border-gray-100">
-                      <h3 className="font-bold text-gray-900 flex items-center gap-2 text-sm mb-3">
-                        <BookOpen className="w-4 h-4 text-gray-500" />
-                        Course Weeks
-                      </h3>
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                        <input
-                          type="text"
-                          placeholder="Search weeks..."
-                          value={weekSearch}
-                          onChange={(e) => setWeekSearch(e.target.value)}
-                          className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent transition-all"
-                        />
+            <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+              <h2 className="text-lg font-bold text-gray-900 mb-4">Your Progress</h2>
+              <div className="text-center">
+                <div className="relative w-24 h-24 mx-auto mb-3">
+                  <svg className="w-24 h-24 transform -rotate-90" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="45" fill="none" stroke="#f1f5f9" strokeWidth="8" />
+                    <circle
+                      cx="50" cy="50" r="45"
+                      fill="none"
+                      stroke="url(#progressGrad)"
+                      strokeWidth="8"
+                      strokeLinecap="round"
+                      strokeDasharray={`${courseData.progress * 2.83} 283`}
+                      className="transition-all duration-1000"
+                    />
+                    <defs>
+                      <linearGradient id="progressGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#ef4444" />
+                        <stop offset="100%" stopColor="#dc2626" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-2xl font-bold text-gray-900">{courseData.progress}%</span>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-500">Course Progress</p>
+                <p className="text-xs text-gray-400 mt-1">Start learning to track your progress</p>
+              </div>
+            </div>
+          </div>
+
+          {/* ===== SKILLS & TECHNOLOGIES ===== */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12">
+            <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+              <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <Zap className="w-5 h-5 text-amber-500" />
+                Skills You'll Learn
+              </h2>
+              <div className="flex flex-wrap gap-2">
+                {courseData.skills.map((skill) => (
+                  <span
+                    key={skill}
+                    className="px-3 py-1.5 bg-gradient-to-r from-red-50 to-amber-50 text-red-700 rounded-lg text-sm font-medium border border-red-100/50"
+                  >
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+              <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <Code className="w-5 h-5 text-blue-500" />
+                Technologies Covered
+              </h2>
+              <div className="flex flex-wrap gap-2">
+                {courseData.technologies.map((tech) => (
+                  <span
+                    key={tech}
+                    className="px-3 py-1.5 bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 rounded-lg text-sm font-medium border border-blue-100/50"
+                  >
+                    {tech}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* ===== LEARNING OUTCOMES ===== */}
+          <div className="bg-white rounded-2xl border border-gray-100 p-6 sm:p-8 shadow-sm mb-12">
+            <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <Target className="w-5 h-5 text-red-500" />
+              Learning Outcomes
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {courseData.learningOutcomes.map((outcome) => (
+                <div key={outcome} className="flex items-start gap-3 p-3 rounded-xl bg-gray-50 hover:bg-red-50/50 transition-colors">
+                  <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                  <span className="text-sm text-gray-700">{outcome}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ===== COURSE ROADMAP ===== */}
+          <div className="bg-white rounded-2xl border border-gray-100 p-6 sm:p-8 shadow-sm mb-12">
+            <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <Layers className="w-5 h-5 text-purple-500" />
+              Course Roadmap
+            </h2>
+            <div className="space-y-4">
+              {courseData.roadmap.map((item) => (
+                <div key={item.week} className="relative">
+                  <button
+                    onClick={() => setExpandedRoadmap(expandedRoadmap === item.week ? null : item.week)}
+                    className="w-full text-left p-4 rounded-xl bg-gray-50 hover:bg-red-50/50 transition-colors border border-gray-100 hover:border-red-100"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className="px-2.5 py-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-semibold rounded-lg">
+                          {item.week}
+                        </span>
+                        <span className="font-semibold text-gray-900">{item.title}</span>
                       </div>
-                    </div>
-                    <div className="p-2 max-h-96 overflow-y-auto">
-                      {filteredWeeks.length === 0 ? (
-                        <p className="text-sm text-gray-400 text-center py-6">No weeks found</p>
+                      {expandedRoadmap === item.week ? (
+                        <ChevronUp className="w-4 h-4 text-gray-400" />
                       ) : (
-                        filteredWeeks.map((week, i) => (
-                          <button
-                            key={i}
-                            onClick={() => setCurrentWeek(week.index)}
-                            className={`w-full text-left px-3 py-3 rounded-xl transition-all duration-200 flex items-center gap-3 mb-0.5 ${
-                              currentWeek === week.index
-                                ? `bg-gradient-to-r ${course.gradient} ${course.borderColor} border`
-                                : 'hover:bg-gray-50 border border-transparent'
-                            }`}
-                          >
-                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${
-                              currentWeek === week.index ? `${course.iconBg} ${course.iconColor}` : 'bg-gray-100 text-gray-500'
-                            }`}>
-                              {week.index + 1}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className={`text-sm font-semibold truncate ${currentWeek === week.index ? 'text-gray-900' : 'text-gray-700'}`}>
-                                Week {week.index + 1}
-                              </p>
-                              <p className="text-xs text-gray-400 truncate mt-0.5">{week.title}</p>
-                            </div>
-                            {currentWeek === week.index && <ChevronRight className={`w-4 h-4 shrink-0 ${course.iconColor}`} />}
-                          </button>
-                        ))
+                        <ChevronDown className="w-4 h-4 text-gray-400" />
                       )}
                     </div>
-                  </div>
-                </div>
-
-                {/* Main Content */}
-                <div className="lg:col-span-9 xl:col-span-9 2xl:col-span-9 space-y-8 lg:space-y-8 xl:space-y-10">
-                  {/* Current Week */}
-                  <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm lg:shadow-md">
-                    <div className="p-6 sm:p-8 lg:p-10">
-                      <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-6 gap-4">
-                        <div>
-                          <div className="flex items-center gap-2 mb-2">
-                            <Calendar className={`w-4 h-4 ${course.iconColor}`} />
-                            <span className={`text-xs font-semibold uppercase tracking-wider ${course.iconColor}`}>Week {currentWeek + 1}</span>
-                          </div>
-                          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">{currentWeekData.title}</h2>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-500 shrink-0">
-                          <Clock className="w-4 h-4" />
-                          <span>~3 hours</span>
-                        </div>
-                      </div>
-
-                      <p className="text-gray-600 text-sm sm:text-base leading-relaxed mb-6">
-                        {currentWeekData.content}
+                    {expandedRoadmap === item.week && (
+                      <p className="mt-3 text-sm text-gray-600 leading-relaxed pl-0 sm:pl-[100px]">
+                        {item.description}
                       </p>
+                    )}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
 
-                      <div className="space-y-3">
-                        <h4 className="font-semibold text-gray-900 flex items-center gap-2 text-sm">
-                          <FileText className="w-4 h-4 text-gray-500" />
-                          Topics covered this week
-                        </h4>
-                        <div className="flex flex-wrap gap-2">
-                          {currentWeekData.topics.map((topic, i) => (
-                            <span key={i} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium ${course.iconBg} ${course.iconColor} border ${course.borderColor}`}>
-                              <CheckCircle2 className="w-3.5 h-3.5" />
-                              {topic}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
+          {/* ===== REQUIREMENTS ===== */}
+          <div className="bg-white rounded-2xl border border-gray-100 p-6 sm:p-8 shadow-sm mb-12">
+            <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <FileText className="w-5 h-5 text-orange-500" />
+              Requirements
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {courseData.requirements.map((req) => (
+                <div key={req} className="flex items-start gap-3 p-3 rounded-xl bg-gray-50">
+                  <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                  <span className="text-sm text-gray-700">{req}</span>
+                </div>
+              ))}
+            </div>
+          </div>
 
-                      <button className={`mt-6 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r ${course.color} text-white font-semibold text-sm hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 cursor-pointer`}>
-                        <PlayCircle className="w-5 h-5" />
-                        Start Week {currentWeek + 1} Learning
-                      </button>
-                    </div>
+          {/* ===== BENEFITS ===== */}
+          <div className="bg-gradient-to-br from-red-500 to-red-700 rounded-2xl p-6 sm:p-8 shadow-lg mb-12">
+            <h2 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+              <Trophy className="w-5 h-5 text-amber-300" />
+              What You Get
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {courseData.benefits.map((benefit) => (
+                <div key={benefit} className="flex items-start gap-3 p-3 rounded-xl bg-white/10 backdrop-blur-sm">
+                  <Award className="w-5 h-5 text-amber-300 flex-shrink-0 mt-0.5" />
+                  <span className="text-sm text-white/90">{benefit}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ===== CERTIFICATE SECTION ===== */}
+          <div className="bg-white rounded-2xl border border-gray-100 p-6 sm:p-8 shadow-sm mb-12 overflow-hidden">
+            <div className="flex flex-col lg:flex-row items-center gap-8">
+              <div className="flex-1">
+                <h2 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                  <Award className="w-5 h-5 text-amber-500" />
+                  Get Certified
+                </h2>
+                <p className="text-sm text-gray-600 leading-relaxed mb-4">
+                  Upon successful completion of all modules and the capstone project, you will receive 
+                  a Tech Trailblazer Academy certificate recognized by industry leaders. Showcase your 
+                  achievement on LinkedIn and boost your career prospects.
+                </p>
+                <div className="flex items-center gap-4 text-sm text-gray-500">
+                  <div className="flex items-center gap-1.5">
+                    <CheckCircle className="w-4 h-4 text-emerald-500" />
+                    Industry Recognized
                   </div>
-
-                  {/* Messages & Announcements */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-8 xl:gap-10">
-                    <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm h-full">
-                      <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-3">
-                        <MessageSquare className="w-4.5 h-4.5 text-gray-500" />
-                        <h3 className="font-bold text-gray-900 text-sm">Messages</h3>
-                      </div>
-                      <div className="p-5">
-                        <div className="p-4 rounded-xl bg-gray-50 border border-gray-100">
-                          <p className="text-sm text-gray-400 text-center">No messages yet. Your mentors will reach out here.</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm h-full">
-                      <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-3">
-                        <Megaphone className="w-4.5 h-4.5 text-gray-500" />
-                        <h3 className="font-bold text-gray-900 text-sm">Announcements</h3>
-                      </div>
-                      <div className="p-5">
-                        <div className={`p-4 rounded-xl bg-gradient-to-br ${course.gradient} border ${course.borderColor}`}>
-                          <div className="flex items-start gap-3">
-                            <div className={`p-2 rounded-lg ${course.iconBg} ${course.iconColor} shrink-0`}>
-                              <Megaphone className="w-4 h-4" />
-                            </div>
-                            <div className="min-w-0">
-                              <h4 className="font-semibold text-gray-900 text-sm">Welcome to {course.title}!</h4>
-                              <p className="text-sm text-gray-600 mt-1 leading-relaxed">We are excited to have you on board. Get ready for an amazing learning journey.</p>
-                              <p className="text-xs text-gray-400 mt-2">Posted 2 days ago</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                  <div className="flex items-center gap-1.5">
+                    <CheckCircle className="w-4 h-4 text-emerald-500" />
+                    Shareable
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <CheckCircle className="w-4 h-4 text-emerald-500" />
+                    Lifetime Access
                   </div>
                 </div>
               </div>
-            </div>
-          )}
-
-          {activeTab === 'profile' && (
-            <div className="max-w-2xl mx-auto">
-              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                <div className="p-6 sm:p-8">
-                  <div className="flex items-center gap-4 mb-8">
-                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center text-white font-bold text-2xl shrink-0">
-                      E
-                    </div>
-                    <div className="min-w-0">
-                      <h2 className="text-xl font-bold text-gray-900">Enoch</h2>
-                      <p className="text-sm text-gray-500">enoch@example.com</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-5">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1.5">Full Name</label>
-                      <input type="text" value="Enoch" readOnly className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent transition-all" />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1.5">Email Address</label>
-                      <input type="email" value="enoch@example.com" readOnly className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent transition-all" />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1.5">Phone Number</label>
-                      <input type="tel" value="+234 800 000 0000" readOnly className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent transition-all" />
-                    </div>
-                    <button className={`w-full py-2.5 px-6 rounded-xl bg-gradient-to-r ${course.color} text-white font-semibold text-sm hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 cursor-pointer`}>
-                      Save Changes
-                    </button>
-                  </div>
+              <div className="flex-shrink-0 w-48 h-36 bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl border-2 border-amber-200 flex items-center justify-center">
+                <div className="text-center">
+                  <Award className="w-10 h-10 text-amber-500 mx-auto mb-1" />
+                  <p className="text-xs font-bold text-amber-800">Certificate</p>
+                  <p className="text-[10px] text-amber-600">of Completion</p>
                 </div>
               </div>
             </div>
-          )}
+          </div>
 
-          {activeTab === 'settings' && (
-            <div className="max-w-2xl mx-auto">
-              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                <div className="p-6 sm:p-8">
-                  <div className="flex items-center gap-3 mb-8">
-                    <Settings className="w-5 h-5 text-gray-500" />
-                    <h2 className="text-xl font-bold text-gray-900">Settings</h2>
-                  </div>
-                  <div className="space-y-8">
-                    {/* Change Password */}
-                    <div>
-                      <div className="flex items-center gap-2 mb-4">
-                        <Lock className="w-4.5 h-4.5 text-gray-400" />
-                        <h3 className="font-semibold text-gray-900 text-sm">Change Password</h3>
-                      </div>
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-1.5">Current Password</label>
-                          <input type="password" placeholder="Enter current password" className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent transition-all" />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-1.5">New Password</label>
-                          <input type="password" placeholder="Enter new password" className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent transition-all" />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-1.5">Confirm New Password</label>
-                          <input type="password" placeholder="Confirm new password" className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent transition-all" />
-                        </div>
-                        <button className="w-full py-2.5 px-6 rounded-xl bg-gray-900 text-white font-semibold text-sm hover:bg-gray-800 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 cursor-pointer">
-                          Update Password
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Notifications */}
-                    <div className="pt-6 border-t border-gray-100">
-                      <div className="flex items-center gap-2 mb-4">
-                        <Bell className="w-4.5 h-4.5 text-gray-400" />
-                        <h3 className="font-semibold text-gray-900 text-sm">Notifications</h3>
-                      </div>
-                      <div className="space-y-3">
-                        <label className="flex items-center justify-between p-3 rounded-xl bg-gray-50 border border-gray-100 cursor-pointer hover:bg-gray-100 transition-colors">
-                          <span className="text-sm text-gray-700 font-medium">Email notifications</span>
-                          <div className="w-10 h-6 bg-gray-300 rounded-full relative transition-colors">
-                            <div className="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow-sm" />
-                          </div>
-                        </label>
-                        <label className="flex items-center justify-between p-3 rounded-xl bg-gray-50 border border-gray-100 cursor-pointer hover:bg-gray-100 transition-colors">
-                          <span className="text-sm text-gray-700 font-medium">Push notifications</span>
-                          <div className="w-10 h-6 bg-red-500 rounded-full relative transition-colors">
-                            <div className="absolute right-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow-sm" />
-                          </div>
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+          {/* ===== STUDENT STATS ===== */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-12">
+            <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm text-center">
+              <div className="w-12 h-12 bg-gradient-to-br from-red-100 to-red-50 rounded-xl flex items-center justify-center mx-auto mb-3">
+                <Users className="w-6 h-6 text-red-500" />
               </div>
+              <p className="text-2xl font-bold text-gray-900">{courseData.studentStats.enrolled.toLocaleString()}</p>
+              <p className="text-sm text-gray-500">Students Enrolled</p>
             </div>
-          )}
+            <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm text-center">
+              <div className="w-12 h-12 bg-gradient-to-br from-amber-100 to-amber-50 rounded-xl flex items-center justify-center mx-auto mb-3">
+                <Star className="w-6 h-6 text-amber-500" />
+              </div>
+              <p className="text-2xl font-bold text-gray-900">{courseData.studentStats.rating}</p>
+              <p className="text-sm text-gray-500">Course Rating</p>
+            </div>
+            <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm text-center">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-50 rounded-xl flex items-center justify-center mx-auto mb-3">
+                <MessageSquare className="w-6 h-6 text-blue-500" />
+              </div>
+              <p className="text-2xl font-bold text-gray-900">{courseData.studentStats.reviews.toLocaleString()}</p>
+              <p className="text-sm text-gray-500">Reviews</p>
+            </div>
+          </div>
+
+          {/* ===== MOTIVATIONAL CALLOUT ===== */}
+          <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 rounded-2xl p-8 sm:p-10 mb-12 shadow-lg relative overflow-hidden">
+            <div className="absolute inset-0 opacity-5">
+              <div className="absolute top-10 left-10 w-32 h-32 bg-red-500 rounded-full blur-3xl" />
+              <div className="absolute bottom-10 right-10 w-32 h-32 bg-red-500 rounded-full blur-3xl" />
+            </div>
+            <div className="relative text-center">
+              <Sparkles className="w-10 h-10 text-amber-400 mx-auto mb-4" />
+              <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3">
+                Ready to Master {courseData.title}?
+              </h2>
+              <p className="text-gray-400 max-w-xl mx-auto mb-6">
+                Join thousands of successful students who have transformed their careers. 
+                Your journey to becoming a {courseData.title} expert starts now.
+              </p>
+              <button
+                onClick={() => router.push(`/classroom/${courseSlug}/dashboard`)}
+                className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold rounded-xl transition-all shadow-lg shadow-red-500/20 hover:shadow-red-500/30"
+              >
+                <PlayCircle className="w-5 h-5" />
+                Enter Classroom
+                <ArrowRight className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          {/* ===== FAQS ===== */}
+          <div className="bg-white rounded-2xl border border-gray-100 p-6 sm:p-8 shadow-sm mb-12">
+            <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <HelpCircle className="w-5 h-5 text-gray-500" />
+              Frequently Asked Questions
+            </h2>
+            <div className="space-y-3">
+              {courseData.faqs.map((faq, index) => (
+                <div key={index} className="rounded-xl border border-gray-100 overflow-hidden">
+                  <button
+                    onClick={() => setActiveFaq(activeFaq === index ? null : index)}
+                    className="w-full text-left p-4 flex items-center justify-between gap-4 hover:bg-gray-50 transition-colors"
+                  >
+                    <span className="text-sm font-medium text-gray-900">{faq.question}</span>
+                    {activeFaq === index ? (
+                      <ChevronUp className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                    )}
+                  </button>
+                  {activeFaq === index && (
+                    <div className="px-4 pb-4">
+                      <p className="text-sm text-gray-600 leading-relaxed">{faq.answer}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ===== STICKY ENTER CLASSROOM BUTTON ===== */}
+          <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200 p-4 lg:hidden z-50">
+            <button
+              onClick={() => router.push(`/classroom/${courseSlug}/dashboard`)}
+              className="w-full py-3.5 bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg"
+            >
+              <PlayCircle className="w-5 h-5" />
+              Enter Classroom
+              <ArrowRight className="w-5 h-5" />
+            </button>
+          </div>
         </div>
       </div>
     </main>
