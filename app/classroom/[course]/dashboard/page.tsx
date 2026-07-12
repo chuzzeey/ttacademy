@@ -105,6 +105,9 @@ export default function DashboardPage() {
             <h1 className="text-base font-semibold text-gray-100 leading-tight truncate">
               {courseData.title}
             </h1>
+            <p className="text-xs text-gray-300 leading-relaxed">
+                online
+              </p>
           </div>
         </div>
 
@@ -130,11 +133,11 @@ export default function DashboardPage() {
             <div className="bg-[#1c2b33] rounded-lg px-4 py-3 text-center max-w-md shadow-lg">
               <p className="text-xs text-gray-300 leading-relaxed">
                 {dashboard.welcomeMessage}
+                <span className="inline-block w-2 h-2 bg-green-500 rounded-full ml-2 align-middle"></span>
+                <span className="text-[10px] text-green-400 ml-1">online</span>
               </p>
-              <p className="text-[10px] text-gray-400 mt-2">
-                {courseData.description}
-              </p>
-              <p className="text-[9px] text-gray-500 mt-2 italic">
+           
+              <p className="text-[9px] text-gray-500 mt-2 ">
                 Important Notice: Messages in this channel are broadcast for your information and do not support replies.
               </p>
               <p className="text-[10px] text-gray-500 mt-2">
