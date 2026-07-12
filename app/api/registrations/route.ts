@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { createAdminClient } from "@/lib/supabase/server-admin";
 
 export async function POST(request: NextRequest) {
   try {
@@ -71,6 +72,23 @@ export async function POST(request: NextRequest) {
         reg_time: regTime,
       },
     });
+
+    // Create Supabase auth user with default password "126"
+    const supabase = await createAdminClient()
+    const { error: authError } = await supabase.auth.admin.createUser({
+      email: email.trim().toLowerCase(),
+      password: "126",
+      email_confirm: true,
+      user_metadata: {
+        name: full_name.trim(),
+        course: course_applying_for,
+        role: "student"
+      }
+    })
+
+    if (authError) {
+      console.error("Failed to create auth user:", authError)
+    }
 
     return NextResponse.json(
       {
