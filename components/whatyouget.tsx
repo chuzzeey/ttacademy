@@ -4,6 +4,7 @@ import Image from 'next/image'
 
 const WhatYouGet = () => {
     const [isVisible, setIsVisible] = useState(false)
+    const [searchTerm, setSearchTerm] = useState('')
     const sectionRef = useRef<HTMLDivElement>(null)
 
     const courses = [
@@ -149,6 +150,11 @@ const WhatYouGet = () => {
         }
     ]
 
+    const filteredCourses = courses.filter(course => 
+        course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        course.description.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+
     useEffect(() => {
         const section = sectionRef.current
         if (!section) return
@@ -196,9 +202,9 @@ const WhatYouGet = () => {
             {/* Bottom fade */}
             <div className="absolute bottom-0 left-0 right-0 h-24 md:h-32 bg-gradient-to-t from-white via-white/90 to-transparent pointer-events-none z-20" />
 
-            <div className="mx-auto max-w-7xl relative z-10">
+            <div className="mx-auto max-w-full relative z-10">
                 {/* Header Section */}
-                <div className={`text-center mb-12 md:mb-16 ${isVisible ? 'animate-[fadeIn_0.8s_ease-out_forwards]' : 'opacity-0'}`}>
+                <div className={`text-center mb-8 md:mb-12 ${isVisible ? 'animate-[fadeIn_0.8s_ease-out_forwards]' : 'opacity-0'}`}>
                     {/* Pill badge */}
                     <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white border border-red-100 rounded-full shadow-sm mb-5">
                         <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
@@ -227,6 +233,22 @@ const WhatYouGet = () => {
                     <p className="text-base md:text-xl text-gray-500 max-w-2xl mx-auto leading-relaxed font-medium">
                         Industry-relevant curriculum designed for your success
                     </p>
+
+                    {/* Search Bar */}
+                    <div className="mt-6 relative max-w-md mx-auto">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
+                        <input
+                            type="text"
+                            placeholder="Search courses..."
+                            className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-full bg-white/80 backdrop-blur-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500/50 text-sm"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
                     
                     <div className="flex items-center justify-center gap-4 mt-6">
                         <div className="h-px w-16 bg-gradient-to-r from-transparent to-red-300" />
@@ -236,69 +258,69 @@ const WhatYouGet = () => {
                 </div>
 
                 {/* Course Cards Grid */}
-                <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-5">
-                    {courses.map((course, index) => (
-                        <div
-                            key={index}
-                            className={`group relative rounded-2xl overflow-hidden bg-white shadow-sm ring-1 ring-black/[0.04] transition-all duration-300 hover:shadow-lg hover:shadow-black/10
-                                ${isVisible ? 'animate-[scaleIn_0.5s_ease-out_forwards]' : 'opacity-0'}
-                            `}
-                            style={{ animationDelay: `${0.1 + (index * 0.06)}s` }}
-                        >
-                            {/* Image Section */}
-                            <div className="relative aspect-[4/3] overflow-hidden">
-                                <Image
-                                    src={course.image}
-                                    alt={course.title}
-                                    fill
-                                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                                    quality={90}
-                                    loading="lazy"
-                                    className="object-cover brightness-90 transition-all duration-500 group-hover:brightness-100 group-hover:scale-105"
-                                />
-                                
-                                {/* Gradient Overlay */}
-                                <div className={`absolute inset-0 bg-gradient-to-t ${course.gradient} opacity-40`} />
-                                
-                                {/* Subtle inner border */}
-                                <div className="absolute inset-3 rounded-xl border border-white/15 pointer-events-none" />
+                {filteredCourses.length === 0 ? (
+                    <div className="text-center py-12">
+                        <p className="text-gray-500">No courses found matching your search</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 2xl:grid-cols-6 gap-4 sm:gap-5 md:gap-6 lg:gap-7 xl:gap-8">
+                        {filteredCourses.map((course, index) => (
+                            <div
+                                key={index}
+                                className={`group bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col hover:-translate-y-1
+                                    ${isVisible ? 'animate-[scaleIn_0.5s_ease-out_forwards]' : 'opacity-0'}
+                                `}
+                                style={{ animationDelay: `${0.1 + (index * 0.06)}s` }}
+                            >
+                                {/* Image Section */}
+                                <div className="relative h-40 sm:h-44 overflow-hidden">
+                                    <Image
+                                        src={course.image}
+                                        alt={course.title}
+                                        fill
+                                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                                        quality={90}
+                                        loading="lazy"
+                                        className="object-cover brightness-90 transition-all duration-500 group-hover:brightness-100 group-hover:scale-105"
+                                    />
+                                    
+                                    {/* Gradient Overlay */}
+                                    <div className={`absolute inset-0 bg-gradient-to-t ${course.gradient} opacity-40`} />
+                                    
+                                    {/* Duration Badge - top right */}
+                                    <div className="absolute top-3 right-3">
+                                        <span className="text-[10px] md:text-xs font-bold px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-gray-800 border border-white/40 shadow-sm">
+                                            {course.duration}
+                                        </span>
+                                    </div>
 
-                                {/* Duration Badge - top right */}
-                                <div className="absolute top-3 right-3">
-                                    <span className="text-[10px] md:text-xs font-bold px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-gray-800 border border-white/40 shadow-sm">
-                                        {course.duration}
-                                    </span>
+                                    {/* Course Title Overlay on Image */}
+                                    <div className="absolute bottom-0 left-0 right-0 p-4">
+                                        <h3 className="text-sm md:text-base font-bold tracking-tight text-white drop-shadow-md">
+                                            {course.title}
+                                        </h3>
+                                    </div>
                                 </div>
 
-                                {/* Course Title Overlay on Image */}
-                                <div className="absolute bottom-0 left-0 right-0 p-3 md:p-4">
-                                    <h3 className="text-sm md:text-base font-bold tracking-tight text-white drop-shadow-md">
-                                        {course.title}
-                                    </h3>
+                                {/* Details Section */}
+                                <div className="p-4 sm:p-5 flex-1 flex flex-col">
+                                    <p className="text-sm text-gray-500 leading-relaxed flex-1">
+                                        {course.description}
+                                    </p>
+                                    
+                                    <div className="mt-4 pt-3 border-t border-gray-100">
+                                        <button className="w-full flex items-center justify-center gap-1.5 text-sm font-semibold text-red-500 hover:text-red-600 transition-colors cursor-pointer">
+                                            Enroll Now
+                                            <svg className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-
-                            {/* Details Section */}
-                            <div className="p-3 md:p-4">
-                                <p className="text-xs md:text-sm text-gray-500 leading-relaxed mb-3 line-clamp-2">
-                                    {course.description}
-                                </p>
-                                
-                                {/* Lessons pill */}
-                                <div className="flex flex-wrap gap-2 mb-3">
-                                    <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-gray-700 bg-gray-100 border border-gray-200 rounded-full px-2.5 py-1">
-                                        <svg className="w-3 h-3 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                                        </svg>
-                                        {course.lessons}
-                                    </span>
-                                </div>
-                                
-                            </div>
-                        </div>
-                    ))}
-                </div>
-
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     )
