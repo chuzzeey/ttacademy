@@ -188,7 +188,7 @@ export default function TeachersPage() {
             <p className="text-gray-500">No courses found matching your search</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6 md:pl-16 md:pr-16 lg:pl-24 lg:pr-24 xl:pl-32 xl:pr-32">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6 md:pl-16 md:pr-16 md:pt-8 md:pb-8 lg:pl-24 lg:pr-24 lg:pt-12 lg:pb-12 xl:pl-32 xl:pr-32 xl:pt-16 xl:pb-16">
             {filteredCourses.map((course) => (
               <div
                 key={course.id}
