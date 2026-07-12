@@ -73,11 +73,11 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Create Supabase auth user with default password "126"
+    // Create Supabase auth user with default password "123456"
     const supabase = await createAdminClient()
     const { error: authError } = await supabase.auth.admin.createUser({
       email: email.trim().toLowerCase(),
-      password: "126",
+      password: "123456",
       email_confirm: true,
       user_metadata: {
         name: full_name.trim(),
