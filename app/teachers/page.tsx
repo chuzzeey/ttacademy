@@ -188,7 +188,7 @@ export default function TeachersPage() {
             <p className="text-gray-500">No courses found matching your search</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-6">
             {filteredCourses.map((course) => (
               <div
                 key={course.id}
@@ -196,7 +196,7 @@ export default function TeachersPage() {
                 className="group bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col hover:-translate-y-1"
               >
                 {/* Course Image */}
-                <div className="relative h-40 sm:h-44 overflow-hidden">
+                <div className="relative h-28 sm:h-36 md:h-44 overflow-hidden">
                   <Image
                     src={course.image}
                     alt={course.title}
@@ -213,19 +213,19 @@ export default function TeachersPage() {
                 </div>
 
                 {/* Content */}
-                <div className="p-4 sm:p-5 flex-1 flex flex-col">
-                  <h3 className="text-base sm:text-lg font-bold text-gray-900">
+                <div className="p-3 sm:p-5 flex-1 flex flex-col">
+                  <h3 className="text-sm sm:text-base lg:text-lg font-bold text-gray-900">
                     {course.title}
                   </h3>
                   
-                  <p className="mt-1.5 text-sm text-gray-500 leading-relaxed flex-1">
+                  <p className="mt-1 text-xs sm:text-sm text-gray-500 leading-relaxed flex-1 line-clamp-2 sm:line-clamp-none">
                     {course.description}
                   </p>
 
-                  <div className="mt-4 pt-3 border-t border-gray-100">
-                    <button className="w-full flex items-center justify-center gap-1.5 text-sm font-semibold text-indigo-500 hover:text-indigo-600 transition-colors cursor-pointer">
+                  <div className="mt-2 sm:mt-4 pt-2 sm:pt-3 border-t border-gray-100">
+                    <button className="w-full flex items-center justify-center gap-1 text-xs sm:text-sm font-semibold text-indigo-500 hover:text-indigo-600 transition-colors cursor-pointer">
                       Manage Course
-                      <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                      <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 group-hover:translate-x-0.5 transition-transform" />
                     </button>
                   </div>
                 </div>
