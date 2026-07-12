@@ -192,7 +192,7 @@ export default function DashboardPage() {
             <div className="h-2 bg-[#0b141a] rounded-full overflow-hidden">
               <div
                 className="h-full bg-[#00a884] rounded-full transition-all duration-700 ease-out"
-                style={{ width: `${currentProgress}%` }}
+                style={{ width: '5%' }}
               />
             </div>
           </div>
