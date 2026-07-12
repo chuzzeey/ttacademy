@@ -188,7 +188,7 @@ export default function ClassroomPage() {
             <p className="text-gray-500">No courses found matching your search</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-6">
+         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6 lg:pl-2 lg:pr-2 lg:pt-12 lg:pb-12  2xl:px-45">
             {filteredCourses.map((course) => (
               <div
                 key={course.id}
