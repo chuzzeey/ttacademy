@@ -186,8 +186,8 @@ export default function DashboardPage() {
           {/* Progress */}
           <div className="px-4 py-4 border-b border-[#2a3942]">
             <div className="flex items-center justify-between text-xs mb-2">
-              <span className="text-gray-400 font-medium">Your Progress</span>
-              <span className="font-semibold text-[#00a884] tabular-nums">{currentProgress}%</span>
+              <span className="text-gray-400 font-medium">Current Week</span>
+              <span className="font-semibold text-[#00a884] tabular-nums">Week 1</span>
             </div>
             <div className="h-2 bg-[#0b141a] rounded-full overflow-hidden">
               <div
