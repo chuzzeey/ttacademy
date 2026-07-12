@@ -105,9 +105,6 @@ export default function DashboardPage() {
             <h1 className="text-base font-semibold text-gray-100 leading-tight truncate">
               {courseData.title}
             </h1>
-            <p className="text-[6px] sm:text-[7px] md:text-[8px] text-gray-400 mt-0.5 leading-relaxed">
-              Important Notice: Messages in this channel are broadcast for your information and do not support replies.
-            </p>
           </div>
         </div>
 
@@ -136,6 +133,9 @@ export default function DashboardPage() {
               </p>
               <p className="text-[10px] text-gray-400 mt-2">
                 {courseData.description}
+              </p>
+              <p className="text-[9px] text-gray-500 mt-2 italic">
+                Important Notice: Messages in this channel are broadcast for your information and do not support replies.
               </p>
               <p className="text-[10px] text-gray-500 mt-2">
                 Today at {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
