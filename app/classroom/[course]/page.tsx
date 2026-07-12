@@ -1,3 +1,8 @@
+
+
+
+
+
 'use client'
 
 import { useParams, useRouter } from 'next/navigation'
@@ -282,6 +287,25 @@ export default function CoursePage() {
 
   const Icon = course.icon
 
+  const courseImages: Record<string, { img: string, textColor: string, tagColor: string, accentColor: string }> = {
+    'cybersecurity': { img: '/cybersecurity_course.jpeg', textColor: 'text-red-100', tagColor: 'text-red-200', accentColor: 'text-red-200' },
+    'data-science': { img: '/data_science_course.jpeg', textColor: 'text-emerald-100', tagColor: 'text-emerald-200', accentColor: 'text-emerald-200' },
+    'ai-automation': { img: '/ai_course.jpeg', textColor: 'text-amber-100', tagColor: 'text-amber-200', accentColor: 'text-amber-200' },
+    'computer-networking': { img: '/neti.jpeg', textColor: 'text-cyan-100', tagColor: 'text-cyan-200', accentColor: 'text-cyan-200' },
+    'ethical-hacking': { img: '/ethical_hack.jpeg', textColor: 'text-rose-100', tagColor: 'text-rose-200', accentColor: 'text-rose-200' },
+    'graphic-design': { img: '/graphic_design_course.jpeg', textColor: 'text-pink-100', tagColor: 'text-pink-200', accentColor: 'text-pink-200' },
+    'uiux-design': { img: '/uiux_course.jpeg', textColor: 'text-purple-100', tagColor: 'text-purple-200', accentColor: 'text-purple-200' },
+    'full-stack-development': { img: '/fullstack_course.jpeg', textColor: 'text-blue-100', tagColor: 'text-blue-200', accentColor: 'text-blue-200' },
+    'frontend-development': { img: '/frontend_course.jpeg', textColor: 'text-sky-100', tagColor: 'text-sky-200', accentColor: 'text-sky-200' },
+    'backend-development': { img: '/backend_course.jpeg', textColor: 'text-indigo-100', tagColor: 'text-indigo-200', accentColor: 'text-indigo-200' },
+    'web-development': { img: '/webi.jpeg', textColor: 'text-teal-100', tagColor: 'text-teal-200', accentColor: 'text-teal-200' },
+    'digital-marketing': { img: '/digital_marketing_couse.jpeg', textColor: 'text-orange-100', tagColor: 'text-orange-200', accentColor: 'text-orange-200' },
+    'cloud-computing': { img: '/cloud_course.jpeg', textColor: 'text-violet-100', tagColor: 'text-violet-200', accentColor: 'text-violet-200' },
+    'data-analysis': { img: '/data_science_course.jpeg', textColor: 'text-lime-100', tagColor: 'text-lime-200', accentColor: 'text-lime-200' },
+  }
+
+  const bg = courseImages[params.course as string] || courseImages['data-science']
+
   return (
     <main className={`min-h-screen bg-gradient-to-br from-gray-50 via-white to-${course.accent}-50`}>
       {/* Back bar */}
@@ -297,7 +321,15 @@ export default function CoursePage() {
       </motion.div>
 
       {/* Hero Section */}
-      <div className={`relative overflow-hidden bg-gradient-to-br ${course.gradient}`}>
+      <div className={`relative overflow-hidden ${course.gradient}`}>
+        <div className="absolute inset-0 z-0">
+          <img 
+            src={bg.img}
+            alt="" 
+            className="w-full h-full object-cover blur-sm scale-105"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-black/20 via-black/10 to-black/20" />
+        </div>
         <div className="relative max-w-full mx-auto px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 py-16 sm:py-24">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
             <motion.div initial={{ scale: 0, rotate: -10 }} animate={{ scale: 1, rotate: 0 }} transition={{ delay: 0.2, type: "spring", stiffness: 200 }} className={`inline-flex items-center justify-center w-20 h-20 rounded-2xl ${course.iconBg} ${course.iconColor} shadow-lg`}>
@@ -305,13 +337,13 @@ export default function CoursePage() {
             </motion.div>
             <div className="flex-1">
               <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
-                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 tracking-tight">{course.title}</h1>
-                <p className="mt-2 text-xl sm:text-2xl text-gray-600 font-medium">{course.tagline}</p>
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white">{course.title}</h1>
+                <p className={`mt-2 text-xl sm:text-2xl font-medium ${bg.textColor}`}>{course.tagline}</p>
               </motion.div>
             </div>
             <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.5 }} className="flex items-center gap-3">
-              <Award className={`w-5 h-5 ${course.iconColor}`} />
-              <span className="text-sm font-semibold text-gray-700">{course.level}</span>
+              <Award className={`w-5 h-5 ${bg.accentColor}`} />
+              <span className={`text-sm font-semibold ${bg.tagColor}`}>{course.level}</span>
             </motion.div>
           </motion.div>
         </div>
@@ -345,7 +377,7 @@ export default function CoursePage() {
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className={`p-8 rounded-2xl bg-gradient-to-br ${course.gradient} border ${course.borderColor}`}>
               <div className="flex items-center gap-4 mb-4">
                 <Award className={`w-8 h-8 ${course.iconColor}`} />
-                <h3 className="text-2xl font-bold text-gray-900">Welcome to {course.title}!</h3>
+                <h3 className="text-2xl font-bold text-gray-900">Welcome to {course.title} Classroom!</h3>
               </div>
               <p className="text-gray-700 text-lg">
                 You are now enrolled! Your journey to becoming a {course.outcome} starts now. All course materials, assignments, and resources are available to you.
