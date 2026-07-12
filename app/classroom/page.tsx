@@ -192,7 +192,7 @@ export default function ClassroomPage() {
             {filteredCourses.map((course) => (
               <div
                 key={course.id}
-                onClick={() => router.push(`/classroom/${course.id}`)}
+                onClick={() => router.push(`/classroom/${course.id}/login`)}
                 className="group bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col hover:-translate-y-1"
               >
                 {/* Course Image */}
