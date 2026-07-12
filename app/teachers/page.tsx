@@ -143,10 +143,10 @@ export default function TeachersPage() {
       {/* Decorative Elements */}
       <div className="absolute top-20 right-0 w-96 h-96 bg-gradient-to-bl from-[#6366f1]/10 to-transparent rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-40 left-20 w-64 h-64 bg-gradient-to-tr from-[#4338ca]/8 to-transparent rounded-full blur-3xl pointer-events-none" />
-
+    
       {/* Header */}
       <div className="relative overflow-hidden">
-        <div className="max-w-full mx-auto px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 py-12 sm:py-16">
+        <div className="max-w-full mx-auto px-6 sm:px-8 md:px-10 lg:px-10 xl:px-20 py-12 sm:py-16">
           <div className="text-center space-y-5 md:space-y-6">
             <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm border border-[#6366f1]/20 rounded-full px-4 py-1.5">
               <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
@@ -188,7 +188,7 @@ export default function TeachersPage() {
             <p className="text-gray-500">No courses found matching your search</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6 md:pl-16 md:pr-16 md:pt-8 md:pb-8 lg:pl-24 lg:pr-24 lg:pt-12 lg:pb-12 xl:pl-32 xl:pr-32 xl:pt-16 xl:pb-16">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6 lg:pl-24 lg:pr-24 lg:pt-12 lg:pb-12">
             {filteredCourses.map((course) => (
               <div
                 key={course.id}
