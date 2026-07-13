@@ -1,10 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
-import { Button } from "../ui/button"
-import { ChevronDown } from "lucide-react"
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts"
+import { useStudentStore } from "@/lib/stores/student-store"
 
 const COLORS = ["#3b82f6", "#22c55e", "#8b5cf6", "#f97316", "#ef4444", "#14b8a6", "#eab308", "#ec4899"]
 
@@ -28,52 +27,39 @@ const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<
 }
 
 export function RegionalInfo() {
-  const [regionData, setRegionData] = useState<RegionData[]>([])
-  const [totalStudents, setTotalStudents] = useState(0)
-  const [topRegion, setTopRegion] = useState("")
-  const [topRegionCount, setTopRegionCount] = useState(0)
+  const students = useStudentStore((state) => state.students)
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await fetch("/api/registrations")
-        const json = await res.json()
-        if (json.data) {
-          // Count students by country
-          const countryCount: Record<string, number> = {}
-          json.data.forEach((s: any) => {
-            const country = s.country || "Unknown"
-            countryCount[country] = (countryCount[country] || 0) + 1
-          })
-
-          // Sort by count descending, take top 8
-          const sorted = Object.entries(countryCount)
-            .sort(([, a], [, b]) => b - a)
-
-          const total = json.data.length
-          setTotalStudents(total)
-
-          // Set top region
-          if (sorted.length > 0) {
-            setTopRegion(sorted[0][0])
-            setTopRegionCount(sorted[0][1])
-          }
-
-          // Map to chart data with colors
-          const chartData = sorted.slice(0, 8).map(([country, value], index) => ({
-            country,
-            value,
-            color: COLORS[index % COLORS.length],
-          }))
-
-          setRegionData(chartData)
-        }
-      } catch (err) {
-        console.error("Failed to fetch regional data:", err)
-      }
+  const { regionData, totalStudents, topRegion, topRegionCount } = useMemo(() => {
+    if (students.length === 0) {
+      return { regionData: [] as RegionData[], totalStudents: 0, topRegion: "", topRegionCount: 0 }
     }
-    fetchData()
-  }, [])
+
+    // Count students by country
+    const countryCount: Record<string, number> = {}
+    students.forEach((s: any) => {
+      const country = s.country || "Unknown"
+      countryCount[country] = (countryCount[country] || 0) + 1
+    })
+
+    // Sort by count descending, take top 8
+    const sorted = Object.entries(countryCount)
+      .sort(([, a], [, b]) => b - a)
+
+    const total = students.length
+
+    // Set top region
+    const top = sorted.length > 0 ? sorted[0][0] : ""
+    const topCount = sorted.length > 0 ? sorted[0][1] : 0
+
+    // Map to chart data with colors
+    const chartData = sorted.slice(0, 8).map(([country, value], index) => ({
+      country,
+      value,
+      color: COLORS[index % COLORS.length],
+    }))
+
+    return { regionData: chartData, totalStudents: total, topRegion: top, topRegionCount: topCount }
+  }, [students])
 
   return (
     <Card className="dashboard-card h-full">
@@ -123,7 +109,7 @@ export function RegionalInfo() {
                 </ResponsiveContainer>
               ) : (
                 <div className="h-full flex items-center justify-center">
-                  <p className="text-xs text-muted-foreground">Loading...</p>
+                  <p className="text-xs text-muted-foreground">No data yet</p>
                 </div>
               )}
             </div>

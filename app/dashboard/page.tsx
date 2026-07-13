@@ -9,6 +9,7 @@ import { RecentlyJoined } from "./components/dashboard/recently-joined"
 import { RegionalInfo } from "./components/dashboard/regional-info"
 import { Button } from "./components/ui/button"
 import { Users, AlertCircle, DollarSign, Calendar, RefreshCw } from "lucide-react"
+import { useStudents } from "@/lib/hooks/use-students"
 
 export default function DashboardPage() {
   const [showPopup, setShowPopup] = useState(false)
@@ -18,6 +19,37 @@ export default function DashboardPage() {
   const [enrolledStudents, setEnrolledStudents] = useState("0")
   const [totalRevenue, setTotalRevenue] = useState("₦0")
   const [thisWeek, setThisWeek] = useState("0")
+
+  // Use the custom hook for instant updates and caching
+  const { students, refetch, setupRealtimeSubscription } = useStudents()
+
+  // Calculate metrics instantly when students change
+  useEffect(() => {
+    if (students.length > 0) {
+      const total = students.length
+      const enrolled = students.filter((s: any) => s.payment_status && s.payment_status !== "Not Paid").length
+      const revenue = students.reduce((sum: number, s: any) => {
+        if (s.payment_status === "Fully Paid") return sum + 50000
+        if (s.payment_status === "1st Installment" || s.payment_status === "2nd Installment") return sum + 25000
+        return sum
+      }, 0)
+      
+      const now = new Date()
+      const weekStart = new Date(now.setDate(now.getDate() - now.getDay()))
+      weekStart.setHours(0, 0, 0, 0)
+      
+      const thisWeekCount = students.filter((s: any) => {
+        if (!s.created_at) return false
+        const regDate = new Date(s.created_at)
+        return regDate >= weekStart
+      }).length
+
+      setTotalStudents(total.toString())
+      setEnrolledStudents(enrolled.toString())
+      setTotalRevenue(`₦${revenue.toLocaleString()}`)
+      setThisWeek(thisWeekCount.toString())
+    }
+  }, [students])
 
   const updateTimeAgo = () => {
     const date = lastUpdatedRef.current
@@ -46,51 +78,14 @@ export default function DashboardPage() {
     }
   }
 
-  const fetchMetrics = async () => {
-    try {
-      const res = await fetch("/api/registrations")
-      const json = await res.json()
-      if (json.data) {
-        const students = json.data
-        const total = students.length
-        
-        // Count enrolled students (not "Not Paid")
-        const enrolled = students.filter((s: any) => s.payment_status && s.payment_status !== "Not Paid").length
-        
-        // Calculate total revenue based on payment status
-        const revenue = students.reduce((sum: number, s: any) => {
-          if (s.payment_status === "Fully Paid") return sum + 50000
-          if (s.payment_status === "1st Installment" || s.payment_status === "2nd Installment") return sum + 25000
-          return sum
-        }, 0)
-        
-        // Count students registered this week
-        const now = new Date()
-        const weekStart = new Date(now.setDate(now.getDate() - now.getDay()))
-        weekStart.setHours(0, 0, 0, 0)
-        
-        const thisWeekCount = students.filter((s: any) => {
-          if (!s.createdAt) return false
-          const regDate = new Date(s.createdAt)
-          return regDate >= weekStart
-        }).length
-
-        setTotalStudents(total.toString())
-        setEnrolledStudents(enrolled.toString())
-        setTotalRevenue(`₦${revenue.toLocaleString()}`)
-        setThisWeek(thisWeekCount.toString())
-      }
-    } catch (err) {
-      console.error("Failed to fetch metrics:", err)
-    }
-  }
-
-  const handleRefresh = () => {
-    window.location.reload()
+  const handleRefresh = async () => {
+    await refetch()
+    const now = new Date()
+    lastUpdatedRef.current = now
+    updateTimeAgo()
   }
 
   useEffect(() => {
-    fetchMetrics()
     const now = new Date()
     lastUpdatedRef.current = now
     updateTimeAgo()
@@ -100,8 +95,14 @@ export default function DashboardPage() {
       updateTimeAgo()
     }, 10000)
     
-    return () => clearInterval(interval)
-  }, [])
+    // Set up realtime subscription for instant updates
+    const cleanup = setupRealtimeSubscription()
+    
+    return () => {
+      clearInterval(interval)
+      cleanup()
+    }
+  }, [setupRealtimeSubscription])
 
   return (
     <>
@@ -121,7 +122,7 @@ export default function DashboardPage() {
         </Button>
       </PageHeader>
 
-      {/* Metric Cards */}
+      {/* Metric Cards - Render instantly with current values */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6">
         <MetricCard title="Total Students" value={totalStudents} icon={Users} description="Total registrations" />
         <MetricCard title="Enrolled Students" value={enrolledStudents} icon={AlertCircle} description="Acquisition needs attention" />

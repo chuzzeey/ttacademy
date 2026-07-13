@@ -1,56 +1,26 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
-import { Button } from "../ui/button"
-import { MoreHorizontal } from "lucide-react"
+import { useStudentStore } from "@/lib/stores/student-store"
 
-interface RecentStudent {
-  name: string
-  course: string
-  joined: string
-  sex: string
-  image: string
+const formatCourseName = (course: string) => {
+  return course
+    .split(/(?<=[a-z])(?=[A-Z])|_|-| /)
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(" ")
 }
 
-  const formatCourseName = (course: string) => {
-    return course
-      .split(/(?<=[a-z])(?=[A-Z])|_|-| /)
-      .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-      .join(" ")
-  }
-
 export function RecentlyJoined() {
-  const [students, setStudents] = useState<RecentStudent[]>([])
+  const students = useStudentStore((state) => state.students)
 
-  useEffect(() => {
-    let isMounted = true
-
-    const fetchRecentStudents = async () => {
-      try {
-        const res = await fetch("/api/registrations")
-        const json = await res.json()
-        if (json.data && isMounted) {
-          const mapped = json.data.map((s: any) => ({
-            name: s.name,
-            course: formatCourseName(s.course),
-            joined: s.reg_date && s.reg_time ? `${s.reg_date} ${s.reg_time}` : s.createdAt ? new Date(s.createdAt).toLocaleDateString() : "N/A",
-            sex: s.sex ? s.sex.charAt(0).toUpperCase() + s.sex.slice(1).toLowerCase() : "N/A",
-            image: "/avatar.png",
-          }))
-          // Get first 4 (API returns newest first)
-          setStudents(mapped.slice(0, 4))
-        }
-      } catch (err) {
-        console.error("Failed to fetch recent students:", err)
-      }
-    }
-    fetchRecentStudents()
-
-    return () => {
-      isMounted = false
-    }
-  }, [])
+  // Get first 4 newest students from the store
+  const recentStudents = students.slice(0, 4).map((s: any) => ({
+    name: s.name,
+    course: formatCourseName(s.course),
+    joined: s.reg_date && s.reg_time ? `${s.reg_date} ${s.reg_time}` : s.created_at ? new Date(s.created_at).toLocaleDateString() : "N/A",
+    sex: s.sex ? s.sex.charAt(0).toUpperCase() + s.sex.slice(1).toLowerCase() : "N/A",
+    image: "/avatar.png",
+  }))
 
   return (
     <Card className="dashboard-card h-full">
@@ -59,10 +29,10 @@ export function RecentlyJoined() {
         <span className="text-sm font-medium ml-2">Joined</span>
       </CardHeader>
       <CardContent className="space-y-4">
-        {students.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-4">Loading...</p>
+        {recentStudents.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-4">No students yet</p>
         ) : (
-          students.map((student, index) => (
+          recentStudents.map((student, index) => (
             <div key={index} className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-lg bg-muted overflow-hidden">

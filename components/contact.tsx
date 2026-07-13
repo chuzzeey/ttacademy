@@ -133,7 +133,11 @@ export default function Contact() {
         }),
       })
       if (res.ok) setSubmitted(true)
-      else { const r = await res.json(); alert(`Registration failed: ${r.error}. Please try again later.`) }
+      else { 
+        const r = await res.json(); 
+        const errorMsg = typeof r.error === 'string' ? r.error : JSON.stringify(r.error) || 'Please try again later.'
+        alert(`Registration failed: ${errorMsg}`) 
+      }
     } catch { alert("Registration failed. Please check your connection and try again.") }
     finally { setSubmitting(false) }
   }

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { SmoothScrollProvider } from "@/components/smooth-scroll";
 import { ThemeProvider } from "@/components/theme-provider";
+import { QueryProvider } from "@/lib/query-provider";
 
 const notoSans = Noto_Sans({
   subsets: ["latin"],
@@ -190,16 +191,18 @@ export default function RootLayout({
         />
       </head>
       <body className={notoSans.variable}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem={false}
-          disableTransitionOnChange
-        >
-          <SmoothScrollProvider>
-            {children}
-          </SmoothScrollProvider>
-        </ThemeProvider>
+        <QueryProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="dark"
+            enableSystem={false}
+            disableTransitionOnChange
+          >
+            <SmoothScrollProvider>
+              {children}
+            </SmoothScrollProvider>
+          </ThemeProvider>
+        </QueryProvider>
       </body>
     </html>
   );

@@ -62,21 +62,26 @@ export async function POST(request: NextRequest) {
         email: email.trim().toLowerCase(),
         phone: phone_whatsapp.trim(),
         course: course_applying_for,
-        sex,
-        country,
+        sex: sex,
+        country: country,
         state: state || null,
-        employment_status,
-        has_laptop,
+        employment_status: employment_status,
+        has_laptop: has_laptop,
         reason: (learning_reason || "").trim(),
         payment_status: "Not Paid",
-        password: "123456",
         reg_date: regDate,
         reg_time: regTime,
       })
       .select()
       .single()
 
-    if (insertError) throw insertError
+    if (insertError) {
+      console.error("Database insert error:", insertError)
+      return NextResponse.json(
+        { error: insertError.message || "Failed to save registration. Please try again." },
+        { status: 500 }
+      )
+    }
 
     // Create Supabase auth user with default password "123456"
     try {
@@ -111,14 +116,29 @@ export async function POST(request: NextRequest) {
       }
     );
 
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
+  } catch (err: any) {
+    let errorMessage = "An unexpected error occurred. Please try again."
+    
+    if (err instanceof Error) {
+      errorMessage = err.message
+    } else if (typeof err === 'object' && err !== null) {
+      // Handle Supabase error objects
+      if (err.message) {
+        errorMessage = err.message
+      } else if (err.error) {
+        errorMessage = typeof err.error === 'string' ? err.error : JSON.stringify(err.error)
+      } else {
+        errorMessage = JSON.stringify(err)
+      }
+    } else if (typeof err === 'string') {
+      errorMessage = err
+    }
 
-    console.error("Registration API error:", message);
+    console.error("Registration API error:", errorMessage)
 
     return NextResponse.json(
       {
-        error: message,
+        error: errorMessage,
       },
       {
         status: 500,
