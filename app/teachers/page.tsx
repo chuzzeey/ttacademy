@@ -133,20 +133,22 @@ export default function TeachersPage() {
   const router = useRouter()
   const [searchTerm, setSearchTerm] = useState('')
 
-  const filteredCourses = courses.filter(course => 
+  const filteredCourses = courses.filter(course =>
     course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     course.description.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-white via-indigo-50/30 to-white">
-      {/* Decorative Elements */}
+    <main className="relative overflow-x-hidden min-h-screen bg-gradient-to-br from-white via-indigo-50/30 to-white">
+      {/* Decorative Elements — now correctly scoped to `main` (relative)
+          and clipped by overflow-x-hidden so they can't push out a
+          horizontal scrollbar on wide screens */}
       <div className="absolute top-20 right-0 w-96 h-96 bg-gradient-to-bl from-[#6366f1]/10 to-transparent rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-40 left-20 w-64 h-64 bg-gradient-to-tr from-[#4338ca]/8 to-transparent rounded-full blur-3xl pointer-events-none" />
-    
+
       {/* Header */}
       <div className="relative overflow-hidden">
-        <div className="max-w-full mx-auto px-6 sm:px-8 md:px-10 lg:px-10 xl:px-20 py-12 sm:py-16">
+        <div className="max-w-6xl mx-auto px-6 sm:px-8 md:px-10 lg:px-12 xl:px-16 py-12 sm:py-16 lg:py-20">
           <div className="text-center space-y-5 md:space-y-6">
             <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm border border-[#6366f1]/20 rounded-full px-4 py-1.5">
               <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
@@ -166,7 +168,7 @@ export default function TeachersPage() {
       </div>
 
       {/* Search Bar */}
-      <div className="max-w-full mx-auto px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 py-6">
+      <div className="max-w-6xl mx-auto px-6 sm:px-8 md:px-10 lg:px-12 xl:px-16 py-6">
         <div className="relative max-w-xl mx-auto">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <Search className="h-5 w-5 text-gray-400" />
@@ -182,13 +184,18 @@ export default function TeachersPage() {
       </div>
 
       {/* Course Grid */}
-      <div className="max-w-full mx-auto px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 py-6 pb-16">
+      {/* Single source of truth for horizontal spacing on this section —
+          the grid no longer carries its own conflicting lg:pl/pr rules.
+          Column count now climbs smoothly: 2 -> 3 -> 4 -> 5 -> 6, so
+          large/xl screens actually fill out instead of stretching 5
+          columns across with dead px-45 padding that never applied. */}
+      <div className="max-w-[1600px] mx-auto px-6 sm:px-8 md:px-10 lg:px-12 xl:px-16 2xl:px-20 py-6 pb-16">
         {filteredCourses.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-500">No courses found matching your search</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6 lg:pl-2 lg:pr-2 lg:pt-12 lg:pb-12  2xl:px-45">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 sm:gap-5 lg:gap-6">
             {filteredCourses.map((course) => (
               <div
                 key={course.id}
@@ -196,13 +203,13 @@ export default function TeachersPage() {
                 className="group bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col hover:-translate-y-1"
               >
                 {/* Course Image */}
-                <div className="relative h-28 sm:h-36 md:h-44 overflow-hidden">
+                <div className="relative h-28 sm:h-36 md:h-40 lg:h-36 xl:h-40 overflow-hidden">
                   <Image
                     src={course.image}
                     alt={course.title}
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-500"
-                    sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                    sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, (max-width: 1280px) 20vw, 16vw"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                   <div className="absolute top-3 right-3">
@@ -213,11 +220,11 @@ export default function TeachersPage() {
                 </div>
 
                 {/* Content */}
-                <div className="p-3 sm:p-5 flex-1 flex flex-col">
+                <div className="p-3 sm:p-4 lg:p-5 flex-1 flex flex-col">
                   <h3 className="text-sm sm:text-base lg:text-lg font-bold text-gray-900">
                     {course.title}
                   </h3>
-                  
+
                   <p className="mt-1 text-xs sm:text-sm text-gray-500 leading-relaxed flex-1 line-clamp-2 sm:line-clamp-none">
                     {course.description}
                   </p>

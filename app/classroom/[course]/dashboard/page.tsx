@@ -43,8 +43,7 @@ export default function DashboardPage() {
   // Setup Supabase Realtime subscription
   useEffect(() => {
     const supabase = createClient()
-    
-    // Subscribe to new messages for this course
+
     const channel = supabase
       .channel(`messages:${courseSlug}`)
       .on(
@@ -56,14 +55,12 @@ export default function DashboardPage() {
           filter: `course=eq.${courseSlug}`,
         },
         (payload) => {
-          // Add new message to the list
           const newMessage = payload.new as Message
           setMessages(prev => [...prev, newMessage])
         }
       )
       .subscribe()
 
-    // Cleanup subscription on unmount
     return () => {
       supabase.removeChannel(channel)
     }
@@ -97,40 +94,46 @@ export default function DashboardPage() {
 
   const currentProgress = Math.round((completedLessons.size / dashboard.lessons.length) * 100)
 
-  const getCourseIcon = (size: string = '5') => {
+  // Pass the FULL class string in (not just a number) — Tailwind's JIT
+  // scanner can't detect dynamically-built class names like `w-${size}`,
+  // so that pattern silently produced icons with no width/height applied.
+  const getCourseIcon = (sizeClass: string = 'w-5 h-5') => {
     const iconMap: Record<string, React.ReactNode> = {
-      'cybersecurity': <Shield className={`w-${size} h-${size} text-white`} />,
-      'data-science': <Brain className={`w-${size} h-${size} text-white`} />,
-      'frontend': <Code className={`w-${size} h-${size} text-white`} />,
-      'backend': <Database className={`w-${size} h-${size} text-white`} />,
-      'fullstack': <Globe className={`w-${size} h-${size} text-white`} />,
-      'uiux': <Palette className={`w-${size} h-${size} text-white`} />,
-      'graphic-design': <Palette className={`w-${size} h-${size} text-white`} />,
-      'ethical-hacking': <Shield className={`w-${size} h-${size} text-white`} />,
+      'cybersecurity': <Shield className={`${sizeClass} text-white`} />,
+      'data-science': <Brain className={`${sizeClass} text-white`} />,
+      'frontend': <Code className={`${sizeClass} text-white`} />,
+      'backend': <Database className={`${sizeClass} text-white`} />,
+      'fullstack': <Globe className={`${sizeClass} text-white`} />,
+      'uiux': <Palette className={`${sizeClass} text-white`} />,
+      'graphic-design': <Palette className={`${sizeClass} text-white`} />,
+      'ethical-hacking': <Shield className={`${sizeClass} text-white`} />,
     };
-    return iconMap[courseSlug] || <GraduationCap className={`w-${size} h-${size} text-white`} />;
+    return iconMap[courseSlug] || <GraduationCap className={`${sizeClass} text-white`} />;
   }
 
   return (
-    <div className="h-screen bg-[#111b21] flex font-sans antialiased">
-      {/* ===== SIDEBAR OVERLAY (mobile) ===== */}
+    <div className="h-screen bg-[#111b21] flex font-sans antialiased overflow-hidden">
+      {/* ===== SIDEBAR OVERLAY (mobile only now — sidebar is persistent from md up) ===== */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* ===== SIDEBAR ===== */}
-      <aside className={`fixed top-0 left-0 h-full w-72 bg-[#111b21] border-r border-[#2a3942] z-50 transform transition-transform duration-300 ease-out shadow-2xl ${
+      {/* Persistent (no overlay, no toggle) from md upward. Only slides as
+          an overlay drawer below md. Width scales up at lg/xl so it doesn't
+          look cramped on big screens. */}
+      <aside className={`fixed top-0 left-0 h-full w-72 md:w-64 lg:w-72 xl:w-80 bg-[#111b21] border-r border-[#2a3942] z-50 transform transition-transform duration-300 ease-out shadow-2xl md:shadow-none ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      } lg:translate-x-0`}>
+      } md:translate-x-0`}>
         <div className="flex flex-col h-full">
           {/* Sidebar Header */}
-          <div className="h-16 flex items-center justify-between px-4 border-b border-[#2a3942]">
+          <div className="h-16 flex items-center justify-between px-4 lg:px-5 border-b border-[#2a3942] shrink-0">
             <div className="flex items-center gap-3 min-w-0">
               <div className={`w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br ${courseData.color} flex items-center justify-center shrink-0`}>
-                {getCourseIcon('5')}
+                {getCourseIcon('w-5 h-5')}
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-gray-100 leading-tight truncate">{courseData.title}</p>
@@ -139,14 +142,14 @@ export default function DashboardPage() {
             </div>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="lg:hidden text-gray-400 hover:text-gray-200 transition-colors rounded-md p-1 hover:bg-[#2a3942]"
+              className="md:hidden text-gray-400 hover:text-gray-200 transition-colors rounded-md p-1 hover:bg-[#2a3942] shrink-0"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
           {/* Progress */}
-          <div className="px-4 py-4 border-b border-[#2a3942]">
+          <div className="px-4 lg:px-5 py-4 border-b border-[#2a3942] shrink-0">
             <div className="flex items-center justify-between text-xs mb-2">
               <span className="text-gray-400 font-medium">Current Week</span>
               <span className="font-semibold text-[#00a884] tabular-nums">Week 1</span>
@@ -160,7 +163,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 overflow-y-auto p-3 space-y-1">
+          <nav className="flex-1 overflow-y-auto p-3 lg:p-4 space-y-1">
             <button
               onClick={() => { setActiveSection('notifications'); setSidebarOpen(false) }}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
@@ -169,7 +172,7 @@ export default function DashboardPage() {
                   : 'text-gray-400 hover:bg-[#2a3942] hover:text-gray-200 font-medium'
               }`}
             >
-              <Bell className="w-4 h-4" />
+              <Bell className="w-4 h-4 shrink-0" />
               Notifications
             </button>
 
@@ -181,7 +184,7 @@ export default function DashboardPage() {
                   : 'text-gray-400 hover:bg-[#2a3942] hover:text-gray-200 font-medium'
               }`}
             >
-              <FileText className="w-4 h-4" />
+              <FileText className="w-4 h-4 shrink-0" />
               Assignments
             </button>
 
@@ -193,13 +196,13 @@ export default function DashboardPage() {
                   : 'text-gray-400 hover:bg-[#2a3942] hover:text-gray-200 font-medium'
               }`}
             >
-              <UsersRound className="w-4 h-4" />
+              <UsersRound className="w-4 h-4 shrink-0" />
               Account Settings
             </button>
           </nav>
 
           {/* Sidebar footer: profile */}
-          <div className="p-3 border-t border-[#2a3942]">
+          <div className="p-3 lg:p-4 border-t border-[#2a3942] shrink-0">
             <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-[#2a3942] transition-colors duration-200 cursor-pointer group">
               <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-700 ring-2 ring-[#2a3942] shrink-0">
                 <Image
@@ -220,23 +223,25 @@ export default function DashboardPage() {
       </aside>
 
       {/* ===== MAIN CONTENT AREA ===== */}
-      <div className="flex-1 flex flex-col lg:ml-72 w-full min-w-0">
+      {/* Offset matches the sidebar's own width at each breakpoint exactly:
+          md:w-64 -> md:ml-64, lg:w-72 -> lg:ml-72, xl:w-80 -> xl:ml-80 */}
+      <div className="flex-1 flex flex-col md:ml-64 lg:ml-72 xl:ml-80 w-full min-w-0 h-full">
         {/* ===== HEADER ===== */}
-        <header className="bg-[#202c33] border-b border-[#2a3942] px-4 py-3 flex items-center justify-between z-40 shrink-0">
-          <div className="flex items-center gap-3">
+        <header className="bg-[#202c33] border-b border-[#2a3942] px-4 md:px-5 lg:px-6 xl:px-8 py-3 md:py-3 lg:py-3.5 flex items-center justify-between z-30 shrink-0 gap-3">
+          <div className="flex items-center gap-3 min-w-0">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden text-gray-300 hover:text-white transition-colors rounded-lg p-2 hover:bg-[#2a3942]"
+              className="md:hidden shrink-0 text-gray-300 hover:text-white transition-colors rounded-lg p-2 hover:bg-[#2a3942]"
             >
               <Menu className="w-5 h-5" />
             </button>
-            
+
             <div className={`w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br ${courseData.color} flex items-center justify-center shrink-0`}>
-              {getCourseIcon('5')}
+              {getCourseIcon('w-5 h-5')}
             </div>
-            
+
             <div className="min-w-0">
-              <h1 className="text-sm font-semibold text-gray-100 leading-tight truncate">
+              <h1 className="text-sm lg:text-[15px] font-semibold text-gray-100 leading-tight truncate">
                 {courseData.title}
               </h1>
               <p className="text-xs text-gray-300 leading-relaxed inline-flex items-center gap-1.5">
@@ -246,7 +251,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <button className="w-9 h-9 rounded-lg hover:bg-[#2a3942] flex items-center justify-center text-gray-300 hover:text-white transition-all">
               <Search className="w-4 h-4" />
             </button>
@@ -263,7 +268,7 @@ export default function DashboardPage() {
                     className="fixed inset-0 z-40 backdrop-blur-sm bg-black/20"
                     onClick={() => setShowProfileDropdown(false)}
                   />
-                  <div className="absolute right-0 mt-2 w-64 bg-[#1f2c33] border border-[#2a3942] rounded-xl shadow-2xl z-50 overflow-hidden">
+                  <div className="absolute right-0 mt-2 w-64 md:w-72 bg-[#1f2c33] border border-[#2a3942] rounded-xl shadow-2xl z-50 overflow-hidden">
                     {/* Profile Header */}
                     <div className="p-4 border-b border-[#2a3942] bg-[#111b21]">
                       <div className="flex items-center gap-3">
@@ -293,7 +298,7 @@ export default function DashboardPage() {
                         onClick={() => { setShowProfileDropdown(false); router.push(`/classroom/${courseSlug}/dashboard/profile`) }}
                         className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-[#2a3942] hover:text-white transition-colors group"
                       >
-                        <div className="w-8 h-8 rounded-lg bg-[#2a3942] flex items-center justify-center group-hover:bg-[#3a4a54] transition-colors">
+                        <div className="w-8 h-8 rounded-lg bg-[#2a3942] flex items-center justify-center group-hover:bg-[#3a4a54] transition-colors shrink-0">
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                           </svg>
@@ -301,7 +306,7 @@ export default function DashboardPage() {
                         Profile Settings
                       </button>
                       <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-[#2a3942] hover:text-white transition-colors group">
-                        <div className="w-8 h-8 rounded-lg bg-[#2a3942] flex items-center justify-center group-hover:bg-[#3a4a54] transition-colors">
+                        <div className="w-8 h-8 rounded-lg bg-[#2a3942] flex items-center justify-center group-hover:bg-[#3a4a54] transition-colors shrink-0">
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
                           </svg>
@@ -313,7 +318,7 @@ export default function DashboardPage() {
                     {/* Divider & Logout */}
                     <div className="border-t border-[#2a3942]">
                       <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-[#2a3942] hover:text-red-300 transition-colors group">
-                        <div className="w-8 h-8 rounded-lg bg-[#2a3942] flex items-center justify-center group-hover:bg-[#3a4a54] transition-colors">
+                        <div className="w-8 h-8 rounded-lg bg-[#2a3942] flex items-center justify-center group-hover:bg-[#3a4a54] transition-colors shrink-0">
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                           </svg>
@@ -334,10 +339,10 @@ export default function DashboardPage() {
           backgroundRepeat: 'repeat',
           backgroundSize: '400px'
         }}>
-          <div className="max-w-4xl mx-auto p-4 space-y-4">
+          <div className="max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto p-4 md:p-5 lg:p-6 xl:p-8 space-y-4">
             {/* Welcome Message */}
             <div className="flex justify-center my-6">
-              <div className="bg-[#1c2b33] rounded-lg px-4 py-3 text-center max-w-md shadow-lg">
+              <div className="bg-[#1c2b33] rounded-lg px-4 py-3 text-center max-w-md lg:max-w-lg shadow-lg">
                 <p className="text-xs text-gray-300 leading-relaxed">
                   {dashboard.welcomeMessage}
                 </p>
@@ -353,7 +358,7 @@ export default function DashboardPage() {
             {/* ===== DYNAMIC MESSAGES FROM DATABASE ===== */}
             {!loadingMessages && messages.map((msg, index) => (
               <div key={msg.id} className="flex justify-start px-2 mb-3">
-                <div className="max-w-[calc(75%)] min-w-[240px]">
+                <div className="max-w-[calc(75%)] md:max-w-[70%] lg:max-w-[60%] xl:max-w-[55%] min-w-[240px]">
                   {/* Sender row */}
                   <div className="flex items-center gap-2 mb-[3px] ml-[2px]">
                     <div className={`w-[22px] h-[22px] rounded-full bg-gradient-to-br ${courseData.color} flex items-center justify-center shrink-0 shadow-md ring-2 ring-[#2a3942]/50`}>
@@ -361,7 +366,7 @@ export default function DashboardPage() {
                     </div>
                     <span className="text-[13px] font-semibold text-[#00a884]">{msg.sender_name}</span>
                   </div>
-                  
+
                   {/* Bubble */}
                   <div className="bg-[#005c4b] rounded-[10px] rounded-tl-[3px] px-[11px] py-[7px] relative group shadow-[0_1px_3px_rgba(0,0,0,0.12),0_1px_2px_rgba(0,0,0,0.08)] hover:shadow-[0_2px_4px_rgba(0,0,0,0.15),0_1px_3px_rgba(0,0,0,0.1)] transition-all duration-200">
                     {/* Title */}

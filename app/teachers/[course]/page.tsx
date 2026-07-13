@@ -54,12 +54,12 @@ export default function TeacherCoursePage() {
   const router = useRouter()
   const course = courseData[params.course as string]
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  
+
   const [messageTitle, setMessageTitle] = useState('')
   const [message, setMessage] = useState('')
   const [showSuccess, setShowSuccess] = useState(false)
   const [error, setError] = useState('')
-  
+
   const [linkTitle, setLinkTitle] = useState('')
   const [linkUrl, setLinkUrl] = useState('')
   const [linkSuccess, setLinkSuccess] = useState(false)
@@ -155,36 +155,39 @@ export default function TeacherCoursePage() {
 
   return (
     <main className="min-h-screen bg-gray-50 font-sans" style={{ fontFamily: 'var(--font-noto-sans)' }}>
-      {/* Mobile Overlay */}
+      {/* Mobile/tablet Overlay — only below md now, since sidebar is
+          persistent from md up */}
       {sidebarOpen && (
-        <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
+        <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
-      {/* Sidebar */}
-      <aside className={`fixed top-0 left-0 z-50 h-full w-72 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:static lg:z-auto`}>
+      {/* Sidebar — persistent (static, no drawer) from md up instead of lg,
+          so md widths aren't stuck with a hidden nav behind a hamburger.
+          Width steps up slightly at xl for breathing room. */}
+      <aside className={`fixed top-0 left-0 z-50 h-full w-72 md:w-64 xl:w-72 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 md:static md:z-auto`}>
         <div className="flex items-center justify-between p-5 border-b border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-lg ${course.iconBg} ${course.iconColor}`}>
+          <div className="flex items-center gap-3 min-w-0">
+            <div className={`p-2 rounded-lg ${course.iconBg} ${course.iconColor} shrink-0`}>
               <GraduationCap className="w-5 h-5" />
             </div>
-            <div>
-              <p className="text-sm font-bold text-gray-900">{course.title}</p>
+            <div className="min-w-0">
+              <p className="text-sm font-bold text-gray-900 truncate">{course.title}</p>
               <p className="text-xs text-gray-400">Mentor Dashboard</p>
             </div>
           </div>
-          <button onClick={() => setSidebarOpen(false)} className="lg:hidden p-1 rounded-lg hover:bg-gray-100">
+          <button onClick={() => setSidebarOpen(false)} className="md:hidden p-1 rounded-lg hover:bg-gray-100 shrink-0">
             <X className="w-5 h-5 text-gray-500" />
           </button>
         </div>
 
         <div className="p-5 border-b border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg shrink-0">
               M
             </div>
-            <div>
-              <p className="font-semibold text-gray-900">Mentor</p>
-              <p className="text-xs text-gray-400">{course.title} Teacher</p>
+            <div className="min-w-0">
+              <p className="font-semibold text-gray-900 truncate">Mentor</p>
+              <p className="text-xs text-gray-400 truncate">{course.title} Teacher</p>
             </div>
           </div>
         </div>
@@ -194,7 +197,7 @@ export default function TeacherCoursePage() {
             const NavIcon = item.icon
             return (
               <button key={item.id} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 transition-all duration-200">
-                <NavIcon className="w-5 h-5 text-gray-400" />
+                <NavIcon className="w-5 h-5 text-gray-400 shrink-0" />
                 {item.label}
               </button>
             )
@@ -203,20 +206,20 @@ export default function TeacherCoursePage() {
 
         <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-gray-100">
           <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition-all duration-200">
-            <LogOut className="w-5 h-5" />
+            <LogOut className="w-5 h-5 shrink-0" />
             Sign Out
           </button>
         </div>
       </aside>
 
-      {/* Main Content */}
-      <div className="lg:ml-72">
+      {/* Main Content — offset matches sidebar width at each step */}
+      <div className="md:ml-64 xl:ml-72">
         {/* Top Bar */}
         <div className="sticky top-0 z-30 bg-white border-b border-gray-200">
-          <div className="max-w-full mx-auto px-4 sm:px-6">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
               <div className="flex items-center gap-3">
-                <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 rounded-lg hover:bg-gray-100">
+                <button onClick={() => setSidebarOpen(true)} className="md:hidden p-2 rounded-lg hover:bg-gray-100">
                   <Menu className="w-5 h-5 text-gray-600" />
                 </button>
                 <button onClick={() => router.push('/teachers')} className="hidden sm:inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors font-medium text-sm">
@@ -234,9 +237,10 @@ export default function TeacherCoursePage() {
           </div>
         </div>
 
-        {/* Hero */}
+        {/* Hero — trimmed lg:py so it doesn't stack an extra step of
+            vertical space beyond sm on top of the sticky bar */}
         <div className={`relative overflow-hidden bg-gradient-to-br ${course.gradient}`}>
-          <div className="relative max-w-full mx-auto px-4 sm:px-6 py-8 sm:py-12">
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-10">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
               <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.2, type: "spring", stiffness: 200 }} className={`inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-2xl ${course.iconBg} ${course.iconColor} shadow-lg shrink-0`}>
                 <Icon className="w-7 h-7 sm:w-8 sm:h-8" />
@@ -249,13 +253,14 @@ export default function TeacherCoursePage() {
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="max-w-full mx-auto px-4 sm:px-6 py-6 sm:py-10">
+        {/* Main Content — trimmed py so it doesn't double up on the
+            padding the hero above it already provides */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
             {/* Send Message */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className={`bg-white rounded-2xl border ${course.borderColor} p-5 sm:p-8 shadow-sm`}>
-              <div className="flex items-center gap-3 mb-5 sm:mb-6">
-                <div className={`p-2.5 rounded-lg ${course.iconBg} ${course.iconColor}`}>
+              <div className="flex items-center gap-3 mb-5 sm:mb-5 lg:mb-5">
+                <div className={`p-2.5 rounded-lg ${course.iconBg} ${course.iconColor} shrink-0`}>
                   <MessageSquare className="w-5 h-5" />
                 </div>
                 <div className="min-w-0">
@@ -303,8 +308,8 @@ export default function TeacherCoursePage() {
 
             {/* Share Links */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className={`bg-white rounded-2xl border ${course.borderColor} p-5 sm:p-8 shadow-sm`}>
-              <div className="flex items-center gap-3 mb-5 sm:mb-6">
-                <div className={`p-2.5 rounded-lg ${course.iconBg} ${course.iconColor}`}>
+              <div className="flex items-center gap-3 mb-5 sm:mb-5 lg:mb-5">
+                <div className={`p-2.5 rounded-lg ${course.iconBg} ${course.iconColor} shrink-0`}>
                   <Link className="w-5 h-5" />
                 </div>
                 <div className="min-w-0">
@@ -376,13 +381,13 @@ export default function TeacherCoursePage() {
             </motion.div>
           </div>
 
-          {/* Tips */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className={`mt-6 sm:mt-8 bg-white rounded-2xl border ${course.borderColor} p-5 sm:p-6`}>
+          {/* Tips — trimmed mt so it sits closer to the grid above it */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className={`mt-5 sm:mt-6 bg-white rounded-2xl border ${course.borderColor} p-5 sm:p-6`}>
             <div className="flex items-center gap-2 mb-4">
               <Bell className={`w-5 h-5 ${course.iconColor}`} />
               <h3 className="font-bold text-gray-900">Mentor Tips</h3>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-gray-600">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm text-gray-600">
               <div className="flex gap-2 items-start">
                 <span className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 bg-gradient-to-r ${course.color}`} />
                 Use announcements for important updates

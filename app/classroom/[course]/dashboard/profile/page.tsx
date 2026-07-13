@@ -38,7 +38,7 @@ function ProfileSkeleton() {
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
       <header className="h-[60px] flex items-center px-4 border-b border-gray-200 bg-white" />
-      <div className="max-w-[600px] mx-auto px-4 py-4 space-y-4">
+      <div className="max-w-[600px] md:max-w-3xl lg:max-w-5xl mx-auto px-4 py-4 space-y-4">
         <Skeleton className="h-[160px] w-full rounded-2xl" />
         <div className="flex gap-4">
           <Skeleton className="w-[100px] h-[100px] rounded-full shrink-0 -mt-16" />
@@ -50,7 +50,11 @@ function ProfileSkeleton() {
         <div className="grid grid-cols-3 gap-2">
           {[1, 2, 3].map((i) => (<Skeleton key={i} className="h-[72px] rounded-2xl" />))}
         </div>
-        {[1, 2, 3].map((i) => (<Skeleton key={i} className="h-14 rounded-2xl" />))}
+        <div className="md:grid md:grid-cols-3 md:gap-5 space-y-4 md:space-y-0">
+          <Skeleton className="h-40 rounded-2xl md:col-span-2" />
+          <Skeleton className="h-40 rounded-2xl md:col-span-1" />
+          <Skeleton className="h-40 rounded-2xl md:col-span-2" />
+        </div>
       </div>
     </div>
   )
@@ -191,7 +195,7 @@ export default function ProfilePage() {
     >
       {/* ===== HEADER ===== */}
       <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl border-b border-gray-200 bg-white/90">
-        <div className="max-w-[600px] mx-auto px-4 h-[60px] flex items-center gap-3">
+        <div className="max-w-[600px] md:max-w-3xl lg:max-w-5xl mx-auto px-4 h-[60px] flex items-center gap-3">
           <button
             onClick={() => router.back()}
             className="w-10 h-10 rounded-full flex items-center justify-center transition-colors active:scale-95 text-gray-900 hover:bg-gray-100"
@@ -221,10 +225,10 @@ export default function ProfilePage() {
         {/* ── Profile hero ── */}
         <div className="relative">
           {/* Cover photo */}
-          <div className="h-[160px] sm:h-[200px] bg-gradient-to-br from-[#1d9bf0]/30 via-[#1d9bf0]/10 to-purple-500/10" />
+          <div className="h-[160px] sm:h-[200px] md:h-[220px] bg-gradient-to-br from-[#1d9bf0]/30 via-[#1d9bf0]/10 to-purple-500/10 md:rounded-2xl" />
 
           {/* Avatar */}
-          <div className="px-4 pb-3">
+          <div className="px-4 md:px-2 pb-3">
             <div className="flex justify-between items-end -mt-[72px] sm:-mt-[88px]">
               <div className="relative group">
                 <div className="w-[100px] h-[100px] sm:w-[120px] sm:h-[120px] rounded-full overflow-hidden border-[4px] shadow-xl border-white bg-gray-100">
@@ -259,7 +263,7 @@ export default function ProfilePage() {
             {/* Name + handle */}
             <div className="mt-3">
               <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-[20px] sm:text-[22px] font-extrabold leading-7 tracking-tight text-gray-900">
+                <h2 className="text-[20px] sm:text-[22px] md:text-[26px] font-extrabold leading-7 tracking-tight text-gray-900">
                   {data?.name || dashboard.profile.name}
                 </h2>
                 <BadgeCheck className="w-[18px] h-[18px] text-[#1d9bf0] shrink-0" />
@@ -304,116 +308,125 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* ── PERSONAL DETAILS ─────────────────────────────────────── */}
-        <div className="mx-4 md:mx-0 mb-3 md:mb-4 rounded-2xl border border-gray-200 overflow-hidden bg-white"
-          style={{ animation: mounted ? 'fadeIn 0.4s ease 0.05s both' : undefined }}
-        >
-          <div className="flex items-center gap-3 px-4 py-3.5 border-b border-gray-200 bg-gray-50">
-            <div className="w-8 h-8 rounded-full bg-[#1d9bf0]/10 flex items-center justify-center">
-              <User className="w-[16px] h-[16px] text-[#1d9bf0]" />
-            </div>
-            <div>
-              <h3 className="text-[15px] font-bold leading-5 text-gray-900">Personal Details</h3>
-              <p className="text-[11px] text-gray-500">Your account information</p>
-            </div>
-          </div>
-          <div className="divide-y divide-gray-100">
-            {[
-              { icon: User, label: 'Name', value: data?.name || dashboard.profile.name },
-              { icon: Mail, label: 'Email', value: data?.email || dashboard.profile.email },
-              { icon: Smartphone, label: 'Phone', value: data?.phone },
-              { icon: BadgeCheck, label: 'Gender', value: data?.sex ? capitalizeWords(data.sex) : undefined },
-            ].map((row, i) => (
-              <div key={row.label}
-                className="flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-gray-50 active:bg-gray-50"
-                style={{ animation: mounted ? `fadeIn 0.3s ease ${0.1 + 0.04 * i}s both` : undefined }}
-              >
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-gray-100">
-                  <row.icon className="w-[16px] h-[16px] text-gray-500" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[10px] uppercase tracking-wider font-semibold text-gray-400">{row.label}</p>
-                  <p className="text-[14px] font-medium truncate mt-[2px] text-gray-900">
-                    {row.value || <span className="italic text-gray-400">Not provided</span>}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        {/* ── DASHBOARD GRID (Personal / Security / Location) ────────
+             Mobile: cards stack in original order (untouched).
+             md/lg: 2-col grid — Personal Details + Location & Course
+             form a wide left column, Security becomes a tall card
+             on the right. */}
+        <div className="mx-4 md:mx-0 md:grid md:grid-cols-3 md:gap-5 lg:gap-6 md:items-start">
 
-        {/* ── SECURITY ─────────────────────────────────────────────── */}
-        <div className="mx-4 md:mx-0 mb-3 md:mb-4 rounded-2xl border border-gray-200 overflow-hidden bg-white"
-          style={{ animation: mounted ? 'fadeIn 0.4s ease 0.2s both' : undefined }}
-        >
-          <div className="flex items-center gap-3 px-4 py-3.5 border-b border-gray-200 bg-gray-50">
-            <div className="w-8 h-8 rounded-full bg-[#1d9bf0]/10 flex items-center justify-center">
-              <Shield className="w-[16px] h-[16px] text-[#1d9bf0]" />
-            </div>
-            <div>
-              <h3 className="text-[15px] font-bold leading-5 text-gray-900">Security</h3>
-              <p className="text-[11px] text-gray-500">Manage your account security</p>
-            </div>
-          </div>
-
-          <button
-            onClick={() => { setShowPasswordModal(true); setPasswordSent(false) }}
-            className="w-full flex items-center justify-between px-4 py-4 transition-colors hover:bg-gray-50 active:bg-gray-50"
+          {/* ── PERSONAL DETAILS ─────────────────────────────────── */}
+          <div className="mb-3 md:mb-0 md:col-span-2 md:order-1 rounded-2xl border border-gray-200 overflow-hidden bg-white"
+            style={{ animation: mounted ? 'fadeIn 0.4s ease 0.05s both' : undefined }}
           >
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-gray-100">
-                <KeyRound className="w-[16px] h-[16px] text-gray-500" />
+            <div className="flex items-center gap-3 px-4 py-3.5 border-b border-gray-200 bg-gray-50">
+              <div className="w-8 h-8 rounded-full bg-[#1d9bf0]/10 flex items-center justify-center">
+                <User className="w-[16px] h-[16px] text-[#1d9bf0]" />
               </div>
-              <div className="text-left">
-                <p className="text-[14px] font-medium text-gray-900">Change password</p>
-                <p className="text-[12px] text-gray-500">Request a reset link via email</p>
+              <div>
+                <h3 className="text-[15px] font-bold leading-5 text-gray-900">Personal Details</h3>
+                <p className="text-[11px] text-gray-500">Your account information</p>
               </div>
             </div>
-            <ChevronRight className="w-[18px] h-[18px] text-gray-400" />
-          </button>
-        </div>
+            <div className="divide-y divide-gray-100 md:grid md:grid-cols-2 md:divide-y-0">
+              {[
+                { icon: User, label: 'Name', value: data?.name || dashboard.profile.name },
+                { icon: Mail, label: 'Email', value: data?.email || dashboard.profile.email },
+                { icon: Smartphone, label: 'Phone', value: data?.phone },
+                { icon: BadgeCheck, label: 'Gender', value: data?.sex ? capitalizeWords(data.sex) : undefined },
+              ].map((row, i) => (
+                <div key={row.label}
+                  className="flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-gray-50 active:bg-gray-50 border-b border-gray-100 md:border-b-0 md:border-t md:first:border-t-0 md:[&:nth-child(2)]:border-t-0"
+                  style={{ animation: mounted ? `fadeIn 0.3s ease ${0.1 + 0.04 * i}s both` : undefined }}
+                >
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-gray-100">
+                    <row.icon className="w-[16px] h-[16px] text-gray-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] uppercase tracking-wider font-semibold text-gray-400">{row.label}</p>
+                    <p className="text-[14px] font-medium truncate mt-[2px] text-gray-900">
+                      {row.value || <span className="italic text-gray-400">Not provided</span>}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
 
-        {/* ── LOCATION & COURSE ────────────────────────────────────── */}
-        <div className="mx-4 md:mx-0 mb-3 md:mb-4 rounded-2xl border border-gray-200 overflow-hidden bg-white"
-          style={{ animation: mounted ? 'fadeIn 0.4s ease 0.35s both' : undefined }}
-        >
-          <div className="flex items-center gap-3 px-4 py-3.5 border-b border-gray-200 bg-gray-50">
-            <div className="w-8 h-8 rounded-full bg-[#1d9bf0]/10 flex items-center justify-center">
-              <MapPinned className="w-[16px] h-[16px] text-[#1d9bf0]" />
-            </div>
-            <div>
-              <h3 className="text-[15px] font-bold leading-5 text-gray-900">Location & Course</h3>
-              <p className="text-[11px] text-gray-500">Your enrolled program details</p>
-            </div>
-          </div>
-          <div className="divide-y divide-gray-100">
-            {[
-              { icon: MapPinned, label: 'Country', value: data?.country },
-              { icon: MapPin, label: 'State/Region', value: data?.state ? getStateDisplayName(data.state) : undefined },
-              { icon: BookOpen, label: 'Course', value: data?.course ? capitalizeWords(data.course) : courseData.title },
-              { icon: CreditCard, label: 'Payment', value: data?.payment_status, badge: paymentPill(data?.payment_status) },
-            ].map((row, i) => (
-              <div key={row.label}
-                className="flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-gray-50 active:bg-gray-50"
-                style={{ animation: mounted ? `fadeIn 0.3s ease ${0.4 + 0.04 * i}s both` : undefined }}
-              >
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-gray-100">
-                  <row.icon className="w-[16px] h-[16px] text-gray-500" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[10px] uppercase tracking-wider font-semibold text-gray-400">{row.label}</p>
-                  <p className="text-[14px] font-medium truncate mt-[2px] text-gray-900">
-                    {row.value || <span className="italic text-gray-400">Not provided</span>}
-                  </p>
-                </div>
-                {row.badge && (
-                  <span className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-semibold ${row.badge.cls}`}>
-                    {row.badge.text}
-                  </span>
-                )}
+          {/* ── SECURITY ─────────────────────────────────────────── */}
+          <div className="mb-3 md:mb-0 md:col-span-1 md:order-2 md:row-span-2 rounded-2xl border border-gray-200 overflow-hidden bg-white md:self-start md:sticky md:top-[76px]"
+            style={{ animation: mounted ? 'fadeIn 0.4s ease 0.2s both' : undefined }}
+          >
+            <div className="flex items-center gap-3 px-4 py-3.5 border-b border-gray-200 bg-gray-50">
+              <div className="w-8 h-8 rounded-full bg-[#1d9bf0]/10 flex items-center justify-center">
+                <Shield className="w-[16px] h-[16px] text-[#1d9bf0]" />
               </div>
-            ))}
+              <div>
+                <h3 className="text-[15px] font-bold leading-5 text-gray-900">Security</h3>
+                <p className="text-[11px] text-gray-500">Manage your account security</p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => { setShowPasswordModal(true); setPasswordSent(false) }}
+              className="w-full flex items-center justify-between px-4 py-4 transition-colors hover:bg-gray-50 active:bg-gray-50"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-gray-100">
+                  <KeyRound className="w-[16px] h-[16px] text-gray-500" />
+                </div>
+                <div className="text-left">
+                  <p className="text-[14px] font-medium text-gray-900">Change password</p>
+                  <p className="text-[12px] text-gray-500">Request a reset link via email</p>
+                </div>
+              </div>
+              <ChevronRight className="w-[18px] h-[18px] text-gray-400" />
+            </button>
           </div>
+
+          {/* ── LOCATION & COURSE ────────────────────────────────── */}
+          <div className="mb-3 md:mb-0 md:col-span-2 md:order-3 rounded-2xl border border-gray-200 overflow-hidden bg-white"
+            style={{ animation: mounted ? 'fadeIn 0.4s ease 0.35s both' : undefined }}
+          >
+            <div className="flex items-center gap-3 px-4 py-3.5 border-b border-gray-200 bg-gray-50">
+              <div className="w-8 h-8 rounded-full bg-[#1d9bf0]/10 flex items-center justify-center">
+                <MapPinned className="w-[16px] h-[16px] text-[#1d9bf0]" />
+              </div>
+              <div>
+                <h3 className="text-[15px] font-bold leading-5 text-gray-900">Location & Course</h3>
+                <p className="text-[11px] text-gray-500">Your enrolled program details</p>
+              </div>
+            </div>
+            <div className="divide-y divide-gray-100 md:grid md:grid-cols-2 md:divide-y-0">
+              {[
+                { icon: MapPinned, label: 'Country', value: data?.country },
+                { icon: MapPin, label: 'State/Region', value: data?.state ? getStateDisplayName(data.state) : undefined },
+                { icon: BookOpen, label: 'Course', value: data?.course ? capitalizeWords(data.course) : courseData.title },
+                { icon: CreditCard, label: 'Payment', value: data?.payment_status, badge: paymentPill(data?.payment_status) },
+              ].map((row, i) => (
+                <div key={row.label}
+                  className="flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-gray-50 active:bg-gray-50 border-b border-gray-100 md:border-b-0 md:border-t md:first:border-t-0 md:[&:nth-child(2)]:border-t-0"
+                  style={{ animation: mounted ? `fadeIn 0.3s ease ${0.4 + 0.04 * i}s both` : undefined }}
+                >
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-gray-100">
+                    <row.icon className="w-[16px] h-[16px] text-gray-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] uppercase tracking-wider font-semibold text-gray-400">{row.label}</p>
+                    <p className="text-[14px] font-medium truncate mt-[2px] text-gray-900">
+                      {row.value || <span className="italic text-gray-400">Not provided</span>}
+                    </p>
+                  </div>
+                  {row.badge && (
+                    <span className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-semibold ${row.badge.cls}`}>
+                      {row.badge.text}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
         </div>
 
         <div className="h-16" />
