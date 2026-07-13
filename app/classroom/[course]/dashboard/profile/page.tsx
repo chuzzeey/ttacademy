@@ -11,6 +11,7 @@ import {
   AlertTriangle, Loader2
 } from 'lucide-react'
 import { getCourseData } from '@/lib/mock-data'
+import { createClient } from '@/lib/supabase/client'
 
 interface StudentData {
   id: string
@@ -46,14 +47,37 @@ export default function ProfilePage() {
 
   useEffect(() => {
     async function fetchStudentData() {
+      const supabase = createClient()
+      
       try {
+        // Get the current logged-in user from Supabase session
+        const { data: { user }, error: authError } = await supabase.auth.getUser()
+        
+        if (authError || !user) {
+          console.error('No authenticated user:', authError)
+          setLoading(false)
+          return
+        }
+
+        // Fetch student data from the API using the logged-in user's email
         const res = await fetch('/api/registrations')
         const json = await res.json()
+        
+        if (json.error) {
+          console.error('API error:', json.error)
+          setLoading(false)
+          return
+        }
+
+        // Find the student record that matches the logged-in user's email
         const student = json.data?.find(
-          (s: StudentData) => s.email.toLowerCase() === dashboard.profile.email.toLowerCase()
+          (s: StudentData) => s.email.toLowerCase() === user.email?.toLowerCase()
         )
+        
         if (student) {
           setStudentData(student)
+        } else {
+          console.error('Student record not found for email:', user.email)
         }
       } catch (err) {
         console.error('Failed to fetch student data:', err)
@@ -61,8 +85,9 @@ export default function ProfilePage() {
         setLoading(false)
       }
     }
+    
     fetchStudentData()
-  }, [dashboard.profile.email])
+  }, [])
 
   const data = studentData
 
