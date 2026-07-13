@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { useProfileTheme } from '@/components/profile-theme-provider'
 import {
   ArrowLeft, User, Mail, Phone, Briefcase, Laptop,
   Globe, Calendar, Lock, CheckCircle, ChevronRight, KeyRound,
@@ -11,7 +10,7 @@ import {
   Shield, BadgeCheck, Smartphone, Camera, X, Upload, Trash2,
   AlertTriangle, Loader2, Copy,
   MapPinned, CalendarDays,
-  AtSign, Sun, Moon
+  AtSign
 } from 'lucide-react'
 import { getCourseData } from '@/lib/mock-data'
 import { getStateDisplayName } from '@/lib/state-utils'
@@ -37,7 +36,7 @@ function Skeleton({ className = '' }: { className?: string }) {
 
 function ProfileSkeleton() {
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 transition-colors">
+    <div className="min-h-screen bg-gray-50 text-gray-900">
       <header className="h-[60px] flex items-center px-4 border-b border-gray-200 bg-white" />
       <div className="max-w-[600px] mx-auto px-4 py-4 space-y-4">
         <Skeleton className="h-[160px] w-full rounded-2xl" />
@@ -61,18 +60,15 @@ function ProfileSkeleton() {
 const formatDate = (dateStr: string | null | undefined) => {
   if (!dateStr) return 'N/A'
   try {
-    // Date is stored in DD/MM/YY format
     const parts = dateStr.split('/')
     if (parts.length === 3) {
       const [day, month, year] = parts
-      // Convert 2-digit year to 4-digit year
       const fullYear = parseInt(year) < 50 ? `20${year}` : `19${year}`
       const date = new Date(`${fullYear}-${month}-${day}`)
       if (!isNaN(date.getTime())) {
         return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
       }
     }
-    // Fallback to standard parsing
     const d = new Date(dateStr)
     if (isNaN(d.getTime())) return dateStr
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
@@ -111,7 +107,6 @@ export default function ProfilePage() {
   const courseSlug = params?.course as string
   const courseData = getCourseData(courseSlug)
   const dashboard = courseData.dashboard
-  const { theme, setTheme } = useProfileTheme()
   const [mounted, setMounted] = useState(false)
 
   const [studentData, setStudentData] = useState<StudentData | null>(null)
@@ -159,25 +154,14 @@ export default function ProfilePage() {
     }
   }
 
-  const paymentColor = (s: string | null | undefined) => {
-    if (!s) return ''
-    switch (s) {
-      case 'Fully Paid': return 'text-emerald-600 dark:text-emerald-400'
-      case '1st Installment':
-      case '2nd Installment': return 'text-amber-600 dark:text-amber-400'
-      case 'Not Paid': return 'text-red-600 dark:text-red-400'
-      default: return 'text-gray-500 dark:text-gray-400'
-    }
-  }
-
   const paymentPill = (s: string | null | undefined) => {
     if (!s) return null
     switch (s) {
-      case 'Fully Paid': return { text: 'Paid', cls: 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400' }
-      case '1st Installment': return { text: 'Partial', cls: 'bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400' }
-      case '2nd Installment': return { text: 'Partial', cls: 'bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400' }
-      case 'Not Paid': return { text: 'Unpaid', cls: 'bg-red-100 dark:bg-red-500/15 text-red-700 dark:text-red-400' }
-      default: return { text: s, cls: 'bg-gray-100 dark:bg-white/[0.06] text-gray-500 dark:text-gray-400' }
+      case 'Fully Paid': return { text: 'Paid', cls: 'bg-emerald-100 text-emerald-700' }
+      case '1st Installment': return { text: 'Partial', cls: 'bg-amber-100 text-amber-700' }
+      case '2nd Installment': return { text: 'Partial', cls: 'bg-amber-100 text-amber-700' }
+      case 'Not Paid': return { text: 'Unpaid', cls: 'bg-red-100 text-red-700' }
+      default: return { text: s, cls: 'bg-gray-100 text-gray-500' }
     }
   }
 
@@ -200,58 +184,26 @@ export default function ProfilePage() {
   if (loading) return <ProfileSkeleton />
 
   const hasAvatar = !!dashboard.profile.avatar
-  const isDark = theme === 'dark'
-
-  // Theme colors
-  const bgMain = isDark ? 'bg-black' : 'bg-gray-50'
-  const bgCard = isDark ? 'bg-white/[0.015]' : 'bg-white'
-  const bgHeader = isDark ? 'bg-black/90' : 'bg-white/90'
-  const borderColor = isDark ? 'border-white/[0.08]' : 'border-gray-200'
-  const borderColorLight = isDark ? 'border-white/[0.06]' : 'border-gray-200'
-  const textPrimary = isDark ? 'text-white' : 'text-gray-900'
-  const textSecondary = isDark ? 'text-gray-400' : 'text-gray-500'
-  const textMuted = isDark ? 'text-gray-500' : 'text-gray-400'
-  const bgHover = isDark ? 'hover:bg-white/[0.08]' : 'hover:bg-gray-100'
-  const bgActive = isDark ? 'active:bg-white/[0.02]' : 'active:bg-gray-50'
-  const bgSectionHeader = isDark ? 'bg-white/[0.03]' : 'bg-gray-50'
-  const bgInput = isDark ? 'bg-white/[0.04]' : 'bg-gray-100'
-  const bgModal = isDark ? 'bg-black' : 'bg-white'
-  const divider = isDark ? 'divide-white/[0.04]' : 'divide-gray-100'
 
   return (
-    <div className={`min-h-screen antialiased transition-colors duration-300 ${bgMain} ${textPrimary}`}
+    <div className="min-h-screen antialiased bg-gray-50 text-gray-900 transition-colors"
       style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" }}
     >
       {/* ===== HEADER ===== */}
-      <header className={`fixed top-0 left-0 right-0 z-50 backdrop-blur-xl border-b transition-colors duration-300 ${bgHeader} ${borderColor}`}>
+      <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl border-b border-gray-200 bg-white/90">
         <div className="max-w-[600px] mx-auto px-4 h-[60px] flex items-center gap-3">
           <button
             onClick={() => router.back()}
-            className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors active:scale-95 ${textPrimary} ${bgHover}`}
+            className="w-10 h-10 rounded-full flex items-center justify-center transition-colors active:scale-95 text-gray-900 hover:bg-gray-100"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="flex-1 min-w-0">
-            <h1 className={`text-[17px] font-bold leading-5 truncate ${textPrimary}`}>
+            <h1 className="text-[17px] font-bold leading-5 truncate text-gray-900">
               {data?.name || dashboard.profile.name}
             </h1>
-            <p className={`text-[13px] leading-4 mt-[1px] ${textSecondary}`}>{courseData.title}</p>
+            <p className="text-[13px] leading-4 mt-[1px] text-gray-500">{courseData.title}</p>
           </div>
-
-          {/* Theme toggle */}
-          {mounted && (
-            <button
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors active:scale-95 shrink-0 ${textSecondary} ${bgHover}`}
-              title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-            >
-              {theme === 'dark' ? (
-                <Sun className="w-[18px] h-[18px]" />
-              ) : (
-                <Moon className="w-[18px] h-[18px]" />
-              )}
-            </button>
-          )}
 
           <span className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#1d9bf0]/10 rounded-full text-[12px] text-[#1d9bf0] font-medium">
             <span className="relative w-[6px] h-[6px]">
@@ -269,13 +221,13 @@ export default function ProfilePage() {
         {/* ── Profile hero ── */}
         <div className="relative">
           {/* Cover photo */}
-          <div className={`h-[160px] sm:h-[200px] bg-gradient-to-br from-[#1d9bf0]/30 via-[#1d9bf0]/10 to-purple-500/10 ${isDark ? 'from-[#1d9bf0]/20 via-[#1d9bf0]/5 to-purple-500/5' : ''}`} />
+          <div className="h-[160px] sm:h-[200px] bg-gradient-to-br from-[#1d9bf0]/30 via-[#1d9bf0]/10 to-purple-500/10" />
 
           {/* Avatar */}
           <div className="px-4 pb-3">
             <div className="flex justify-between items-end -mt-[72px] sm:-mt-[88px]">
               <div className="relative group">
-                <div className={`w-[100px] h-[100px] sm:w-[120px] sm:h-[120px] rounded-full overflow-hidden border-[4px] shadow-xl ${isDark ? 'border-black bg-gray-900' : 'border-white bg-gray-100'}`}>
+                <div className="w-[100px] h-[100px] sm:w-[120px] sm:h-[120px] rounded-full overflow-hidden border-[4px] shadow-xl border-white bg-gray-100">
                   {hasAvatar ? (
                     <Image
                       src={dashboard.profile.avatar}
@@ -290,14 +242,14 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Online indicator */}
-                <span className={`absolute bottom-[6px] right-[6px] w-[18px] h-[18px] bg-[#1d9bf0] border-[3px] rounded-full shadow ${isDark ? 'border-black' : 'border-white'}`}>
+                <span className="absolute bottom-[6px] right-[6px] w-[18px] h-[18px] bg-[#1d9bf0] border-[3px] rounded-full shadow border-white">
                   <span className="absolute inset-0 bg-[#1d9bf0] rounded-full animate-ping opacity-40" />
                 </span>
 
                 {/* Camera button */}
                 <button
                   onClick={() => setShowPhotoModal(true)}
-                  className={`absolute -bottom-[2px] -left-[2px] w-[32px] h-[32px] rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-110 active:scale-95 border ${isDark ? 'bg-gray-800 hover:bg-gray-700 border-white/10 text-gray-300' : 'bg-white hover:bg-gray-50 border-gray-200 text-gray-700'}`}
+                  className="absolute -bottom-[2px] -left-[2px] w-[32px] h-[32px] rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-110 active:scale-95 border border-gray-200 bg-white hover:bg-gray-50 text-gray-700"
                 >
                   <Camera className="w-[14px] h-[14px]" />
                 </button>
@@ -307,14 +259,14 @@ export default function ProfilePage() {
             {/* Name + handle */}
             <div className="mt-3">
               <div className="flex items-center gap-2 flex-wrap">
-                <h2 className={`text-[20px] sm:text-[22px] font-extrabold leading-7 tracking-tight ${textPrimary}`}>
+                <h2 className="text-[20px] sm:text-[22px] font-extrabold leading-7 tracking-tight text-gray-900">
                   {data?.name || dashboard.profile.name}
                 </h2>
                 <BadgeCheck className="w-[18px] h-[18px] text-[#1d9bf0] shrink-0" />
               </div>
               <div className="flex items-center gap-1.5 mt-0.5">
-                <span className={`text-[14px] uppercase tracking-wider font-semibold ${textMuted}`}>ID:</span>
-                <p className={`text-[14px] ${textSecondary}`}>
+                <span className="text-[14px] uppercase tracking-wider font-semibold text-gray-400">ID:</span>
+                <p className="text-[14px] text-gray-500">
                   {data?.id ? data.id.substring(0, 8).toUpperCase() : 'Student'}
                 </p>
               </div>
@@ -334,16 +286,16 @@ export default function ProfilePage() {
 
             {/* Stat pills */}
             <div className="flex flex-wrap gap-2 mt-3">
-              <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] border ${isDark ? 'bg-white/[0.05] text-gray-400 border-white/[0.06]' : 'bg-white text-gray-600 border-gray-200'}`}>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] border border-gray-200 bg-white text-gray-600">
                 <CalendarDays className="w-3.5 h-3.5" />
                 Joined {formatDate(data?.reg_date)}
               </span>
               <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-medium border ${
                 data?.payment_status === 'Fully Paid'
-                  ? isDark ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20' : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                   : data?.payment_status === 'Not Paid'
-                  ? isDark ? 'bg-red-500/15 text-red-400 border-red-500/20' : 'bg-red-50 text-red-700 border-red-200'
-                  : isDark ? 'bg-amber-500/15 text-amber-400 border-amber-500/20' : 'bg-amber-50 text-amber-700 border-amber-200'
+                  ? 'bg-red-50 text-red-700 border-red-200'
+                  : 'bg-amber-50 text-amber-700 border-amber-200'
               }`}>
                 <CreditCard className="w-3.5 h-3.5" />
                 {paymentLabel(data?.payment_status)}
@@ -353,19 +305,19 @@ export default function ProfilePage() {
         </div>
 
         {/* ── PERSONAL DETAILS ─────────────────────────────────────── */}
-        <div className={`mx-4 mb-3 rounded-2xl border overflow-hidden ${bgCard} ${borderColorLight}`}
+        <div className="mx-4 mb-3 rounded-2xl border border-gray-200 overflow-hidden bg-white"
           style={{ animation: mounted ? 'fadeIn 0.4s ease 0.05s both' : undefined }}
         >
-          <div className={`flex items-center gap-3 px-4 py-3.5 border-b ${bgSectionHeader} ${borderColorLight}`}>
+          <div className="flex items-center gap-3 px-4 py-3.5 border-b border-gray-200 bg-gray-50">
             <div className="w-8 h-8 rounded-full bg-[#1d9bf0]/10 flex items-center justify-center">
               <User className="w-[16px] h-[16px] text-[#1d9bf0]" />
             </div>
             <div>
-              <h3 className={`text-[15px] font-bold leading-5 ${textPrimary}`}>Personal Details</h3>
-              <p className={`text-[11px] ${textSecondary}`}>Your account information</p>
+              <h3 className="text-[15px] font-bold leading-5 text-gray-900">Personal Details</h3>
+              <p className="text-[11px] text-gray-500">Your account information</p>
             </div>
           </div>
-          <div className={`divide-y ${divider}`}>
+          <div className="divide-y divide-gray-100">
             {[
               { icon: User, label: 'Name', value: data?.name || dashboard.profile.name },
               { icon: Mail, label: 'Email', value: data?.email || dashboard.profile.email },
@@ -373,16 +325,16 @@ export default function ProfilePage() {
               { icon: BadgeCheck, label: 'Gender', value: data?.sex ? capitalizeWords(data.sex) : undefined },
             ].map((row, i) => (
               <div key={row.label}
-                className={`flex items-center gap-3 px-4 py-3.5 transition-colors ${bgActive}`}
+                className="flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-gray-50 active:bg-gray-50"
                 style={{ animation: mounted ? `fadeIn 0.3s ease ${0.1 + 0.04 * i}s both` : undefined }}
               >
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${isDark ? 'bg-white/[0.04]' : 'bg-gray-100'}`}>
-                  <row.icon className={`w-[16px] h-[16px] ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-gray-100">
+                  <row.icon className="w-[16px] h-[16px] text-gray-500" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className={`text-[10px] uppercase tracking-wider font-semibold ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{row.label}</p>
-                  <p className={`text-[14px] font-medium truncate mt-[2px] ${textPrimary}`}>
-                    {row.value || <span className={`italic ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>Not provided</span>}
+                  <p className="text-[10px] uppercase tracking-wider font-semibold text-gray-400">{row.label}</p>
+                  <p className="text-[14px] font-medium truncate mt-[2px] text-gray-900">
+                    {row.value || <span className="italic text-gray-400">Not provided</span>}
                   </p>
                 </div>
               </div>
@@ -391,50 +343,50 @@ export default function ProfilePage() {
         </div>
 
         {/* ── SECURITY ─────────────────────────────────────────────── */}
-        <div className={`mx-4 mb-3 rounded-2xl border overflow-hidden ${bgCard} ${borderColorLight}`}
+        <div className="mx-4 mb-3 rounded-2xl border border-gray-200 overflow-hidden bg-white"
           style={{ animation: mounted ? 'fadeIn 0.4s ease 0.2s both' : undefined }}
         >
-          <div className={`flex items-center gap-3 px-4 py-3.5 border-b ${bgSectionHeader} ${borderColorLight}`}>
+          <div className="flex items-center gap-3 px-4 py-3.5 border-b border-gray-200 bg-gray-50">
             <div className="w-8 h-8 rounded-full bg-[#1d9bf0]/10 flex items-center justify-center">
               <Shield className="w-[16px] h-[16px] text-[#1d9bf0]" />
             </div>
             <div>
-              <h3 className={`text-[15px] font-bold leading-5 ${textPrimary}`}>Security</h3>
-              <p className={`text-[11px] ${textSecondary}`}>Manage your account security</p>
+              <h3 className="text-[15px] font-bold leading-5 text-gray-900">Security</h3>
+              <p className="text-[11px] text-gray-500">Manage your account security</p>
             </div>
           </div>
 
           <button
             onClick={() => { setShowPasswordModal(true); setPasswordSent(false) }}
-            className={`w-full flex items-center justify-between px-4 py-4 transition-colors ${bgActive}`}
+            className="w-full flex items-center justify-between px-4 py-4 transition-colors hover:bg-gray-50 active:bg-gray-50"
           >
             <div className="flex items-center gap-3">
-              <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${isDark ? 'bg-white/[0.04]' : 'bg-gray-100'}`}>
-                <KeyRound className={`w-[16px] h-[16px] ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-gray-100">
+                <KeyRound className="w-[16px] h-[16px] text-gray-500" />
               </div>
               <div className="text-left">
-                <p className={`text-[14px] font-medium ${textPrimary}`}>Change password</p>
-                <p className={`text-[12px] ${textSecondary}`}>Request a reset link via email</p>
+                <p className="text-[14px] font-medium text-gray-900">Change password</p>
+                <p className="text-[12px] text-gray-500">Request a reset link via email</p>
               </div>
             </div>
-            <ChevronRight className={`w-[18px] h-[18px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`} />
+            <ChevronRight className="w-[18px] h-[18px] text-gray-400" />
           </button>
         </div>
 
         {/* ── LOCATION & COURSE ────────────────────────────────────── */}
-        <div className={`mx-4 mb-3 rounded-2xl border overflow-hidden ${bgCard} ${borderColorLight}`}
+        <div className="mx-4 mb-3 rounded-2xl border border-gray-200 overflow-hidden bg-white"
           style={{ animation: mounted ? 'fadeIn 0.4s ease 0.35s both' : undefined }}
         >
-          <div className={`flex items-center gap-3 px-4 py-3.5 border-b ${bgSectionHeader} ${borderColorLight}`}>
+          <div className="flex items-center gap-3 px-4 py-3.5 border-b border-gray-200 bg-gray-50">
             <div className="w-8 h-8 rounded-full bg-[#1d9bf0]/10 flex items-center justify-center">
               <MapPinned className="w-[16px] h-[16px] text-[#1d9bf0]" />
             </div>
             <div>
-              <h3 className={`text-[15px] font-bold leading-5 ${textPrimary}`}>Location & Course</h3>
-              <p className={`text-[11px] ${textSecondary}`}>Your enrolled program details</p>
+              <h3 className="text-[15px] font-bold leading-5 text-gray-900">Location & Course</h3>
+              <p className="text-[11px] text-gray-500">Your enrolled program details</p>
             </div>
           </div>
-          <div className={`divide-y ${divider}`}>
+          <div className="divide-y divide-gray-100">
             {[
               { icon: MapPinned, label: 'Country', value: data?.country },
               { icon: MapPin, label: 'State/Region', value: data?.state ? getStateDisplayName(data.state) : undefined },
@@ -442,16 +394,16 @@ export default function ProfilePage() {
               { icon: CreditCard, label: 'Payment', value: data?.payment_status, badge: paymentPill(data?.payment_status) },
             ].map((row, i) => (
               <div key={row.label}
-                className={`flex items-center gap-3 px-4 py-3.5 transition-colors ${bgActive}`}
+                className="flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-gray-50 active:bg-gray-50"
                 style={{ animation: mounted ? `fadeIn 0.3s ease ${0.4 + 0.04 * i}s both` : undefined }}
               >
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${isDark ? 'bg-white/[0.04]' : 'bg-gray-100'}`}>
-                  <row.icon className={`w-[16px] h-[16px] ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-gray-100">
+                  <row.icon className="w-[16px] h-[16px] text-gray-500" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className={`text-[10px] uppercase tracking-wider font-semibold ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{row.label}</p>
-                  <p className={`text-[14px] font-medium truncate mt-[2px] ${textPrimary}`}>
-                    {row.value || <span className={`italic ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>Not provided</span>}
+                  <p className="text-[10px] uppercase tracking-wider font-semibold text-gray-400">{row.label}</p>
+                  <p className="text-[14px] font-medium truncate mt-[2px] text-gray-900">
+                    {row.value || <span className="italic text-gray-400">Not provided</span>}
                   </p>
                 </div>
                 {row.badge && (
@@ -472,13 +424,13 @@ export default function ProfilePage() {
         <>
           <div className="fixed inset-0 z-50 bg-black/60" onClick={() => { if (!showRemoveConfirm) setShowPhotoModal(false) }} />
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className={`${bgModal} border ${borderColorLight} rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl`}>
+            <div className="bg-white border border-gray-200 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl">
               {!showRemoveConfirm ? (
                 <>
                   <div className="relative px-6 pt-7 pb-4 text-center">
                     <button
                       onClick={() => setShowPhotoModal(false)}
-                      className={`absolute top-3 right-3 w-10 h-10 rounded-full flex items-center justify-center transition-colors ${textSecondary} ${bgHover}`}
+                      className="absolute top-3 right-3 w-10 h-10 rounded-full flex items-center justify-center transition-colors text-gray-500 hover:bg-gray-100"
                     >
                       <X className="w-[18px] h-[18px]" />
                     </button>
@@ -491,8 +443,8 @@ export default function ProfilePage() {
                       )}
                     </div>
 
-                    <h3 className={`text-[17px] font-bold ${textPrimary}`}>Profile photo</h3>
-                    <p className={`text-[13px] ${textSecondary} mt-1`}>Choose a new photo or remove</p>
+                    <h3 className="text-[17px] font-bold text-gray-900">Profile photo</h3>
+                    <p className="text-[13px] text-gray-500 mt-1">Choose a new photo or remove</p>
                   </div>
 
                   <div className="px-6 pb-6 space-y-2">
@@ -516,14 +468,14 @@ export default function ProfilePage() {
 
                     <button
                       onClick={modalHandlers.removePhoto}
-                      className={`w-full flex items-center gap-3 px-4 py-3.5 border rounded-xl transition-colors active:scale-[0.98] ${isDark ? 'bg-white/[0.05] hover:bg-white/[0.08] border-white/[0.08]' : 'bg-gray-50 hover:bg-gray-100 border-gray-200'}`}
+                      className="w-full flex items-center gap-3 px-4 py-3.5 border border-gray-200 rounded-xl transition-colors active:scale-[0.98] bg-gray-50 hover:bg-gray-100"
                     >
                       <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center">
                         <Trash2 className="w-[18px] h-[18px] text-red-500" />
                       </div>
                       <div className="text-left">
-                        <p className={`text-[14px] font-semibold ${isDark ? 'text-gray-200' : 'text-gray-900'}`}>Remove photo</p>
-                        <p className={`text-[11px] ${textSecondary}`}>Reset to default</p>
+                        <p className="text-[14px] font-semibold text-gray-900">Remove photo</p>
+                        <p className="text-[11px] text-gray-500">Reset to default</p>
                       </div>
                     </button>
                   </div>
@@ -534,14 +486,14 @@ export default function ProfilePage() {
                     <div className="w-14 h-14 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-4">
                       <AlertTriangle className="w-7 h-7 text-red-500" />
                     </div>
-                    <h3 className={`text-[17px] font-bold ${textPrimary} mb-1`}>Remove photo?</h3>
-                    <p className={`text-[13px] ${textSecondary}`}>This will reset to the default avatar.</p>
+                    <h3 className="text-[17px] font-bold text-gray-900 mb-1">Remove photo?</h3>
+                    <p className="text-[13px] text-gray-500">This will reset to the default avatar.</p>
                   </div>
 
                   <div className="px-6 pb-6 flex gap-2">
                     <button
                       onClick={() => setShowRemoveConfirm(false)}
-                      className={`flex-1 py-3 rounded-xl border text-[14px] transition-colors font-medium active:scale-[0.98] ${borderColorLight} ${textPrimary} ${bgHover}`}
+                      className="flex-1 py-3 rounded-xl border border-gray-200 text-[14px] transition-colors font-medium active:scale-[0.98] text-gray-900 hover:bg-gray-100"
                     >
                       Cancel
                     </button>
@@ -564,13 +516,13 @@ export default function ProfilePage() {
         <>
           <div className="fixed inset-0 z-50 bg-black/60" onClick={modalHandlers.passwordDecline} />
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className={`${bgModal} border ${borderColorLight} rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl`}>
+            <div className="bg-white border border-gray-200 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl">
               {!passwordSent ? (
                 <>
                   <div className="relative px-6 pt-7 pb-4 text-center">
                     <button
                       onClick={modalHandlers.passwordDecline}
-                      className={`absolute top-3 right-3 w-10 h-10 rounded-full flex items-center justify-center transition-colors ${textSecondary} ${bgHover}`}
+                      className="absolute top-3 right-3 w-10 h-10 rounded-full flex items-center justify-center transition-colors text-gray-500 hover:bg-gray-100"
                     >
                       <X className="w-[18px] h-[18px]" />
                     </button>
@@ -579,13 +531,13 @@ export default function ProfilePage() {
                       <Shield className="w-7 h-7 text-[#1d9bf0]" />
                     </div>
 
-                    <h3 className={`text-[17px] font-bold ${textPrimary} mb-1`}>Reset password</h3>
-                    <p className={`text-[13px] ${textSecondary} leading-relaxed`}>
+                    <h3 className="text-[17px] font-bold text-gray-900 mb-1">Reset password</h3>
+                    <p className="text-[13px] text-gray-500 leading-relaxed">
                       We'll send a secure reset link to your email.
                     </p>
 
-                    <div className={`mt-5 p-3.5 rounded-xl border ${isDark ? 'bg-white/[0.03] border-white/[0.06]' : 'bg-gray-50 border-gray-200'}`}>
-                      <p className={`text-[10px] uppercase tracking-wider font-semibold mb-1 ${textSecondary}`}>Email</p>
+                    <div className="mt-5 p-3.5 rounded-xl border border-gray-200 bg-gray-50">
+                      <p className="text-[10px] uppercase tracking-wider font-semibold mb-1 text-gray-500">Email</p>
                       <p className="text-[14px] font-semibold text-[#1d9bf0]">{dashboard.profile.email}</p>
                     </div>
                   </div>
@@ -593,7 +545,7 @@ export default function ProfilePage() {
                   <div className="px-6 pb-6 flex gap-2">
                     <button
                       onClick={modalHandlers.passwordDecline}
-                      className={`flex-1 py-3 rounded-xl border text-[14px] transition-colors font-medium active:scale-[0.98] ${borderColorLight} ${textPrimary} ${bgHover}`}
+                      className="flex-1 py-3 rounded-xl border border-gray-200 text-[14px] transition-colors font-medium active:scale-[0.98] text-gray-900 hover:bg-gray-100"
                     >
                       Cancel
                     </button>
@@ -612,13 +564,13 @@ export default function ProfilePage() {
                       <CheckCircle className="w-7 h-7 text-emerald-500" />
                     </div>
 
-                    <h3 className={`text-[17px] font-bold ${textPrimary} mb-1`}>Link sent!</h3>
-                    <p className={`text-[13px] ${textSecondary} leading-relaxed`}>
+                    <h3 className="text-[17px] font-bold text-gray-900 mb-1">Link sent!</h3>
+                    <p className="text-[13px] text-gray-500 leading-relaxed">
                       Check <span className="text-[#1d9bf0] font-medium">{dashboard.profile.email}</span> for the reset link.
                     </p>
 
-                    <div className={`mt-4 p-3 rounded-xl border ${isDark ? 'bg-amber-500/5 border-amber-500/10' : 'bg-amber-50 border-amber-500/20'}`}>
-                      <p className={`text-[11px] flex items-center gap-1.5 ${isDark ? 'text-amber-400/80' : 'text-amber-700'}`}>
+                    <div className="mt-4 p-3 rounded-xl border border-amber-500/20 bg-amber-50">
+                      <p className="text-[11px] flex items-center gap-1.5 text-amber-700">
                         <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
                         Check spam if you don't see it.
                       </p>

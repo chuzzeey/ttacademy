@@ -9,7 +9,7 @@ export default function ProfileLayout({
 }) {
   return (
     <ProfileThemeProvider
-      defaultTheme="dark"
+      defaultTheme="light"
       storageKey="profile-theme"
     >
       {children}
