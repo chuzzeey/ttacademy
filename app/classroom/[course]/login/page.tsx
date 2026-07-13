@@ -91,14 +91,23 @@ export default function CourseLoginPage() {
 
       if (data.user) {
         // Get user metadata to check course access
-        const userCourse = data.user.user_metadata?.course?.toLowerCase()
-        const requestedCourse = courseSlug?.toLowerCase()
+        const userCourseRaw = data.user.user_metadata?.course || ''
+        const requestedCourse = courseSlug?.toLowerCase() || ''
+        
+        // Normalize user course to match URL slug format (lowercase, replace spaces/special chars with hyphens)
+        const userCourse = userCourseRaw
+          .toLowerCase()
+          .trim()
+          .replace(/\s+/g, '-')           // Replace spaces with hyphens
+          .replace(/[^a-z0-9-]/g, '')     // Remove special characters except hyphens
+          .replace(/-+/g, '-')             // Replace multiple hyphens with single
+          .replace(/^-|-$/g, '')           // Remove leading/trailing hyphens
 
         // Verify that the user can only access their registered course
         if (userCourse !== requestedCourse) {
           // Sign out the user since they're trying to access wrong course
           await supabase.auth.signOut()
-          setError(`You are not authorized to access this course. You registered for: ${userCourse}`)
+          setError(`You are not authorized to access this course. You registered for: ${userCourseRaw}`)
           setIsLoading(false)
           return
         }
