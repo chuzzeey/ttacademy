@@ -216,7 +216,7 @@ export default function ProfilePage() {
       </header>
 
       {/* ===== BODY ===== */}
-      <div className="max-w-[600px] mx-auto pb-20 pt-[60px]">
+      <div className="max-w-[600px] md:max-w-3xl lg:max-w-5xl mx-auto pb-20 pt-[60px] px-4 sm:px-6 lg:px-8">
 
         {/* ── Profile hero ── */}
         <div className="relative">
@@ -305,7 +305,7 @@ export default function ProfilePage() {
         </div>
 
         {/* ── PERSONAL DETAILS ─────────────────────────────────────── */}
-        <div className="mx-4 mb-3 rounded-2xl border border-gray-200 overflow-hidden bg-white"
+        <div className="mx-4 md:mx-0 mb-3 md:mb-4 rounded-2xl border border-gray-200 overflow-hidden bg-white"
           style={{ animation: mounted ? 'fadeIn 0.4s ease 0.05s both' : undefined }}
         >
           <div className="flex items-center gap-3 px-4 py-3.5 border-b border-gray-200 bg-gray-50">
@@ -343,7 +343,7 @@ export default function ProfilePage() {
         </div>
 
         {/* ── SECURITY ─────────────────────────────────────────────── */}
-        <div className="mx-4 mb-3 rounded-2xl border border-gray-200 overflow-hidden bg-white"
+        <div className="mx-4 md:mx-0 mb-3 md:mb-4 rounded-2xl border border-gray-200 overflow-hidden bg-white"
           style={{ animation: mounted ? 'fadeIn 0.4s ease 0.2s both' : undefined }}
         >
           <div className="flex items-center gap-3 px-4 py-3.5 border-b border-gray-200 bg-gray-50">
@@ -374,7 +374,7 @@ export default function ProfilePage() {
         </div>
 
         {/* ── LOCATION & COURSE ────────────────────────────────────── */}
-        <div className="mx-4 mb-3 rounded-2xl border border-gray-200 overflow-hidden bg-white"
+        <div className="mx-4 md:mx-0 mb-3 md:mb-4 rounded-2xl border border-gray-200 overflow-hidden bg-white"
           style={{ animation: mounted ? 'fadeIn 0.4s ease 0.35s both' : undefined }}
         >
           <div className="flex items-center gap-3 px-4 py-3.5 border-b border-gray-200 bg-gray-50">
