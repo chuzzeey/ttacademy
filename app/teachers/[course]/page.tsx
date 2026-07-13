@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { Shield, BarChart3, Cpu, Globe, ShieldAlert, Palette, Code, Monitor, Server, Globe2, TrendingUp, Cloud, Database, ArrowLeft, Send, AlertCircle, CheckCircle2, MessageSquare, Bell, Link, ExternalLink, Copy, Menu, X, GraduationCap, LogOut, Home, BookMarked, User, Settings } from 'lucide-react'
+import { Shield, BarChart3, Cpu, Globe, ShieldAlert, Palette, Code, Monitor, Server, Globe2, TrendingUp, Cloud, Database, ArrowLeft, Send, AlertCircle, CheckCircle2, MessageSquare, Bell, Menu, X, GraduationCap, LogOut, Home, BookMarked, User, Settings } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 
 const courseSlugMap: Record<string, string> = {
@@ -53,27 +53,22 @@ export default function TeacherCoursePage() {
   const params = useParams()
   const router = useRouter()
   const course = courseData[params.course as string]
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const [messageTitle, setMessageTitle] = useState('')
   const [message, setMessage] = useState('')
   const [showSuccess, setShowSuccess] = useState(false)
   const [error, setError] = useState('')
-
-  const [linkTitle, setLinkTitle] = useState('')
-  const [linkUrl, setLinkUrl] = useState('')
-  const [linkSuccess, setLinkSuccess] = useState(false)
-  const [linkError, setLinkError] = useState('')
-  const [links, setLinks] = useState<{ title: string; url: string }[]>([])
-  const [copiedIndex, setCopiedIndex] = useState<number | null>(null)
+  const [isSending, setIsSending] = useState(false)
+  const [sentMessages, setSentMessages] = useState<{ title: string; content: string; timestamp: Date }[]>([])
 
   if (!course) {
     return (
-      <main className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Course Not Found</h1>
-          <p className="text-gray-600 mb-8">The course you are looking for does not exist.</p>
-          <button onClick={() => router.push('/teachers')} className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors font-semibold">
+      <main className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="text-center max-w-md">
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Course Not Found</h1>
+          <p className="text-gray-600 mb-8 text-sm sm:text-base">The course you are looking for does not exist.</p>
+          <button onClick={() => router.push('/teachers')} className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors font-semibold text-sm sm:text-base">
             <ArrowLeft className="w-4 h-4" /> Back to Dashboard
           </button>
         </div>
@@ -93,6 +88,7 @@ export default function TeacherCoursePage() {
       return
     }
 
+    setIsSending(true)
     try {
       const res = await fetch('/api/messages/send', {
         method: 'POST',
@@ -108,6 +104,7 @@ export default function TeacherCoursePage() {
       if (!res.ok) {
         const data = await res.json()
         setError(data.error || 'Failed to send message')
+        setIsSending(false)
         return
       }
 
@@ -115,35 +112,13 @@ export default function TeacherCoursePage() {
       setShowSuccess(true)
       setMessageTitle('')
       setMessage('')
+      setSentMessages([...sentMessages, { title: messageTitle, content: message, timestamp: new Date() }])
+      setIsSending(false)
       setTimeout(() => setShowSuccess(false), 3000)
     } catch (err) {
       setError('Failed to send message. Please try again.')
+      setIsSending(false)
     }
-  }
-
-  const handleAddLink = () => {
-    if (!linkTitle.trim()) {
-      setLinkError('Please enter a link title.')
-      return
-    }
-    if (!linkUrl.trim()) {
-      setLinkError('Please paste a link.')
-      return
-    }
-    setLinkError('')
-    setLinks([...links, { title: linkTitle, url: linkUrl }])
-    setLinkSuccess(true)
-    setTimeout(() => {
-      setLinkSuccess(false)
-      setLinkTitle('')
-      setLinkUrl('')
-    }, 2000)
-  }
-
-  const handleCopyLink = (index: number) => {
-    navigator.clipboard.writeText(links[index].url)
-    setCopiedIndex(index)
-    setTimeout(() => setCopiedIndex(null), 2000)
   }
 
   const navItems = [
@@ -154,258 +129,303 @@ export default function TeacherCoursePage() {
   ]
 
   return (
-    <main className="min-h-screen bg-gray-50 font-sans" style={{ fontFamily: 'var(--font-noto-sans)' }}>
-      {/* Mobile/tablet Overlay — only below md now, since sidebar is
-          persistent from md up */}
-      {sidebarOpen && (
-        <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setSidebarOpen(false)} />
-      )}
-
-      {/* Sidebar — persistent (static, no drawer) from md up instead of lg,
-          so md widths aren't stuck with a hidden nav behind a hamburger.
-          Width steps up slightly at xl for breathing room. */}
-      <aside className={`fixed top-0 left-0 z-50 h-full w-72 md:w-64 xl:w-72 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 md:static md:z-auto`}>
-        <div className="flex items-center justify-between p-5 border-b border-gray-100">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className={`p-2 rounded-lg ${course.iconBg} ${course.iconColor} shrink-0`}>
-              <GraduationCap className="w-5 h-5" />
+    <main
+      className="min-h-screen font-sans"
+      style={{
+        fontFamily: 'var(--font-noto-sans)',
+        backgroundColor: '#ECE5DD',
+        backgroundImage:
+          "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cg fill='%23000000' fill-opacity='0.03'%3E%3Cpath d='M0 38.59l2.83-2.83 1.41 1.41L1.41 40H0v-1.41zM0 1.4l2.83 2.83 1.41-1.41L1.41 0H0v1.41zM38.59 40l-2.83-2.83 1.41-1.41L40 38.59V40h-1.41zM40 1.41l-2.83 2.83-1.41-1.41L38.59 0H40v1.41zM20 18.6l2.83-2.83 1.41 1.41L21.41 20l2.83 2.83-1.41 1.41L20 21.41l-2.83 2.83-1.41-1.41L18.59 20l-2.83-2.83 1.41-1.41L20 18.59z'/%3E%3C/g%3E%3C/svg%3E\")",
+      }}
+    >
+      {/* Top Navigation Bar - WhatsApp Teal */}
+      <header className="sticky top-0 z-50 bg-[#008069] shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16 sm:h-20">
+            {/* Logo & Course Title */}
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                <GraduationCap className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+              </div>
+              <div className="hidden sm:block">
+                <p className="text-sm font-bold text-white">{course.title}</p>
+                <p className="text-xs text-white/70">Mentor Dashboard</p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <p className="text-sm font-bold text-gray-900 truncate">{course.title}</p>
-              <p className="text-xs text-gray-400">Mentor Dashboard</p>
-            </div>
-          </div>
-          <button onClick={() => setSidebarOpen(false)} className="md:hidden p-1 rounded-lg hover:bg-gray-100 shrink-0">
-            <X className="w-5 h-5 text-gray-500" />
-          </button>
-        </div>
-
-        <div className="p-5 border-b border-gray-100">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg shrink-0">
-              M
-            </div>
-            <div className="min-w-0">
-              <p className="font-semibold text-gray-900 truncate">Mentor</p>
-              <p className="text-xs text-gray-400 truncate">{course.title} Teacher</p>
-            </div>
-          </div>
-        </div>
-
-        <nav className="p-3 space-y-1">
-          {navItems.map((item) => {
-            const NavIcon = item.icon
-            return (
-              <button key={item.id} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 transition-all duration-200">
-                <NavIcon className="w-5 h-5 text-gray-400 shrink-0" />
-                {item.label}
+          
+            {/* Centered Navigation - Desktop */}
+            <nav className="hidden md:flex items-center justify-center gap-1">
+              {navItems.map((item) => {
+                const NavIcon = item.icon
+                return (
+                  <button
+                    key={item.id}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-white/80 hover:bg-white/10 hover:text-white transition-all duration-200"
+                  >
+                    <NavIcon className="w-4 h-4" />
+                    <span>{item.label}</span>
+                  </button>
+                )
+              })}
+            </nav>
+            
+            {/* Right Side Actions */}
+            <div className="flex items-center gap-2 sm:gap-3">
+              <button className="hidden sm:flex p-2 rounded-lg hover:bg-white/10 transition-colors relative">
+                <Bell className="w-5 h-5 text-white/80" />
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
               </button>
-            )
-          })}
-        </nav>
-
-        <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-gray-100">
-          <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition-all duration-200">
-            <LogOut className="w-5 h-5 shrink-0" />
-            Sign Out
-          </button>
-        </div>
-      </aside>
-
-      {/* Main Content — offset matches sidebar width at each step */}
-      <div className="md:ml-64 xl:ml-72">
-        {/* Top Bar */}
-        <div className="sticky top-0 z-30 bg-white border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16">
-              <div className="flex items-center gap-3">
-                <button onClick={() => setSidebarOpen(true)} className="md:hidden p-2 rounded-lg hover:bg-gray-100">
-                  <Menu className="w-5 h-5 text-gray-600" />
-                </button>
-                <button onClick={() => router.push('/teachers')} className="hidden sm:inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors font-medium text-sm">
-                  <ArrowLeft className="w-5 h-5" />
-                  <span>Back</span>
-                </button>
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-xs sm:text-sm">
+                M
               </div>
-              <div className="flex items-center gap-3">
-                <Bell className="w-5 h-5 text-gray-400" />
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xs">
-                  M
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Hero — trimmed lg:py so it doesn't stack an extra step of
-            vertical space beyond sm on top of the sticky bar */}
-        <div className={`relative overflow-hidden bg-gradient-to-br ${course.gradient}`}>
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-10">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-              <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.2, type: "spring", stiffness: 200 }} className={`inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-2xl ${course.iconBg} ${course.iconColor} shadow-lg shrink-0`}>
-                <Icon className="w-7 h-7 sm:w-8 sm:h-8" />
-              </motion.div>
-              <div className="flex-1 min-w-0">
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900">Welcome, Mentor</h1>
-                <p className="mt-1 text-gray-600 text-base sm:text-lg">You are the teacher for {course.title}</p>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-
-        {/* Main Content — trimmed py so it doesn't double up on the
-            padding the hero above it already provides */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
-            {/* Send Message */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className={`bg-white rounded-2xl border ${course.borderColor} p-5 sm:p-8 shadow-sm`}>
-              <div className="flex items-center gap-3 mb-5 sm:mb-5 lg:mb-5">
-                <div className={`p-2.5 rounded-lg ${course.iconBg} ${course.iconColor} shrink-0`}>
-                  <MessageSquare className="w-5 h-5" />
-                </div>
-                <div className="min-w-0">
-                  <h2 className="text-lg sm:text-xl font-bold text-gray-900">Send Announcement</h2>
-                  <p className="text-xs sm:text-sm text-gray-500">Send a message to all {course.title} students</p>
-                </div>
-              </div>
-
-              <div className="mb-3 sm:mb-4">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Message Title</label>
-                <input type="text" value={messageTitle} onChange={(e) => { setMessageTitle(e.target.value); setError('') }}
-                  placeholder="e.g., Assignment Reminder..."
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 text-gray-900 placeholder-gray-400 transition-all text-sm" />
-              </div>
-
-              <div className="mb-3 sm:mb-4">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Your Message</label>
-                <textarea value={message} onChange={(e) => { setMessage(e.target.value); setError('') }}
-                  placeholder="Write your announcement here..."
-                  rows={5}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 text-gray-900 placeholder-gray-400 transition-all text-sm resize-none" />
-              </div>
-
-              {error && (
-                <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-2 mb-4 p-3 rounded-lg bg-red-50 border border-red-200">
-                  <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
-                  <p className="text-sm text-red-600">{error}</p>
-                </motion.div>
-              )}
-
-              <AnimatePresence>
-                {showSuccess && (
-                  <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} className="flex items-center gap-2 mb-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                    <p className="text-sm text-emerald-600 font-medium">Announcement sent!</p>
-                  </motion.div>
+              <button onClick={() => router.push('/teachers')} className="hidden lg:inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors font-medium text-sm">
+                <ArrowLeft className="w-4 h-4" />
+                <span>Back</span>
+              </button>
+              {/* Mobile Menu Button */}
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="md:hidden p-2 rounded-lg hover:bg-white/10 transition-colors"
+              >
+                {mobileMenuOpen ? (
+                  <X className="w-5 h-5 text-white" />
+                ) : (
+                  <Menu className="w-5 h-5 text-white" />
                 )}
-              </AnimatePresence>
-
-              <button onClick={handleSendMessage} className={`w-full py-3 sm:py-4 px-6 rounded-xl bg-gradient-to-r ${course.color} text-white font-bold text-sm sm:text-lg hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 flex items-center justify-center gap-2 active:scale-[0.98]`}>
-                <Send className="w-4 h-4 sm:w-5 sm:h-5" />
-                Send to All Students
               </button>
-            </motion.div>
+            </div>
+          </div>
+        </div>
 
-            {/* Share Links */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className={`bg-white rounded-2xl border ${course.borderColor} p-5 sm:p-8 shadow-sm`}>
-              <div className="flex items-center gap-3 mb-5 sm:mb-5 lg:mb-5">
-                <div className={`p-2.5 rounded-lg ${course.iconBg} ${course.iconColor} shrink-0`}>
-                  <Link className="w-5 h-5" />
-                </div>
-                <div className="min-w-0">
-                  <h2 className="text-lg sm:text-xl font-bold text-gray-900">Share Resources</h2>
-                  <p className="text-xs sm:text-sm text-gray-500">Paste links for your students to access</p>
-                </div>
-              </div>
-
-              <div className="mb-3 sm:mb-4">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Link Title</label>
-                <input type="text" value={linkTitle} onChange={(e) => { setLinkTitle(e.target.value); setLinkError('') }}
-                  placeholder="e.g., Join Zoom Call Now..."
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 text-gray-900 placeholder-gray-400 transition-all text-sm" />
-              </div>
-
-              <div className="mb-3 sm:mb-4">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Paste Link</label>
-                <input type="url" value={linkUrl} onChange={(e) => { setLinkUrl(e.target.value); setLinkError('') }}
-                  placeholder="https://..."
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 text-gray-900 placeholder-gray-400 transition-all text-sm" />
-              </div>
-
-              {linkError && (
-                <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-2 mb-4 p-3 rounded-lg bg-red-50 border border-red-200">
-                  <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
-                  <p className="text-sm text-red-600">{linkError}</p>
-                </motion.div>
-              )}
-
-              <AnimatePresence>
-                {linkSuccess && (
-                  <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} className="flex items-center gap-2 mb-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                    <p className="text-sm text-emerald-600 font-medium">Link added!</p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              <button onClick={handleAddLink} className={`w-full py-3 sm:py-4 px-6 rounded-xl bg-gradient-to-r ${course.color} text-white font-bold text-sm sm:text-lg hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 flex items-center justify-center gap-2 active:scale-[0.98]`}>
-                <Link className="w-4 h-4 sm:w-5 sm:h-5" />
-                Add Link
-              </button>
-
-              {links.length > 0 && (
-                <div className="mt-5 sm:mt-6">
-                  <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2 text-sm">
-                    <ExternalLink className="w-4 h-4 text-gray-500" />
-                    Shared Links ({links.length})
-                  </h3>
-                  <div className="space-y-2 sm:space-y-3">
-                    {links.map((link, index) => (
-                      <div key={index} className={`p-3 rounded-xl bg-gradient-to-br ${course.gradient} border ${course.borderColor} flex items-center justify-between gap-2`}>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-gray-900 truncate">{link.title}</p>
-                          <p className="text-xs text-gray-500 truncate">{link.url}</p>
-                        </div>
-                        <button onClick={() => handleCopyLink(index)} className="p-2 rounded-lg bg-white/80 hover:bg-white transition-colors shrink-0">
-                          {copiedIndex === index ? (
-                            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                          ) : (
-                            <Copy className="w-4 h-4 text-gray-500" />
-                          )}
-                        </button>
-                      </div>
-                    ))}
+        {/* Mobile Menu Dropdown */}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="md:hidden border-t border-white/10 bg-[#008069]"
+            >
+              <nav className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
+                <div className="flex flex-col gap-1">
+                  {navItems.map((item) => {
+                    const NavIcon = item.icon
+                    return (
+                      <button
+                        key={item.id}
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-white/80 hover:bg-white/10 transition-all duration-200"
+                      >
+                        <NavIcon className="w-5 h-5 text-white/70" />
+                        <span>{item.label}</span>
+                      </button>
+                    )
+                  })}
+                  <div className="border-t border-white/10 mt-2 pt-2">
+                    <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-red-200 hover:bg-red-500/20 transition-all duration-200">
+                      <LogOut className="w-5 h-5" />
+                      <span>Sign Out</span>
+                    </button>
                   </div>
                 </div>
-              )}
+              </nav>
             </motion.div>
+          )}
+        </AnimatePresence>
+      </header>
+
+      {/* Main Content - WhatsApp Chat Style */}
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <div className="grid grid-cols-1 gap-4">
+          {/* Send Announcement - WhatsApp style white card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-white rounded-lg shadow-sm p-4 sm:p-5"
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-lg bg-[#008069]/10 text-[#008069]">
+                <MessageSquare className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-base sm:text-lg font-bold text-[#111B21]">Send Announcement</h2>
+                <p className="text-xs text-[#667781]">Send a message to all {course.title} students</p>
+              </div>
+            </div>
+
+            <div className="mb-3">
+              <label className="block text-sm font-semibold text-[#111B21] mb-1.5">Message Title</label>
+              <input
+                type="text"
+                value={messageTitle}
+                onChange={(e) => { setMessageTitle(e.target.value); setError('') }}
+                placeholder="e.g., Assignment Reminder..."
+                className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-[#F0F2F5] focus:outline-none focus:ring-2 focus:ring-[#008069]/30 text-[#111B21] placeholder-[#667781] transition-all text-sm"
+              />
+            </div>
+
+            <div className="mb-3">
+              <label className="block text-sm font-semibold text-[#111B21] mb-1.5">Your Message</label>
+              <textarea
+                value={message}
+                onChange={(e) => { setMessage(e.target.value); setError('') }}
+                placeholder="Write your announcement here..."
+                rows={4}
+                className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-[#F0F2F5] focus:outline-none focus:ring-2 focus:ring-[#008069]/30 text-[#111B21] placeholder-[#667781] transition-all text-sm resize-none"
+              />
+            </div>
+
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-center gap-2 mb-3 p-2.5 rounded-lg bg-red-50 border border-red-200"
+              >
+                <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
+                <p className="text-sm text-red-600">{error}</p>
+              </motion.div>
+            )}
+
+            <AnimatePresence>
+              {showSuccess && (
+                <motion.div
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -5 }}
+                  className="flex items-center gap-2 mb-3 p-2.5 rounded-lg bg-[#D9FDD3] border border-[#008069]/20"
+                >
+                  <CheckCircle2 className="w-4 h-4 text-[#008069] shrink-0" />
+                  <p className="text-sm text-[#111B21] font-medium">Announcement sent!</p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <button
+              onClick={handleSendMessage}
+              disabled={isSending}
+              className="w-full py-2.5 sm:py-3 px-6 rounded-lg bg-[#008069] text-white font-bold text-sm sm:text-base hover:bg-[#017561] transition-all duration-300 flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              {isSending ? (
+                <>
+                  <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Send className="w-4 h-4 sm:w-5 sm:h-5" />
+                  Send to All Students
+                </>
+              )}
+            </button>
+          </motion.div>
+
+        {/* WhatsApp-style Chat UI */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="rounded-lg overflow-hidden border border-black/5 shadow-sm"
+        >
+          {/* Chat Header */}
+          <div className="flex items-center gap-3 px-4 py-3 bg-[#008069] text-white">
+            <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+              <Icon className="w-5 h-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold text-sm truncate">{course.title} Students</p>
+              <p className="text-xs text-white/70">Announcement channel</p>
+            </div>
+            <MessageSquare className="w-5 h-5 text-white/80" />
           </div>
 
-          {/* Tips — trimmed mt so it sits closer to the grid above it */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className={`mt-5 sm:mt-6 bg-white rounded-2xl border ${course.borderColor} p-5 sm:p-6`}>
-            <div className="flex items-center gap-2 mb-4">
-              <Bell className={`w-5 h-5 ${course.iconColor}`} />
-              <h3 className="font-bold text-gray-900">Mentor Tips</h3>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm text-gray-600">
-              <div className="flex gap-2 items-start">
-                <span className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 bg-gradient-to-r ${course.color}`} />
-                Use announcements for important updates
+          {/* Chat Body - WhatsApp background (transparent to show page bg) */}
+          <div
+            className="p-4 space-y-2 max-h-[28rem] overflow-y-auto"
+            style={{
+              backgroundColor: 'transparent',
+            }}
+          >
+            {/* Incoming system tips (left, white bubbles) */}
+            {[
+              'Use announcements for important updates',
+              'Share Zoom links for live sessions',
+              'Include deadlines in your messages',
+              'Keep a supportive and encouraging tone',
+            ].map((tip, i) => (
+              <div key={`tip-${i}`} className="flex justify-start">
+                <div className="relative max-w-[85%] bg-white rounded-lg px-3 py-2 shadow-sm" style={{ borderTopLeftRadius: 0 }}>
+                  <p className="text-xs sm:text-sm text-[#111B21]">{tip}</p>
+                  <div className="flex items-center justify-end gap-1 mt-1">
+                    <span className="text-[10px] text-[#667781]">
+                      {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                </div>
               </div>
-              <div className="flex gap-2 items-start">
-                <span className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 bg-gradient-to-r ${course.color}`} />
-                Share Zoom links for live sessions
+            ))}
+
+            {/* Outgoing sent messages (right, WhatsApp green bubbles) */}
+            {sentMessages.map((msg, index) => (
+              <div
+                key={index}
+                onContextMenu={(e) => {
+                  e.preventDefault()
+                  if (confirm('Delete this message?')) {
+                    setSentMessages(sentMessages.filter((_, i) => i !== index))
+                  }
+                }}
+                onTouchStart={(e) => {
+                  const timer = setTimeout(() => {
+                    if (confirm('Delete this message?')) {
+                      setSentMessages(sentMessages.filter((_, i) => i !== index))
+                    }
+                  }, 800)
+                  e.currentTarget.dataset.timer = timer.toString()
+                }}
+                onTouchEnd={(e) => {
+                  const timer = e.currentTarget.dataset.timer
+                  if (timer) clearTimeout(parseInt(timer))
+                }}
+                className="flex justify-end group"
+              >
+                <div
+                  className="relative max-w-[85%] rounded-lg px-3 py-2 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+                  style={{ backgroundColor: '#D9FDD3', borderTopRightRadius: 0 }}
+                >
+                  <h4 className="font-semibold text-xs sm:text-sm text-[#111B21] mb-0.5 break-words">{msg.title}</h4>
+                  <p className="text-xs sm:text-sm text-[#111B21] break-words whitespace-pre-wrap">{msg.content}</p>
+                  <div className="flex items-center justify-end gap-1 mt-1">
+                    <span className="text-[10px] text-[#667781]">
+                      {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                    {/* Blue double check = read */}
+                    <svg className="w-3.5 h-3.5 text-[#53BDEB]" viewBox="0 0 18 18" fill="currentColor">
+                      <path d="M1.5 9.5l3.5 3.5 7-7M8 13l3.5 3.5 7-7" stroke="currentColor" strokeWidth="1.6" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (confirm('Delete this message?')) {
+                        setSentMessages(sentMessages.filter((_, i) => i !== index))
+                      }
+                    }}
+                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
               </div>
-              <div className="flex gap-2 items-start">
-                <span className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 bg-gradient-to-r ${course.color}`} />
-                Include deadlines in your messages
+            ))}
+
+            {sentMessages.length === 0 && (
+              <div className="flex justify-center py-6">
+                <p className="text-xs text-[#667781] bg-white/60 rounded-full px-3 py-1">
+                  No announcements sent yet
+                </p>
               </div>
-              <div className="flex gap-2 items-start">
-                <span className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 bg-gradient-to-r ${course.color}`} />
-                Keep a supportive and encouraging tone
-              </div>
-            </div>
-          </motion.div>
+            )}
+          </div>
+        </motion.div>
         </div>
       </div>
     </main>
