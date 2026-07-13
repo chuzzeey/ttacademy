@@ -5,6 +5,23 @@ import { useState } from 'react'
 import { Shield, BarChart3, Cpu, Globe, ShieldAlert, Palette, Code, Monitor, Server, Globe2, TrendingUp, Cloud, Database, ArrowLeft, Send, AlertCircle, CheckCircle2, MessageSquare, Bell, Link, ExternalLink, Copy, Menu, X, GraduationCap, LogOut, Home, BookMarked, User, Settings } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 
+const courseSlugMap: Record<string, string> = {
+  'cybersecurity': 'cybersecurity',
+  'data-science': 'data-science',
+  'ai-automation': 'ai-automation',
+  'computer-networking': 'computer-networking',
+  'ethical-hacking': 'ethical-hacking',
+  'graphic-design': 'graphic-design',
+  'uiux-design': 'uiux-design',
+  'full-stack-development': 'full-stack-development',
+  'frontend-development': 'frontend-development',
+  'backend-development': 'backend-development',
+  'web-development': 'web-development',
+  'digital-marketing': 'digital-marketing',
+  'cloud-computing': 'cloud-computing',
+  'data-analysis': 'data-analysis',
+}
+
 const courseData: Record<string, {
   title: string
   icon: any
@@ -66,7 +83,7 @@ export default function TeacherCoursePage() {
 
   const Icon = course.icon
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!messageTitle.trim()) {
       setError('Please enter a message title.')
       return
@@ -75,13 +92,33 @@ export default function TeacherCoursePage() {
       setError('Please write a message to send.')
       return
     }
-    setError('')
-    setShowSuccess(true)
-    setTimeout(() => {
-      setShowSuccess(false)
+
+    try {
+      const res = await fetch('/api/messages/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: messageTitle,
+          content: message,
+          course: params.course,
+          sender_name: 'Mentor',
+        }),
+      })
+
+      if (!res.ok) {
+        const data = await res.json()
+        setError(data.error || 'Failed to send message')
+        return
+      }
+
+      setError('')
+      setShowSuccess(true)
       setMessageTitle('')
       setMessage('')
-    }, 3000)
+      setTimeout(() => setShowSuccess(false), 3000)
+    } catch (err) {
+      setError('Failed to send message. Please try again.')
+    }
   }
 
   const handleAddLink = () => {

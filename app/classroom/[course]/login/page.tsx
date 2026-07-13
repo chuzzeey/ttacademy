@@ -112,6 +112,14 @@ export default function CourseLoginPage() {
           return
         }
 
+        // Store student info in sessionStorage so the dashboard can access it
+        sessionStorage.setItem('ttacademy_student', JSON.stringify({
+          id: data.user.id,
+          name: data.user.user_metadata?.name || '',
+          email: data.user.email || '',
+          course: userCourseRaw,
+        }))
+
         // Successful login with correct course access
         setSuccess(true)
         setTimeout(() => {

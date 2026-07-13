@@ -19,6 +19,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl)
   }
 
+  // If authenticated but not the admin email, deny access to dashboard
+  if (isProtectedPath && session && session.user.email !== 'amahchibu@gmail.com') {
+    await supabase.auth.signOut()
+    const loginUrl = new URL('/admin-login', request.url)
+    loginUrl.searchParams.set('error', 'unauthorized')
+    return NextResponse.redirect(loginUrl)
+  }
+
   // If authenticated and trying to access login page, redirect to dashboard
   if (request.nextUrl.pathname === '/admin-login' && session) {
     const redirectUrl = request.nextUrl.searchParams.get('redirect') || '/dashboard'

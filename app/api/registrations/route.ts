@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { createAdminClient } from "@/lib/supabase/server-admin";
 
 export async function POST(request: NextRequest) {
@@ -55,8 +54,10 @@ export async function POST(request: NextRequest) {
       now.getMinutes()
     ).padStart(2, "0")}`;
 
-    const student = await prisma.student.create({
-      data: {
+    const supabase = await createAdminClient()
+    const { data: student, error: insertError } = await supabase
+      .from('students')
+      .insert({
         name: full_name.trim(),
         email: email.trim().toLowerCase(),
         phone: phone_whatsapp.trim(),
@@ -68,26 +69,36 @@ export async function POST(request: NextRequest) {
         has_laptop,
         reason: (learning_reason || "").trim(),
         payment_status: "Not Paid",
+        password: "123456",
         reg_date: regDate,
         reg_time: regTime,
-      },
-    });
+      })
+      .select()
+      .single()
+
+    if (insertError) throw insertError
 
     // Create Supabase auth user with default password "123456"
-    const supabase = await createAdminClient()
-    const { error: authError } = await supabase.auth.admin.createUser({
-      email: email.trim().toLowerCase(),
-      password: "123456",
-      email_confirm: true,
-      user_metadata: {
-        name: full_name.trim(),
-        course: course_applying_for,
-        role: "student"
-      }
-    })
+    try {
+      const supabase = await createAdminClient()
+      const { error: authError } = await supabase.auth.admin.createUser({
+        email: email.trim().toLowerCase(),
+        password: "123456",
+        email_confirm: true,
+        user_metadata: {
+          name: full_name.trim(),
+          course: course_applying_for,
+          role: "student"
+        }
+      })
 
-    if (authError) {
-      console.error("Failed to create auth user:", authError)
+      if (authError) {
+        console.error("Failed to create auth user:", authError)
+        // Don't fail the registration if auth user creation fails
+      }
+    } catch (supabaseError) {
+      console.error("Supabase client error:", supabaseError)
+      // Don't fail the registration if Supabase is not configured
     }
 
     return NextResponse.json(
@@ -155,14 +166,15 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const updatedStudent = await prisma.student.update({
-      where: {
-        id: studentId,
-      },
-      data: {
-        payment_status,
-      },
-    });
+    const supabase = await createAdminClient()
+    const { data: updatedStudent, error: updateError } = await supabase
+      .from('students')
+      .update({ payment_status })
+      .eq('id', studentId)
+      .select()
+      .single()
+
+    if (updateError) throw updateError
 
     return NextResponse.json(
       {
@@ -193,11 +205,13 @@ export async function PATCH(request: NextRequest) {
 
 export async function GET() {
   try {
-    const students = await prisma.student.findMany({
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+    const supabase = await createAdminClient()
+    const { data: students, error: fetchError } = await supabase
+      .from('students')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (fetchError) throw fetchError
 
     return NextResponse.json(
       {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import {
@@ -10,6 +10,15 @@ import {
   MessagesSquare, UsersRound
 } from 'lucide-react'
 import { getCourseData } from '@/lib/mock-data'
+import { createClient } from '@/lib/supabase/client'
+
+interface Message {
+  id: string
+  title: string
+  content: string
+  sender_name: string
+  created_at: string
+}
 
 export default function DashboardPage() {
   const params = useParams()
@@ -24,6 +33,55 @@ export default function DashboardPage() {
     new Set(dashboard.lessons.filter(l => l.completed).map(l => l.id))
   )
   const [showProfileDropdown, setShowProfileDropdown] = useState(false)
+  const [messages, setMessages] = useState<Message[]>([])
+  const [loadingMessages, setLoadingMessages] = useState(true)
+
+  useEffect(() => {
+    fetchMessages()
+  }, [courseSlug])
+
+  // Setup Supabase Realtime subscription
+  useEffect(() => {
+    const supabase = createClient()
+    
+    // Subscribe to new messages for this course
+    const channel = supabase
+      .channel(`messages:${courseSlug}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `course=eq.${courseSlug}`,
+        },
+        (payload) => {
+          // Add new message to the list
+          const newMessage = payload.new as Message
+          setMessages(prev => [...prev, newMessage])
+        }
+      )
+      .subscribe()
+
+    // Cleanup subscription on unmount
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [courseSlug])
+
+  const fetchMessages = async () => {
+    try {
+      const res = await fetch(`/api/messages/get?course=${courseSlug}`)
+      if (res.ok) {
+        const data = await res.json()
+        setMessages(data.data || [])
+      }
+    } catch (err) {
+      console.error('Failed to fetch messages:', err)
+    } finally {
+      setLoadingMessages(false)
+    }
+  }
 
   const toggleLesson = (lessonId: string) => {
     setCompletedLessons(prev => {
@@ -113,18 +171,6 @@ export default function DashboardPage() {
             >
               <Bell className="w-4 h-4" />
               Notifications
-            </button>
-
-            <button
-              onClick={() => { setActiveSection('messages'); setSidebarOpen(false) }}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
-                activeSection === 'messages'
-                  ? 'bg-[#2a3942] text-gray-100 font-semibold'
-                  : 'text-gray-400 hover:bg-[#2a3942] hover:text-gray-200 font-medium'
-              }`}
-            >
-              <MessagesSquare className="w-4 h-4" />
-              Messages
             </button>
 
             <button
@@ -283,7 +329,7 @@ export default function DashboardPage() {
         </header>
 
         {/* ===== MAIN CHAT AREA ===== */}
-        <div className="flex-1 overflow-y-auto bg-[#0b141a] bg-opacity-30" style={{
+        <div className="flex-1 overflow-y-auto bg-[#0b141a] bg-opacity-30 scrollbar-hide" style={{
           backgroundImage: 'url(https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png)',
           backgroundRepeat: 'repeat',
           backgroundSize: '400px'
@@ -304,59 +350,53 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* ===== WHATSAPP-STYLE MESSAGE ===== */}
-            <div className="flex justify-start px-2 mb-3">
-              <div className="max-w-[calc(75%)] min-w-[240px]">
-                {/* Sender row */}
-                <div className="flex items-center gap-2 mb-[3px] ml-[2px]">
-                  <div className={`w-[22px] h-[22px] rounded-full bg-gradient-to-br ${courseData.color} flex items-center justify-center shrink-0 shadow-md ring-2 ring-[#2a3942]/50`}>
-                    {getCourseIcon('3')}
+            {/* ===== DYNAMIC MESSAGES FROM DATABASE ===== */}
+            {!loadingMessages && messages.map((msg, index) => (
+              <div key={msg.id} className="flex justify-start px-2 mb-3">
+                <div className="max-w-[calc(75%)] min-w-[240px]">
+                  {/* Sender row */}
+                  <div className="flex items-center gap-2 mb-[3px] ml-[2px]">
+                    <div className={`w-[22px] h-[22px] rounded-full bg-gradient-to-br ${courseData.color} flex items-center justify-center shrink-0 shadow-md ring-2 ring-[#2a3942]/50`}>
+                      <span className="text-white text-xs font-bold">{msg.sender_name.charAt(0).toUpperCase()}</span>
+                    </div>
+                    <span className="text-[13px] font-semibold text-[#00a884]">{msg.sender_name}</span>
                   </div>
-                  <span className="text-[13px] font-semibold text-[#00a884]">Tutor, {courseData.title}</span>
-                </div>
-                
-                {/* Bubble */}
-                <div className="bg-[#005c4b] rounded-[10px] rounded-tl-[3px] px-[11px] py-[7px] relative group shadow-[0_1px_3px_rgba(0,0,0,0.12),0_1px_2px_rgba(0,0,0,0.08)] hover:shadow-[0_2px_4px_rgba(0,0,0,0.15),0_1px_3px_rgba(0,0,0,0.1)] transition-all duration-200">
-                  {/* Hover actions */}
-                  <div className="absolute top-[2px] right-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                    <div className="p-[3px] cursor-pointer rounded-[6px] hover:bg-[#ffffff15]">
-                      <svg viewBox="0 0 10 10" className="w-[14px] h-[14px] fill-[#a0b4b9]">
-                        <path d="M5 7.5a.5.5 0 01-.35-.15l-2-2a.5.5 0 11.7-.7L5 6.29l1.65-1.64a.5.5 0 11.7.7l-2 2A.5.5 0 015 7.5z"/>
+                  
+                  {/* Bubble */}
+                  <div className="bg-[#005c4b] rounded-[10px] rounded-tl-[3px] px-[11px] py-[7px] relative group shadow-[0_1px_3px_rgba(0,0,0,0.12),0_1px_2px_rgba(0,0,0,0.08)] hover:shadow-[0_2px_4px_rgba(0,0,0,0.15),0_1px_3px_rgba(0,0,0,0.1)] transition-all duration-200">
+                    {/* Title */}
+                    <div className="pr-[26px]">
+                      <p className="text-[14.5px] text-[#ffffff] leading-[1.45] whitespace-pre-wrap break-words select-text font-semibold">
+                        {msg.title}
+                      </p>
+                    </div>
+
+                    {/* Text content */}
+                    <div className="pr-[26px] mt-[7px]">
+                      <p className="text-[14.5px] text-[#e9edef] leading-[1.45] whitespace-pre-wrap break-words select-text">
+                        {msg.content}
+                      </p>
+                    </div>
+
+                    {/* Footer row */}
+                    <div className="flex items-center justify-end gap-[3px] mt-[5px]">
+                      <span className="text-[11px] text-[#a0b4b9]">
+                        {new Date(msg.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                      </span>
+                      <svg viewBox="0 0 16 11" className="w-[16px] h-[11px]">
+                        <path d="M2 5.5L4.5 8L9 3.5" stroke="#53bdeb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M6 5.5L8.5 8L13 3.5" stroke="#53bdeb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
                     </div>
-                  </div>
 
-                  {/* Text content */}
-                  <div className="pr-[26px]">
-                    <p className="text-[14.5px] text-[#e9edef] leading-[1.45] whitespace-pre-wrap break-words select-text">
-                      Hello! 👋
-                    </p>
-                    <p className="text-[14.5px] text-[#e9edef] leading-[1.45] mt-[7px] whitespace-pre-wrap break-words select-text">
-                      Welcome to <strong className="font-bold text-[#ffffff]">{courseData.title}</strong>! I'm your instructor, <strong className="font-bold text-[#ffffff]">{courseData.instructor}</strong>.
-                    </p>
-                    <p className="text-[14.5px] text-[#e9edef] leading-[1.45] mt-[7px] whitespace-pre-wrap break-words select-text">
-                      Excited to have you on board. Let's get started! 🚀
-                    </p>
-                  </div>
-
-                  {/* Footer row */}
-                  <div className="flex items-center justify-end gap-[3px] mt-[5px]">
-                    <span className="text-[11px] text-[#a0b4b9]">
-                      {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
-                    </span>
-                    <svg viewBox="0 0 16 11" className="w-[16px] h-[11px]">
-                      <path d="M2 5.5L4.5 8L9 3.5" stroke="#53bdeb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M6 5.5L8.5 8L13 3.5" stroke="#53bdeb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </div>
-
-                  {/* Tail */}
-                  <div className="absolute -left-[7px] top-[12px] w-[10px] h-[10px] overflow-hidden">
-                    <div className="absolute left-0 top-0 w-[14px] h-[14px] bg-[#005c4b] rounded-[2px]" style={{ clipPath: 'polygon(100% 0, 100% 100%, 0 100%)' }}></div>
+                    {/* Tail */}
+                    <div className="absolute -left-[7px] top-[12px] w-[10px] h-[10px] overflow-hidden">
+                      <div className="absolute left-0 top-0 w-[14px] h-[14px] bg-[#005c4b] rounded-[2px]" style={{ clipPath: 'polygon(100% 0, 100% 100%, 0 100%)' }}></div>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            ))}
 
             {/* Bottom Spacer for Input */}
             <div className="h-20" />

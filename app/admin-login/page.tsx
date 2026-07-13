@@ -26,6 +26,15 @@ function LoginForm() {
     checkSession()
   }, [router, supabase])
 
+  useEffect(() => {
+    // Check for error parameter in URL
+    const url = new URL(window.location.href)
+    const errorParam = url.searchParams.get('error')
+    if (errorParam === 'unauthorized') {
+      setError('Unauthorized: Only the admin can access this dashboard')
+    }
+  }, [])
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -38,6 +47,14 @@ function LoginForm() {
       })
 
       if (error) throw error
+
+      // Only allow the specific admin email
+      if (data.user?.email !== 'amahchibu@gmail.com') {
+        await supabase.auth.signOut()
+        setError('Unauthorized: Only the admin can access this dashboard')
+        setLoading(false)
+        return
+      }
 
       if (data.session) {
         router.push('/dashboard')

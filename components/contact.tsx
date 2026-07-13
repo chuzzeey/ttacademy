@@ -59,7 +59,8 @@ export default function Contact() {
         if (data?.data && Array.isArray(data.data)) {
           const cd = data.data.find((i: any) => i.iso2 === form.country || i.iso3 === form.country)
           if (cd?.states && Array.isArray(cd.states)) {
-            setStates(cd.states.map((s: any) => ({ code: s.state_code || s.name, name: s.name })).sort((a: any, b: any) => a.name.localeCompare(b.name)))
+            // Store full state name as both code and value to ensure we save the full name
+            setStates(cd.states.map((s: any) => ({ code: s.name, name: s.name })).sort((a: any, b: any) => a.name.localeCompare(b.name)))
           } else { setStates([]) }
         } else { setStates([]) }
       } catch { setStates([]) }

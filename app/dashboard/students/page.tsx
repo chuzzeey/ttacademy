@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Button } from "../components/ui/button"
 import { Input } from "../components/ui/input"
 import { Calendar, Download, DollarSign, ShoppingBag, CreditCard, Search, Eye, ChevronLeft, ChevronRight, User, X, Mail, BookOpen, Clock, CheckCircle, XCircle, ChevronDown, Briefcase, Monitor, Phone, MapPin, Copy, Check } from "lucide-react"
+import { getStateDisplayName, formatLocation } from "@/lib/state-utils"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select"
 
 const COURSES = [
@@ -583,7 +584,7 @@ export default function StudentsPage() {
                     <div className="p-1.5 sm:p-2 rounded-lg bg-muted shrink-0"><MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" /></div>
                     <div className="min-w-0">
                       <p className="text-[10px] sm:text-xs text-muted-foreground">Location</p>
-                      <p className="text-xs sm:text-sm font-medium truncate">{selectedStudent.country}{selectedStudent.state ? `, ${selectedStudent.state}` : ""}</p>
+                      <p className="text-xs sm:text-sm font-medium truncate">{formatLocation(selectedStudent.country, selectedStudent.state)}</p>
                     </div>
                   </div>
                 </div>
