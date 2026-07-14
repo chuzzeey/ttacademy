@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { getCourseData } from '@/lib/mock-data'
 import { getStateDisplayName } from '@/lib/state-utils'
+import { getStudentByEmail } from '@/lib/supabase/students'
 
 interface StudentData {
   id: string
@@ -138,8 +139,14 @@ export default function ProfilePage() {
       try {
         const res = await fetch('/api/registrations/me')
         const json = await res.json()
-        if (res.ok && json.data) setStudentData(json.data)
-      } catch (err) { /* silently fall back to mock data */ }
+        if (res.ok && json.data) {
+          setStudentData(json.data)
+          return
+        }
+        // Fallback: try Supabase directly
+        const student = await getStudentByEmail(dashboard.profile.email)
+        if (student) setStudentData(student as StudentData)
+      } catch (err) { console.error('Failed to fetch student data:', err) }
       finally { setLoading(false) }
     }
     fetchStudentData()
@@ -265,19 +272,7 @@ export default function ProfilePage() {
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <div className="flex-1 min-w-0">
-            <h1 className="text-[17px] font-bold leading-5 truncate text-gray-900">
-              {data?.name || dashboard.profile.name}
-            </h1>
-            <p className="text-[13px] leading-4 mt-[1px] text-gray-500">{courseData.title}</p>
-          </div>
-          <span className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#1d9bf0]/10 rounded-full text-[12px] text-[#1d9bf0] font-medium">
-            <span className="relative w-[6px] h-[6px]">
-              <span className="absolute inset-0 bg-[#1d9bf0] rounded-full" />
-              <span className="absolute inset-0 bg-[#1d9bf0] rounded-full animate-ping opacity-40" />
-            </span>
-            Active
-          </span>
+          <div className="flex-1" />
         </div>
       </header>
 

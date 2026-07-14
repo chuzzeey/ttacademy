@@ -40,7 +40,7 @@ export default function DashboardPage() {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [loadingMessages, setLoadingMessages] = useState(true)
-  const [showChatList, setShowChatList] = useState(true)
+  const [showChatList, setShowChatList] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [isSending, setIsSending] = useState(false)
