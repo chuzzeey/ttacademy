@@ -27,7 +27,6 @@ interface Message {
   status: 'sending' | 'sent' | 'delivered' | 'read'
   sender: 'me' | 'system' | 'mentor'
   senderName?: string
-  isAnnouncement?: boolean
 }
 
 export default function DashboardPage() {
@@ -110,7 +109,6 @@ export default function DashboardPage() {
             status: 'read' as const,
             sender: msg.sender_name === 'Mentor' ? ('mentor' as const) : ('me' as const),
             senderName: msg.sender_name,
-            isAnnouncement: msg.sender_name === 'Mentor'
           }))
           
           setMessages(prev => {
@@ -154,7 +152,6 @@ export default function DashboardPage() {
               status: 'read',
               sender: newMsg.sender_name === 'Mentor' ? 'mentor' : 'me',
               senderName: newMsg.sender_name,
-              isAnnouncement: newMsg.sender_name === 'Mentor'
             }
             
             // Check if this is an optimistic update (sending status) that needs to be replaced
