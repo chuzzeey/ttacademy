@@ -14,7 +14,6 @@ import {
 } from 'lucide-react'
 import { getCourseData } from '@/lib/mock-data'
 import { getStateDisplayName } from '@/lib/state-utils'
-import { getStudentByEmail } from '@/lib/supabase/students'
 
 interface StudentData {
   id: string
@@ -141,11 +140,7 @@ export default function ProfilePage() {
         const json = await res.json()
         if (res.ok && json.data) {
           setStudentData(json.data)
-          return
         }
-        // Fallback: try Supabase directly
-        const student = await getStudentByEmail(dashboard.profile.email)
-        if (student) setStudentData(student as StudentData)
       } catch (err) { console.error('Failed to fetch student data:', err) }
       finally { setLoading(false) }
     }
