@@ -370,7 +370,7 @@ export default function DashboardPage() {
                   </button>
                   {showProfileDropdown && (
                     <>
-                      <div className="fixed inset-0 z-40" onClick={() => setShowProfileDropdown(false)} />
+                      <div className="fixed inset-0 z-40 backdrop-blur-sm bg-black/10" onClick={() => setShowProfileDropdown(false)} />
                       <div className="absolute right-0 top-11 w-56 bg-white border border-gray-200 rounded-xl shadow-2xl z-50 overflow-hidden">
                         <div className="py-1">
                           <button onClick={() => router.push(`/classroom/${courseSlug}/dashboard/profile`)} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors">Profile Settings</button>
