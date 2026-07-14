@@ -49,6 +49,7 @@ export default function DashboardPage() {
   const inputRef = useRef<HTMLInputElement>(null)
   const processedMessagesRef = useRef<Set<string>>(new Set()) // Track processed message IDs
   const initialLoadCompleteRef = useRef(false) // Track if initial load is complete
+  const prevMessagesLengthRef = useRef(0) // Track previous message count
   const [studentData, setStudentData] = useState<{ name: string; email: string; avatar: string } | null>(null)
 
   const emojis = ['😊', '👍', '🎉', '📚', '💡', '🔥', '✅', '⭐', '💪', '👏', '🎯', '📌', '📢', '💬', '🤝', '🌟']
@@ -100,6 +101,9 @@ export default function DashboardPage() {
 
     const fetchMessages = async () => {
       try {
+        // Mark initial load as complete immediately to prevent realtime duplicates
+        initialLoadCompleteRef.current = true
+        
         const res = await fetch(`/api/messages/get?course=${courseSlug}`)
         if (res.ok) {
           const data = await res.json()
@@ -129,10 +133,6 @@ export default function DashboardPage() {
         console.error('Failed to fetch messages:', err)
       } finally {
         setLoadingMessages(false)
-        // Mark initial load as complete after a short delay
-        setTimeout(() => {
-          initialLoadCompleteRef.current = true
-        }, 1000)
       }
     }
 
@@ -192,6 +192,23 @@ export default function DashboardPage() {
       supabase.removeChannel(channel)
     }
   }, [courseSlug])
+
+  // Deduplicate messages whenever they change (prevent infinite loop)
+  useEffect(() => {
+    if (messages.length > prevMessagesLengthRef.current) {
+      setMessages(prev => {
+        const seen = new Set<string>()
+        const unique = prev.filter(msg => {
+          const key = `${msg.id}-${msg.text}`
+          if (seen.has(key)) return false
+          seen.add(key)
+          return true
+        })
+        prevMessagesLengthRef.current = unique.length
+        return unique.length === prev.length ? prev : unique
+      })
+    }
+  }, [messages.length])
 
   // Auto scroll to bottom on new messages
   useEffect(() => {
