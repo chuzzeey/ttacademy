@@ -48,6 +48,7 @@ export default function DashboardPage() {
   const chatEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const processedMessagesRef = useRef<Set<string>>(new Set()) // Track processed message IDs
+  const initialLoadCompleteRef = useRef(false) // Track if initial load is complete
   const [studentData, setStudentData] = useState<{ name: string; email: string; avatar: string } | null>(null)
 
   const emojis = ['😊', '👍', '🎉', '📚', '💡', '🔥', '✅', '⭐', '💪', '👏', '🎯', '📌', '📢', '💬', '🤝', '🌟']
@@ -114,14 +115,24 @@ export default function DashboardPage() {
           // Replace all messages with fetched ones (system messages are preserved)
           setMessages(prev => {
             const systemMessages = prev.filter(m => m.sender === 'system')
-            const allIds = new Set(dbMessages.map(m => m.id))
-            return [...systemMessages, ...dbMessages]
+            // Deduplicate by ID
+            const seen = new Set<string>()
+            const uniqueDbMessages = dbMessages.filter(msg => {
+              if (seen.has(msg.id)) return false
+              seen.add(msg.id)
+              return true
+            })
+            return [...systemMessages, ...uniqueDbMessages]
           })
         }
       } catch (err) {
         console.error('Failed to fetch messages:', err)
       } finally {
         setLoadingMessages(false)
+        // Mark initial load as complete after a short delay
+        setTimeout(() => {
+          initialLoadCompleteRef.current = true
+        }, 1000)
       }
     }
 
@@ -140,6 +151,9 @@ export default function DashboardPage() {
           filter: `course=eq.${courseSlug}`,
         },
         (payload) => {
+          // Skip realtime events during initial load to prevent duplicates
+          if (!initialLoadCompleteRef.current) return
+          
           const newMsg = payload.new as DbMessage
           setMessages(prev => {
             const exists = prev.some(m => m.id === newMsg.id)
