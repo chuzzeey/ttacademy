@@ -48,7 +48,6 @@ export default function DashboardPage() {
   const chatEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const processedMessagesRef = useRef<Set<string>>(new Set()) // Track processed message IDs
-  const messageIdsRef = useRef<Set<string>>(new Set()) // Track all message IDs to prevent duplicates
   const [studentData, setStudentData] = useState<{ name: string; email: string; avatar: string } | null>(null)
 
   const emojis = ['😊', '👍', '🎉', '📚', '💡', '🔥', '✅', '⭐', '💪', '👏', '🎯', '📌', '📢', '💬', '🤝', '🌟']
@@ -112,11 +111,11 @@ export default function DashboardPage() {
             senderName: msg.sender_name,
           }))
           
+          // Replace all messages with fetched ones (system messages are preserved)
           setMessages(prev => {
-            const initial = prev.filter(m => m.sender === 'system')
-            const uniqueDbMessages = dbMessages.filter(m => !messageIdsRef.current.has(m.id))
-            messageIdsRef.current = new Set([...messageIdsRef.current, ...uniqueDbMessages.map(m => m.id)])
-            return [...initial, ...uniqueDbMessages]
+            const systemMessages = prev.filter(m => m.sender === 'system')
+            const allIds = new Set(dbMessages.map(m => m.id))
+            return [...systemMessages, ...dbMessages]
           })
         }
       } catch (err) {
@@ -144,7 +143,7 @@ export default function DashboardPage() {
           const newMsg = payload.new as DbMessage
           setMessages(prev => {
             const exists = prev.some(m => m.id === newMsg.id)
-            if (exists || messageIdsRef.current.has(newMsg.id)) return prev
+            if (exists) return prev
             
             const msg: Message = {
               id: newMsg.id,
