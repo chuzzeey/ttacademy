@@ -48,6 +48,7 @@ export default function DashboardPage() {
   const chatEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const processedMessagesRef = useRef<Set<string>>(new Set()) // Track processed message IDs
+  const messageIdsRef = useRef<Set<string>>(new Set()) // Track all message IDs to prevent duplicates
   const [studentData, setStudentData] = useState<{ name: string; email: string; avatar: string } | null>(null)
 
   const emojis = ['😊', '👍', '🎉', '📚', '💡', '🔥', '✅', '⭐', '💪', '👏', '🎯', '📌', '📢', '💬', '🤝', '🌟']
@@ -104,7 +105,7 @@ export default function DashboardPage() {
           const data = await res.json()
           const dbMessages: Message[] = (data.data || []).map((msg: DbMessage) => ({
             id: msg.id,
-            text: msg.sender_name === 'Mentor' ? `${msg.title}\n${msg.content}` : msg.content,
+            text: msg.content,
             timestamp: new Date(msg.created_at),
             status: 'read' as const,
             sender: msg.sender_name === 'Mentor' ? ('mentor' as const) : ('me' as const),
@@ -113,8 +114,8 @@ export default function DashboardPage() {
           
           setMessages(prev => {
             const initial = prev.filter(m => m.sender === 'system')
-            const existingIds = new Set([...initial, ...dbMessages].map(m => m.id))
-            const uniqueDbMessages = dbMessages.filter(m => !existingIds.has(m.id))
+            const uniqueDbMessages = dbMessages.filter(m => !messageIdsRef.current.has(m.id))
+            messageIdsRef.current = new Set([...messageIdsRef.current, ...uniqueDbMessages.map(m => m.id)])
             return [...initial, ...uniqueDbMessages]
           })
         }
@@ -126,21 +127,6 @@ export default function DashboardPage() {
     }
 
     fetchMessages()
-
-    // Deduplicate messages periodically
-    const dedupInterval = setInterval(() => {
-      setMessages(prev => {
-        const seen = new Set<string>()
-        return prev.filter(msg => {
-          const key = `${msg.sender}-${msg.text}-${msg.timestamp.getTime()}`
-          if (seen.has(key)) return false
-          seen.add(key)
-          return true
-        })
-      })
-    }, 2000)
-
-    return () => clearInterval(dedupInterval)
 
     // Setup Supabase Realtime subscription for live messages
     const supabase = createClient()
@@ -158,11 +144,11 @@ export default function DashboardPage() {
           const newMsg = payload.new as DbMessage
           setMessages(prev => {
             const exists = prev.some(m => m.id === newMsg.id)
-            if (exists) return prev
+            if (exists || messageIdsRef.current.has(newMsg.id)) return prev
             
             const msg: Message = {
               id: newMsg.id,
-              text: newMsg.sender_name === 'Mentor' ? `${newMsg.title}\n${newMsg.content}` : newMsg.content,
+              text: newMsg.content,
               timestamp: new Date(newMsg.created_at),
               status: 'read',
               sender: newMsg.sender_name === 'Mentor' ? 'mentor' : 'me',
