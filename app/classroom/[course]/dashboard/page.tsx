@@ -74,6 +74,26 @@ export default function DashboardPage() {
   const studentName = studentData?.name || dashboard.profile.name || 'Student'
   const studentAvatar = studentData?.avatar || dashboard.profile.avatar
 
+  // Auth state listener - redirect to login if signed out
+  useEffect(() => {
+    const supabase = createClient()
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT' || !session) {
+        router.push(`/classroom/${courseSlug}/login`)
+      }
+    })
+    
+    // Also check current session on mount
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        router.push(`/classroom/${courseSlug}/login`)
+      }
+    })
+    
+    return () => subscription.unsubscribe()
+  }, [courseSlug, router])
+  
   // Fetch existing messages from DB + setup realtime subscription
   useEffect(() => {
     if (!courseSlug) return
