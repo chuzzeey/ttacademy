@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS public.students (
   wants_scholarship TEXT NOT NULL DEFAULT 'no',
   why_learn_this_skill TEXT NOT NULL,
   last_progress TEXT,
+  pin TEXT DEFAULT '0000',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -45,3 +46,9 @@ DROP POLICY IF EXISTS "Allow full access to students" ON public.students;
 CREATE POLICY "Allow full access to students" ON public.students FOR ALL USING (true);
 
 -- Done! Your landing page wizard form will now save data here.
+
+-- ============================================================
+-- ADD PIN COLUMN (if upgrading an existing database)
+-- ============================================================
+-- Run this separately if the students table already exists:
+-- ALTER TABLE public.students ADD COLUMN IF NOT EXISTS pin TEXT DEFAULT '0000';

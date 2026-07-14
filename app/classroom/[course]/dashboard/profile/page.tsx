@@ -8,7 +8,7 @@ import {
   Globe, Calendar, Lock, CheckCircle, ChevronRight, KeyRound,
   GraduationCap, MapPin, BookOpen, CreditCard, Clock,
   Shield, BadgeCheck, Smartphone, Camera, X, Upload, Trash2,
-  AlertTriangle, Loader2, Copy,
+  AlertTriangle, Loader2, Copy, Eye, EyeOff,
   MapPinned, CalendarDays,
   AtSign
 } from 'lucide-react'
@@ -116,8 +116,16 @@ export default function ProfilePage() {
 
   const [studentData, setStudentData] = useState<StudentData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [showPasswordModal, setShowPasswordModal] = useState(false)
-  const [passwordSent, setPasswordSent] = useState(false)
+  const [showPinModal, setShowPinModal] = useState(false)
+  const [currentPin, setCurrentPin] = useState('')
+  const [newPin, setNewPin] = useState('')
+  const [confirmPin, setConfirmPin] = useState('')
+  const [pinError, setPinError] = useState('')
+  const [pinSuccess, setPinSuccess] = useState(false)
+  const [updatingPin, setUpdatingPin] = useState(false)
+  const [showCurrentPin, setShowCurrentPin] = useState(false)
+  const [showNewPin, setShowNewPin] = useState(false)
+  const [showConfirmPin, setShowConfirmPin] = useState(false)
   const [showPhotoModal, setShowPhotoModal] = useState(false)
   const [photoUploading, setPhotoUploading] = useState(false)
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false)
@@ -169,9 +177,62 @@ export default function ProfilePage() {
     }
   }
 
+  const handleUpdatePin = async () => {
+    setPinError('')
+
+    if (!currentPin || !newPin || !confirmPin) {
+      setPinError('All fields are required')
+      return
+    }
+
+    if (newPin.length < 4) {
+      setPinError('PIN must be at least 4 characters')
+      return
+    }
+
+    if (newPin !== confirmPin) {
+      setPinError('New PIN and confirm PIN do not match')
+      return
+    }
+
+    if (currentPin === newPin) {
+      setPinError('New PIN must be different from current PIN')
+      return
+    }
+
+    setUpdatingPin(true)
+    try {
+      const res = await fetch('/api/pin/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPin, newPin }),
+      })
+      const json = await res.json()
+      if (!res.ok) {
+        setPinError(json.error || 'Failed to update PIN')
+        return
+      }
+      setPinSuccess(true)
+      setCurrentPin('')
+      setNewPin('')
+      setConfirmPin('')
+    } catch {
+      setPinError('Failed to update PIN. Please try again.')
+    } finally {
+      setUpdatingPin(false)
+    }
+  }
+
+  const closePinModal = () => {
+    setShowPinModal(false)
+    setPinSuccess(false)
+    setPinError('')
+    setCurrentPin('')
+    setNewPin('')
+    setConfirmPin('')
+  }
+
   const modalHandlers = {
-    passwordProceed: () => setPasswordSent(true),
-    passwordDecline: () => { setShowPasswordModal(false); setPasswordSent(false) },
     photoUpload: () => {
       const input = document.createElement('input')
       input.type = 'file'; input.accept = 'image/*'
@@ -225,10 +286,8 @@ export default function ProfilePage() {
 
         {/* ── Profile hero ── */}
         <div className="relative">
-          {/* Cover photo */}
           <div className="h-[160px] sm:h-[200px] md:h-[220px] bg-gradient-to-br from-[#1d9bf0]/30 via-[#1d9bf0]/10 to-purple-500/10 md:rounded-2xl" />
 
-          {/* Avatar */}
           <div className="px-0 sm:px-1 md:px-2 pb-3">
             <div className="flex justify-between items-end -mt-[72px] sm:-mt-[88px]">
               <div className="relative group">
@@ -245,13 +304,9 @@ export default function ProfilePage() {
                     <DefaultAvatar name={data?.name || dashboard.profile.name} size={120} />
                   )}
                 </div>
-
-                {/* Online indicator */}
                 <span className="absolute bottom-[6px] right-[6px] w-[18px] h-[18px] bg-[#1d9bf0] border-[3px] rounded-full shadow border-white">
                   <span className="absolute inset-0 bg-[#1d9bf0] rounded-full animate-ping opacity-40" />
                 </span>
-
-                {/* Camera button */}
                 <button
                   onClick={() => setShowPhotoModal(true)}
                   className="absolute -bottom-[2px] -left-[2px] w-[32px] h-[32px] rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-110 active:scale-95 border border-gray-200 bg-white hover:bg-gray-50 text-gray-700"
@@ -261,7 +316,6 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Name + handle */}
             <div className="mt-3">
               <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-[20px] sm:text-[22px] md:text-[26px] font-extrabold leading-7 tracking-tight text-gray-900">
@@ -289,7 +343,6 @@ export default function ProfilePage() {
               )}
             </div>
 
-            {/* Stat pills */}
             <div className="flex flex-wrap gap-2 mt-3">
               <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] border border-gray-200 bg-white text-gray-600">
                 <CalendarDays className="w-3.5 h-3.5" />
@@ -309,14 +362,9 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* ── DASHBOARD GRID (Personal / Security / Location) ────────
-             Mobile: cards stack vertically (single column).
-             md+: 2-col grid — Personal Details + Location & Course
-             form a wide left column, Security becomes a tall card
-             on the right. */}
         <div className="md:grid md:grid-cols-3 md:gap-5 lg:gap-6 md:items-start">
 
-          {/* ── PERSONAL DETAILS ─────────────────────────────────── */}
+          {/* ── PERSONAL DETAILS ── */}
           <div className="mb-3 md:mb-0 md:col-span-2 md:order-1 rounded-2xl border border-gray-200 overflow-hidden bg-white"
             style={{ animation: mounted ? 'fadeIn 0.4s ease 0.05s both' : undefined }}
           >
@@ -354,7 +402,7 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* ── SECURITY ─────────────────────────────────────────── */}
+          {/* ── SECURITY (CHANGE PIN) ── */}
           <div className="mb-3 md:mb-0 md:col-span-1 md:order-2 md:row-span-2 rounded-2xl border border-gray-200 overflow-hidden bg-white md:self-start md:sticky md:top-[76px]"
             style={{ animation: mounted ? 'fadeIn 0.4s ease 0.2s both' : undefined }}
           >
@@ -369,7 +417,7 @@ export default function ProfilePage() {
             </div>
 
             <button
-              onClick={() => { setShowPasswordModal(true); setPasswordSent(false) }}
+              onClick={() => { setShowPinModal(true); setPinError(''); setPinSuccess(false) }}
               className="w-full flex items-center justify-between px-4 py-4 transition-colors hover:bg-gray-50 active:bg-gray-50"
             >
               <div className="flex items-center gap-3">
@@ -377,15 +425,15 @@ export default function ProfilePage() {
                   <KeyRound className="w-[16px] h-[16px] text-gray-500" />
                 </div>
                 <div className="text-left">
-                  <p className="text-[14px] font-medium text-gray-900">Change password</p>
-                  <p className="text-[12px] text-gray-500">Request a reset link via email</p>
+                  <p className="text-[14px] font-medium text-gray-900">Change PIN</p>
+                  <p className="text-[12px] text-gray-500">Update your access PIN</p>
                 </div>
               </div>
               <ChevronRight className="w-[18px] h-[18px] text-gray-400" />
             </button>
           </div>
 
-          {/* ── LOCATION & COURSE ────────────────────────────────── */}
+          {/* ── LOCATION & COURSE ── */}
           <div className="mb-3 md:mb-0 md:col-span-2 md:order-3 rounded-2xl border border-gray-200 overflow-hidden bg-white"
             style={{ animation: mounted ? 'fadeIn 0.4s ease 0.35s both' : undefined }}
           >
@@ -448,7 +496,6 @@ export default function ProfilePage() {
                     >
                       <X className="w-[18px] h-[18px]" />
                     </button>
-
                     <div className="w-[80px] h-[80px] rounded-full mx-auto mb-4 overflow-hidden ring-2 ring-gray-200">
                       {hasAvatar ? (
                         <Image src={userAvatar} alt="" width={80} height={80} className="w-full h-full object-cover" />
@@ -456,11 +503,9 @@ export default function ProfilePage() {
                         <DefaultAvatar name={data?.name} size={80} />
                       )}
                     </div>
-
                     <h3 className="text-[17px] font-bold text-gray-900">Profile photo</h3>
                     <p className="text-[13px] text-gray-500 mt-1">Choose a new photo or remove</p>
                   </div>
-
                   <div className="px-6 pb-6 space-y-2">
                     <button
                       onClick={modalHandlers.photoUpload}
@@ -479,7 +524,6 @@ export default function ProfilePage() {
                         <p className="text-[11px] text-white/60">Select from your device</p>
                       </div>
                     </button>
-
                     <button
                       onClick={modalHandlers.removePhoto}
                       className="w-full flex items-center gap-3 px-4 py-3.5 border border-gray-200 rounded-xl transition-colors active:scale-[0.98] bg-gray-50 hover:bg-gray-100"
@@ -503,7 +547,6 @@ export default function ProfilePage() {
                     <h3 className="text-[17px] font-bold text-gray-900 mb-1">Remove photo?</h3>
                     <p className="text-[13px] text-gray-500">This will reset to the default avatar.</p>
                   </div>
-
                   <div className="px-6 pb-6 flex gap-2">
                     <button
                       onClick={() => setShowRemoveConfirm(false)}
@@ -525,49 +568,126 @@ export default function ProfilePage() {
         </>
       )}
 
-      {/* ===== PASSWORD MODAL ===== */}
-      {showPasswordModal && (
+      {/* ===== PIN MODAL ===== */}
+      {showPinModal && (
         <>
-          <div className="fixed inset-0 z-50 bg-black/60" onClick={modalHandlers.passwordDecline} />
+          <div className="fixed inset-0 z-50 bg-black/60" onClick={closePinModal} />
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="bg-white border border-gray-200 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl">
-              {!passwordSent ? (
+              {!pinSuccess ? (
                 <>
-                  <div className="relative px-6 pt-7 pb-4 text-center">
+                  <div className="relative px-6 pt-7 pb-4">
                     <button
-                      onClick={modalHandlers.passwordDecline}
+                      onClick={closePinModal}
                       className="absolute top-3 right-3 w-10 h-10 rounded-full flex items-center justify-center transition-colors text-gray-500 hover:bg-gray-100"
                     >
                       <X className="w-[18px] h-[18px]" />
                     </button>
 
                     <div className="w-14 h-14 rounded-2xl bg-[#1d9bf0]/10 flex items-center justify-center mx-auto mb-4">
-                      <Shield className="w-7 h-7 text-[#1d9bf0]" />
+                      <Lock className="w-7 h-7 text-[#1d9bf0]" />
                     </div>
 
-                    <h3 className="text-[17px] font-bold text-gray-900 mb-1">Reset password</h3>
-                    <p className="text-[13px] text-gray-500 leading-relaxed">
-                      We'll send a secure reset link to your email.
+                    <h3 className="text-[17px] font-bold text-gray-900 text-center mb-1">Change PIN</h3>
+                    <p className="text-[13px] text-gray-500 text-center leading-relaxed mb-5">
+                      Enter your current PIN and set a new one
                     </p>
 
-                    <div className="mt-5 p-3.5 rounded-xl border border-gray-200 bg-gray-50">
-                      <p className="text-[10px] uppercase tracking-wider font-semibold mb-1 text-gray-500">Email</p>
-                      <p className="text-[14px] font-semibold text-[#1d9bf0]">{userEmail}</p>
+                    {/* Current PIN */}
+                    <div className="mb-4">
+                      <label className="text-[10px] uppercase tracking-wider font-semibold mb-1.5 text-gray-500 block">Current PIN</label>
+                      <div className="relative">
+                        <input
+                          type={showCurrentPin ? 'text' : 'password'}
+                          value={currentPin}
+                          onChange={(e) => setCurrentPin(e.target.value)}
+                          maxLength={10}
+                          className="w-full px-4 py-3 rounded-xl border border-gray-200 text-[14px] text-gray-900 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#1d9bf0]/30 focus:border-[#1d9bf0] transition-colors pr-10"
+                          placeholder="Enter current PIN"
+                          autoFocus
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowCurrentPin(!showCurrentPin)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        >
+                          {showCurrentPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
                     </div>
+
+                    {/* New PIN */}
+                    <div className="mb-4">
+                      <label className="text-[10px] uppercase tracking-wider font-semibold mb-1.5 text-gray-500 block">New PIN</label>
+                      <div className="relative">
+                        <input
+                          type={showNewPin ? 'text' : 'password'}
+                          value={newPin}
+                          onChange={(e) => setNewPin(e.target.value)}
+                          maxLength={10}
+                          className="w-full px-4 py-3 rounded-xl border border-gray-200 text-[14px] text-gray-900 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#1d9bf0]/30 focus:border-[#1d9bf0] transition-colors pr-10"
+                          placeholder="Enter new PIN"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowNewPin(!showNewPin)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        >
+                          {showNewPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Confirm New PIN */}
+                    <div className="mb-2">
+                      <label className="text-[10px] uppercase tracking-wider font-semibold mb-1.5 text-gray-500 block">Confirm New PIN</label>
+                      <div className="relative">
+                        <input
+                          type={showConfirmPin ? 'text' : 'password'}
+                          value={confirmPin}
+                          onChange={(e) => setConfirmPin(e.target.value)}
+                          maxLength={10}
+                          className="w-full px-4 py-3 rounded-xl border border-gray-200 text-[14px] text-gray-900 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#1d9bf0]/30 focus:border-[#1d9bf0] transition-colors pr-10"
+                          placeholder="Confirm new PIN"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPin(!showConfirmPin)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        >
+                          {showConfirmPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Error */}
+                    {pinError && (
+                      <div className="mt-3 p-2.5 rounded-xl bg-red-50 border border-red-200">
+                        <p className="text-[11px] flex items-center gap-1.5 text-red-600">
+                          <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                          {pinError}
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   <div className="px-6 pb-6 flex gap-2">
                     <button
-                      onClick={modalHandlers.passwordDecline}
+                      onClick={closePinModal}
                       className="flex-1 py-3 rounded-xl border border-gray-200 text-[14px] transition-colors font-medium active:scale-[0.98] text-gray-900 hover:bg-gray-100"
                     >
                       Cancel
                     </button>
                     <button
-                      onClick={modalHandlers.passwordProceed}
-                      className="flex-1 py-3 rounded-xl bg-[#1d9bf0] hover:bg-[#1a8cd8] text-[14px] text-white font-semibold transition-colors active:scale-[0.98]"
+                      onClick={handleUpdatePin}
+                      disabled={updatingPin}
+                      className="flex-1 py-3 rounded-xl bg-[#1d9bf0] hover:bg-[#1a8cd8] disabled:opacity-50 disabled:cursor-not-allowed text-[14px] text-white font-semibold transition-colors active:scale-[0.98] flex items-center justify-center gap-2"
                     >
-                      Send Link
+                      {updatingPin ? (
+                        <><Loader2 className="w-4 h-4 animate-spin" /> Updating...</>
+                      ) : (
+                        'Update PIN'
+                      )}
                     </button>
                   </div>
                 </>
@@ -577,23 +697,14 @@ export default function ProfilePage() {
                     <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center mx-auto mb-4">
                       <CheckCircle className="w-7 h-7 text-emerald-500" />
                     </div>
-
-                    <h3 className="text-[17px] font-bold text-gray-900 mb-1">Link sent!</h3>
+                    <h3 className="text-[17px] font-bold text-gray-900 mb-1">PIN Updated!</h3>
                     <p className="text-[13px] text-gray-500 leading-relaxed">
-                      Check <span className="text-[#1d9bf0] font-medium">{userEmail}</span> for the reset link.
+                      Your PIN has been changed successfully.
                     </p>
-
-                    <div className="mt-4 p-3 rounded-xl border border-amber-500/20 bg-amber-50">
-                      <p className="text-[11px] flex items-center gap-1.5 text-amber-700">
-                        <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-                        Check spam if you don't see it.
-                      </p>
-                    </div>
                   </div>
-
                   <div className="px-6 pb-6">
                     <button
-                      onClick={modalHandlers.passwordDecline}
+                      onClick={closePinModal}
                       className="w-full py-3 rounded-xl bg-[#1d9bf0] hover:bg-[#1a8cd8] text-[14px] text-white font-semibold transition-colors active:scale-[0.98]"
                     >
                       Done
