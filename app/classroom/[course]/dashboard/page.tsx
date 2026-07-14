@@ -38,6 +38,7 @@ export default function DashboardPage() {
   const dashboard = courseData.dashboard
 
   const [showProfileDropdown, setShowProfileDropdown] = useState(false)
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [loadingMessages, setLoadingMessages] = useState(true)
   const [showChatList, setShowChatList] = useState(false)
@@ -194,6 +195,18 @@ export default function DashboardPage() {
     if (diffDays === 1) return 'YESTERDAY'
     if (diffDays < 7) return date.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase()
     return date.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase()
+  }
+
+  const handleLogout = async () => {
+    try {
+      const supabase = createClient()
+      await supabase.auth.signOut()
+      setShowLogoutModal(false)
+      setShowProfileDropdown(false)
+      router.push(`/classroom/${courseSlug}/login`)
+    } catch (err) {
+      console.error('Logout error:', err)
+    }
   }
 
   const handleHelpSupport = () => {
@@ -384,7 +397,7 @@ export default function DashboardPage() {
                           <button onClick={handleHelpSupport} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors">Help & Support</button>
                         </div>
                         <div className="border-t border-gray-200">
-                          <button className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-500 hover:bg-gray-100 transition-colors">Logout</button>
+                          <button onClick={() => { setShowLogoutModal(true); setShowProfileDropdown(false) }} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-500 hover:bg-gray-100 transition-colors">Logout</button>
                         </div>
                       </div>
                     </>
@@ -557,6 +570,40 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* ===== LOGOUT MODAL ===== */}
+      {showLogoutModal && (
+        <>
+          <div className="fixed inset-0 z-50 bg-black/60" onClick={() => setShowLogoutModal(false)} />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="bg-white border border-gray-200 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl">
+              <div className="px-6 pt-7 pb-4 text-center">
+                <div className="w-14 h-14 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-7 h-7 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                </div>
+                <h3 className="text-[17px] font-bold text-gray-900 mb-1">Logout?</h3>
+                <p className="text-[13px] text-gray-500">Are you sure you want to log out of your account?</p>
+              </div>
+              <div className="px-6 pb-6 flex gap-2">
+                <button
+                  onClick={() => setShowLogoutModal(false)}
+                  className="flex-1 py-3 rounded-xl border border-gray-200 text-[14px] transition-colors font-medium active:scale-[0.98] text-gray-900 hover:bg-gray-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="flex-1 py-3 rounded-xl bg-red-500 hover:bg-red-600 text-[14px] text-white font-semibold transition-colors active:scale-[0.98]"
+                >
+                  Logout
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }
