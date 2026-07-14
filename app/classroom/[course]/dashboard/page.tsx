@@ -48,7 +48,7 @@ export default function DashboardPage() {
   const chatEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const processedMessagesRef = useRef<Set<string>>(new Set()) // Track processed message IDs
-  const [studentData, setStudentData] = useState<{ name: string; email: string; phone: string; avatar: string } | null>(null)
+  const [studentData, setStudentData] = useState<{ name: string; email: string; avatar: string } | null>(null)
 
   const emojis = ['😊', '👍', '🎉', '📚', '💡', '🔥', '✅', '⭐', '💪', '👏', '🎯', '📌', '📢', '💬', '🤝', '🌟']
 
@@ -62,7 +62,6 @@ export default function DashboardPage() {
           setStudentData({
             name: json.data.name,
             email: json.data.email,
-            phone: json.data.phone || 'N/A',
             avatar: json.data.avatar || '/placeholder-user.jpg',
           })
         }
@@ -199,7 +198,7 @@ export default function DashboardPage() {
 
   const handleHelpSupport = () => {
     const phone = '2348034826276'
-    const text = `Hello, I need help. Name: ${studentName}, Email: ${studentData?.email || 'N/A'}, Phone: ${studentData?.phone || 'N/A'}`
+    const text = `Hello, I need help. Name: ${studentName}, Email: ${studentData?.email || 'N/A'}`
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank')
     setShowProfileDropdown(false)
   }
