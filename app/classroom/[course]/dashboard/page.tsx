@@ -48,7 +48,7 @@ export default function DashboardPage() {
   const chatEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const processedMessagesRef = useRef<Set<string>>(new Set()) // Track processed message IDs
-  const [studentData, setStudentData] = useState<{ name: string; email: string; avatar: string } | null>(null)
+  const [studentData, setStudentData] = useState<{ id?: string; name: string; email: string; avatar: string } | null>(null)
 
   const emojis = ['😊', '👍', '🎉', '📚', '💡', '🔥', '✅', '⭐', '💪', '👏', '🎯', '📌', '📢', '💬', '🤝', '🌟']
 
@@ -60,6 +60,7 @@ export default function DashboardPage() {
         const json = await res.json()
         if (res.ok && json.data) {
           setStudentData({
+            id: json.data.id,
             name: json.data.name,
             email: json.data.email,
             avatar: json.data.avatar || '/placeholder-user.jpg',
@@ -194,6 +195,13 @@ export default function DashboardPage() {
     if (diffDays === 1) return 'YESTERDAY'
     if (diffDays < 7) return date.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase()
     return date.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase()
+  }
+
+  const handleHelpSupport = () => {
+    const phone = '2348034826276'
+    const text = `Hello, I need help. Name: ${studentName}, ID: ${studentData?.id ? studentData.id.substring(0, 8).toUpperCase() : 'Student'}`
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank')
+    setShowProfileDropdown(false)
   }
 
   const handleSendMessage = async () => {
@@ -374,7 +382,7 @@ export default function DashboardPage() {
                       <div className="absolute right-0 top-11 w-56 bg-white border border-gray-200 rounded-xl shadow-2xl z-50 overflow-hidden">
                         <div className="py-1">
                           <button onClick={() => router.push(`/classroom/${courseSlug}/dashboard/profile`)} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors">Profile Settings</button>
-                          <button className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors">Help & Support</button>
+                          <button onClick={handleHelpSupport} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors">Help & Support</button>
                         </div>
                         <div className="border-t border-gray-200">
                           <button className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-500 hover:bg-gray-100 transition-colors">Logout</button>
