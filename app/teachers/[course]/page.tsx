@@ -103,7 +103,7 @@ export default function TeacherCoursePage() {
           const data = await res.json()
           const dbMessages: Message[] = (data.data || []).map((msg: DbMessage) => ({
             id: msg.id,
-            text: `${msg.title}\n${msg.content}`,
+            text: msg.content,
             timestamp: new Date(msg.created_at),
             status: 'read' as const,
             sender: msg.sender_name === 'Mentor' ? ('me' as const) : ('student' as const),
@@ -147,7 +147,7 @@ export default function TeacherCoursePage() {
             
             const msg: Message = {
               id: newMsg.id,
-              text: `${newMsg.title}\n${newMsg.content}`,
+              text: newMsg.content,
               timestamp: new Date(newMsg.created_at),
               status: 'read',
               sender: newMsg.sender_name === 'Mentor' ? 'me' : 'student',
@@ -564,18 +564,14 @@ export default function TeacherCoursePage() {
                   ) : (
                     // My message (right side) - WhatsApp green
                     <div className="flex justify-end mb-1 group relative">
-                      <div 
-                        className="relative max-w-[70%] sm:max-w-[60%] px-3 py-2 shadow-[0_1px_1px_rgba(0,0,0,0.06)] group-hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)] transition-shadow"
-                        style={{ 
-                          backgroundColor: '#D9FDD3',
-                          borderRadius: '8px 4px 8px 8px',
-                        }}
-                      >
-                        <div className="flex items-center gap-1 mb-1">
-                          <Megaphone className="w-3.5 h-3.5 text-[#008069]" />
-                          <span className="text-[11px] font-semibold text-[#008069]">Announcement</span>
-                        </div>
-                        <p className="text-[14px] text-[#111B21] leading-[19px] break-words whitespace-pre-wrap">{msg.text}</p>
+                        <div 
+                          className="relative px-3 py-2 shadow-[0_1px_1px_rgba(0,0,0,0.06)] group-hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)] transition-shadow"
+                          style={{ 
+                            backgroundColor: '#D9FDD3',
+                            borderRadius: '8px 4px 8px 8px',
+                          }}
+                        >
+                          <p className="text-[14px] text-[#111B21] leading-[19px] break-words whitespace-pre-wrap">{msg.text}</p>
                         <div className="flex items-center justify-end gap-0.5 mt-0.5">
                           <span className="text-[11px] text-[#667781] leading-[13px]">
                             {formatTime(msg.timestamp)}

@@ -101,9 +101,6 @@ export default function DashboardPage() {
 
     const fetchMessages = async () => {
       try {
-        // Mark initial load as complete immediately to prevent realtime duplicates
-        initialLoadCompleteRef.current = true
-        
         const res = await fetch(`/api/messages/get?course=${courseSlug}`)
         if (res.ok) {
           const data = await res.json()
@@ -116,16 +113,20 @@ export default function DashboardPage() {
             senderName: msg.sender_name,
           }))
           
+          // Deduplicate by ID before setting state
+          const seen = new Set<string>()
+          const uniqueDbMessages = dbMessages.filter(msg => {
+            if (seen.has(msg.id)) {
+              console.warn('Duplicate message ID found:', msg.id)
+              return false
+            }
+            seen.add(msg.id)
+            return true
+          })
+          
           // Replace all messages with fetched ones (system messages are preserved)
           setMessages(prev => {
             const systemMessages = prev.filter(m => m.sender === 'system')
-            // Deduplicate by ID
-            const seen = new Set<string>()
-            const uniqueDbMessages = dbMessages.filter(msg => {
-              if (seen.has(msg.id)) return false
-              seen.add(msg.id)
-              return true
-            })
             return [...systemMessages, ...uniqueDbMessages]
           })
         }
@@ -133,6 +134,7 @@ export default function DashboardPage() {
         console.error('Failed to fetch messages:', err)
       } finally {
         setLoadingMessages(false)
+        initialLoadCompleteRef.current = true
       }
     }
 
