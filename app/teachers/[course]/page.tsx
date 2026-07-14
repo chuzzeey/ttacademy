@@ -1,9 +1,19 @@
 'use client'
 
 import { useParams, useRouter } from 'next/navigation'
-import { useState } from 'react'
-import { Shield, BarChart3, Cpu, Globe, ShieldAlert, Palette, Code, Monitor, Server, Globe2, TrendingUp, Cloud, Database, ArrowLeft, Send, AlertCircle, CheckCircle2, MessageSquare, Bell, Menu, X, GraduationCap, LogOut, Home, BookMarked, User, Settings } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Shield, BarChart3, Cpu, Globe, ShieldAlert, Palette, Code, Monitor, Server, Globe2, TrendingUp, Cloud, Database, ArrowLeft, Send, Bell, Menu, X, GraduationCap, LogOut, Home, BookMarked, User, Settings, Search, MoreVertical, Paperclip, ImagePlus, Check, CheckCheck, Clock, Megaphone } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
+import { createClient } from '@/lib/supabase/client'
+
+interface DbMessage {
+  id: string
+  title: string
+  content: string
+  sender_name: string
+  course: string
+  created_at: string
+}
 
 const courseSlugMap: Record<string, string> = {
   'cybersecurity': 'cybersecurity',
@@ -25,6 +35,8 @@ const courseSlugMap: Record<string, string> = {
 const courseData: Record<string, {
   title: string
   icon: any
+  emoji: string
+  students: number
   color: string
   gradient: string
   lightBg: string
@@ -33,20 +45,29 @@ const courseData: Record<string, {
   borderColor: string
   accent: string
 }> = {
-  'cybersecurity': { title: 'Cybersecurity', icon: Shield, color: 'from-red-600 to-red-800', gradient: 'from-red-500/20 via-red-600/10 to-red-800/20', lightBg: 'bg-red-50', iconBg: 'bg-red-100', iconColor: 'text-red-600', borderColor: 'border-red-200', accent: 'red' },
-  'data-science': { title: 'Data Science', icon: BarChart3, color: 'from-emerald-600 to-emerald-800', gradient: 'from-emerald-500/20 via-emerald-600/10 to-emerald-800/20', lightBg: 'bg-emerald-50', iconBg: 'bg-emerald-100', iconColor: 'text-emerald-600', borderColor: 'border-emerald-200', accent: 'emerald' },
-  'ai-automation': { title: 'AI Automation', icon: Cpu, color: 'from-amber-600 to-amber-800', gradient: 'from-amber-500/20 via-amber-600/10 to-amber-800/20', lightBg: 'bg-amber-50', iconBg: 'bg-amber-100', iconColor: 'text-amber-600', borderColor: 'border-amber-200', accent: 'amber' },
-  'computer-networking': { title: 'Computer Networking', icon: Globe, color: 'from-cyan-600 to-cyan-800', gradient: 'from-cyan-500/20 via-cyan-600/10 to-cyan-800/20', lightBg: 'bg-cyan-50', iconBg: 'bg-cyan-100', iconColor: 'text-cyan-600', borderColor: 'border-cyan-200', accent: 'cyan' },
-  'ethical-hacking': { title: 'Ethical Hacking', icon: ShieldAlert, color: 'from-rose-600 to-rose-800', gradient: 'from-rose-500/20 via-rose-600/10 to-rose-800/20', lightBg: 'bg-rose-50', iconBg: 'bg-rose-100', iconColor: 'text-rose-600', borderColor: 'border-rose-200', accent: 'rose' },
-  'graphic-design': { title: 'Graphic Design', icon: Palette, color: 'from-pink-600 to-pink-800', gradient: 'from-pink-500/20 via-pink-600/10 to-pink-800/20', lightBg: 'bg-pink-50', iconBg: 'bg-pink-100', iconColor: 'text-pink-600', borderColor: 'border-pink-200', accent: 'pink' },
-  'uiux-design': { title: 'UI/UX Design', icon: Palette, color: 'from-purple-600 to-purple-800', gradient: 'from-purple-500/20 via-purple-600/10 to-purple-800/20', lightBg: 'bg-purple-50', iconBg: 'bg-purple-100', iconColor: 'text-purple-600', borderColor: 'border-purple-200', accent: 'purple' },
-  'full-stack-development': { title: 'Full Stack Development', icon: Code, color: 'from-blue-600 to-blue-800', gradient: 'from-blue-500/20 via-blue-600/10 to-blue-800/20', lightBg: 'bg-blue-50', iconBg: 'bg-blue-100', iconColor: 'text-blue-600', borderColor: 'border-blue-200', accent: 'blue' },
-  'frontend-development': { title: 'Frontend Development', icon: Monitor, color: 'from-sky-600 to-sky-800', gradient: 'from-sky-500/20 via-sky-600/10 to-sky-800/20', lightBg: 'bg-sky-50', iconBg: 'bg-sky-100', iconColor: 'text-sky-600', borderColor: 'border-sky-200', accent: 'sky' },
-  'backend-development': { title: 'Backend Development', icon: Server, color: 'from-indigo-600 to-indigo-800', gradient: 'from-indigo-500/20 via-indigo-600/10 to-indigo-800/20', lightBg: 'bg-indigo-50', iconBg: 'bg-indigo-100', iconColor: 'text-indigo-600', borderColor: 'border-indigo-200', accent: 'indigo' },
-  'web-development': { title: 'Web Development', icon: Globe2, color: 'from-teal-600 to-teal-800', gradient: 'from-teal-500/20 via-teal-600/10 to-teal-800/20', lightBg: 'bg-teal-50', iconBg: 'bg-teal-100', iconColor: 'text-teal-600', borderColor: 'border-teal-200', accent: 'teal' },
-  'digital-marketing': { title: 'Digital Marketing', icon: TrendingUp, color: 'from-orange-600 to-orange-800', gradient: 'from-orange-500/20 via-orange-600/10 to-orange-800/20', lightBg: 'bg-orange-50', iconBg: 'bg-orange-100', iconColor: 'text-orange-600', borderColor: 'border-orange-200', accent: 'orange' },
-  'cloud-computing': { title: 'Cloud Computing', icon: Cloud, color: 'from-violet-600 to-violet-800', gradient: 'from-violet-500/20 via-violet-600/10 to-violet-800/20', lightBg: 'bg-violet-50', iconBg: 'bg-violet-100', iconColor: 'text-violet-600', borderColor: 'border-violet-200', accent: 'violet' },
-  'data-analysis': { title: 'Data Analysis', icon: Database, color: 'from-lime-600 to-lime-800', gradient: 'from-lime-500/20 via-lime-600/10 to-lime-800/20', lightBg: 'bg-lime-50', iconBg: 'bg-lime-100', iconColor: 'text-lime-600', borderColor: 'border-lime-200', accent: 'lime' },
+  'cybersecurity': { title: 'Cybersecurity', icon: Shield, emoji: '🔒', students: 24, color: 'from-red-600 to-red-800', gradient: 'from-red-500/20 via-red-600/10 to-red-800/20', lightBg: 'bg-red-50', iconBg: 'bg-red-100', iconColor: 'text-red-600', borderColor: 'border-red-200', accent: 'red' },
+  'data-science': { title: 'Data Science', icon: BarChart3, emoji: '📊', students: 31, color: 'from-emerald-600 to-emerald-800', gradient: 'from-emerald-500/20 via-emerald-600/10 to-emerald-800/20', lightBg: 'bg-emerald-50', iconBg: 'bg-emerald-100', iconColor: 'text-emerald-600', borderColor: 'border-emerald-200', accent: 'emerald' },
+  'ai-automation': { title: 'AI Automation', icon: Cpu, emoji: '🤖', students: 18, color: 'from-amber-600 to-amber-800', gradient: 'from-amber-500/20 via-amber-600/10 to-amber-800/20', lightBg: 'bg-amber-50', iconBg: 'bg-amber-100', iconColor: 'text-amber-600', borderColor: 'border-amber-200', accent: 'amber' },
+  'computer-networking': { title: 'Computer Networking', icon: Globe, emoji: '🌐', students: 22, color: 'from-cyan-600 to-cyan-800', gradient: 'from-cyan-500/20 via-cyan-600/10 to-cyan-800/20', lightBg: 'bg-cyan-50', iconBg: 'bg-cyan-100', iconColor: 'text-cyan-600', borderColor: 'border-cyan-200', accent: 'cyan' },
+  'ethical-hacking': { title: 'Ethical Hacking', icon: ShieldAlert, emoji: '💻', students: 15, color: 'from-rose-600 to-rose-800', gradient: 'from-rose-500/20 via-rose-600/10 to-rose-800/20', lightBg: 'bg-rose-50', iconBg: 'bg-rose-100', iconColor: 'text-rose-600', borderColor: 'border-rose-200', accent: 'rose' },
+  'graphic-design': { title: 'Graphic Design', icon: Palette, emoji: '🎨', students: 27, color: 'from-pink-600 to-pink-800', gradient: 'from-pink-500/20 via-pink-600/10 to-pink-800/20', lightBg: 'bg-pink-50', iconBg: 'bg-pink-100', iconColor: 'text-pink-600', borderColor: 'border-pink-200', accent: 'pink' },
+  'uiux-design': { title: 'UI/UX Design', icon: Palette, emoji: '🎯', students: 20, color: 'from-purple-600 to-purple-800', gradient: 'from-purple-500/20 via-purple-600/10 to-purple-800/20', lightBg: 'bg-purple-50', iconBg: 'bg-purple-100', iconColor: 'text-purple-600', borderColor: 'border-purple-200', accent: 'purple' },
+  'full-stack-development': { title: 'Full Stack Development', icon: Code, emoji: '⚡', students: 35, color: 'from-blue-600 to-blue-800', gradient: 'from-blue-500/20 via-blue-600/10 to-blue-800/20', lightBg: 'bg-blue-50', iconBg: 'bg-blue-100', iconColor: 'text-blue-600', borderColor: 'border-blue-200', accent: 'blue' },
+  'frontend-development': { title: 'Frontend Development', icon: Monitor, emoji: '🎨', students: 29, color: 'from-sky-600 to-sky-800', gradient: 'from-sky-500/20 via-sky-600/10 to-sky-800/20', lightBg: 'bg-sky-50', iconBg: 'bg-sky-100', iconColor: 'text-sky-600', borderColor: 'border-sky-200', accent: 'sky' },
+  'backend-development': { title: 'Backend Development', icon: Server, emoji: '⚙️', students: 23, color: 'from-indigo-600 to-indigo-800', gradient: 'from-indigo-500/20 via-indigo-600/10 to-indigo-800/20', lightBg: 'bg-indigo-50', iconBg: 'bg-indigo-100', iconColor: 'text-indigo-600', borderColor: 'border-indigo-200', accent: 'indigo' },
+  'web-development': { title: 'Web Development', icon: Globe2, emoji: '🌍', students: 33, color: 'from-teal-600 to-teal-800', gradient: 'from-teal-500/20 via-teal-600/10 to-teal-800/20', lightBg: 'bg-teal-50', iconBg: 'bg-teal-100', iconColor: 'text-teal-600', borderColor: 'border-teal-200', accent: 'teal' },
+  'digital-marketing': { title: 'Digital Marketing', icon: TrendingUp, emoji: '📈', students: 26, color: 'from-orange-600 to-orange-800', gradient: 'from-orange-500/20 via-orange-600/10 to-orange-800/20', lightBg: 'bg-orange-50', iconBg: 'bg-orange-100', iconColor: 'text-orange-600', borderColor: 'border-orange-200', accent: 'orange' },
+  'cloud-computing': { title: 'Cloud Computing', icon: Cloud, emoji: '☁️', students: 19, color: 'from-violet-600 to-violet-800', gradient: 'from-violet-500/20 via-violet-600/10 to-violet-800/20', lightBg: 'bg-violet-50', iconBg: 'bg-violet-100', iconColor: 'text-violet-600', borderColor: 'border-violet-200', accent: 'violet' },
+  'data-analysis': { title: 'Data Analysis', icon: Database, emoji: '📉', students: 21, color: 'from-lime-600 to-lime-800', gradient: 'from-lime-500/20 via-lime-600/10 to-lime-800/20', lightBg: 'bg-lime-50', iconBg: 'bg-lime-100', iconColor: 'text-lime-600', borderColor: 'border-lime-200', accent: 'lime' },
+}
+
+interface Message {
+  id: string
+  text: string
+  timestamp: Date
+  status: 'sending' | 'sent' | 'delivered' | 'read'
+  sender: 'me' | 'system' | 'student'
+  senderName?: string
 }
 
 export default function TeacherCoursePage() {
@@ -55,12 +76,126 @@ export default function TeacherCoursePage() {
   const course = courseData[params.course as string]
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-  const [messageTitle, setMessageTitle] = useState('')
   const [message, setMessage] = useState('')
-  const [showSuccess, setShowSuccess] = useState(false)
   const [error, setError] = useState('')
   const [isSending, setIsSending] = useState(false)
-  const [sentMessages, setSentMessages] = useState<{ title: string; content: string; timestamp: Date }[]>([])
+  const [messages, setMessages] = useState<Message[]>([])
+  const [isTyping, setIsTyping] = useState(false)
+  const [showEmoji, setShowEmoji] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [showSearch, setShowSearch] = useState(false)
+  const [loadingHistory, setLoadingHistory] = useState(true)
+  const chatEndRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const emojis = ['😊', '👍', '🎉', '📚', '💡', '🔥', '✅', '⭐', '💪', '👏', '🎯', '📌', '📢', '💬', '🤝', '🌟']
+
+  // Fetch existing messages from DB + setup realtime subscription
+  useEffect(() => {
+    const courseSlug = params.course as string
+    if (!courseSlug) return
+
+    // Fetch existing messages
+    const fetchMessages = async () => {
+      try {
+        const res = await fetch(`/api/messages/get?course=${courseSlug}`)
+        if (res.ok) {
+          const data = await res.json()
+          const dbMessages: Message[] = (data.data || []).map((msg: DbMessage) => ({
+            id: msg.id,
+            text: `${msg.title}\n${msg.content}`,
+            timestamp: new Date(msg.created_at),
+            status: 'read' as const,
+            sender: msg.sender_name === 'Mentor' ? ('me' as const) : ('student' as const),
+            senderName: msg.sender_name
+          }))
+          
+          setMessages(prev => {
+            const initial = prev.filter(m => m.sender === 'system')
+            const existingIds = new Set([...initial, ...dbMessages].map(m => m.id))
+            const uniqueDbMessages = dbMessages.filter(m => !existingIds.has(m.id))
+            return [...initial, ...uniqueDbMessages]
+          })
+        }
+      } catch (err) {
+        console.error('Failed to fetch messages:', err)
+      } finally {
+        setLoadingHistory(false)
+      }
+    }
+
+    fetchMessages()
+
+    // Setup Supabase Realtime subscription for live messages
+    const supabase = createClient()
+    const channel = supabase
+      .channel(`teacher-messages:${courseSlug}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `course=eq.${courseSlug}`,
+        },
+        (payload) => {
+          const newMsg = payload.new as DbMessage
+          // Avoid duplicate if teacher just sent it
+          setMessages(prev => {
+            const exists = prev.some(m => m.id === newMsg.id)
+            if (exists) return prev
+            
+            const msg: Message = {
+              id: newMsg.id,
+              text: `${newMsg.title}\n${newMsg.content}`,
+              timestamp: new Date(newMsg.created_at),
+              status: 'read',
+              sender: newMsg.sender_name === 'Mentor' ? 'me' : 'student',
+              senderName: newMsg.sender_name
+            }
+            return [...prev, msg]
+          })
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [params.course])
+
+  // Initial system messages
+  useEffect(() => {
+    if (!course) return
+    setMessages([
+      {
+        id: 'sys-1',
+        text: `Welcome to the ${course.title} announcement channel! 👋`,
+        timestamp: new Date(Date.now() - 3600000 * 2),
+        status: 'read',
+        sender: 'system'
+      },
+      {
+        id: 'sys-2',
+        text: 'Use this channel to send important updates to your students. They will see your messages in real-time.',
+        timestamp: new Date(Date.now() - 3600000 * 1.5),
+        status: 'read',
+        sender: 'system'
+      },
+      {
+        id: 'sys-3',
+        text: 'When students reply, their messages will appear here instantly. 💬',
+        timestamp: new Date(Date.now() - 3600000),
+        status: 'read',
+        sender: 'system'
+      }
+    ])
+  }, [course?.title])
+
+  // Auto scroll to bottom on new messages
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
 
   if (!course) {
     return (
@@ -79,23 +214,52 @@ export default function TeacherCoursePage() {
   const Icon = course.icon
 
   const handleSendMessage = async () => {
-    if (!messageTitle.trim()) {
-      setError('Please enter a message title.')
-      return
-    }
     if (!message.trim()) {
       setError('Please write a message to send.')
       return
     }
 
+    const tempId = `temp-${Date.now()}`
+    const newMsg: Message = {
+      id: tempId,
+      text: message.trim(),
+      timestamp: new Date(),
+      status: 'sending',
+      sender: 'me'
+    }
+
+    setMessages(prev => [...prev, newMsg])
+    const sentText = message.trim()
+    setMessage('')
     setIsSending(true)
+
+    // Simulate send status changes
+    setTimeout(() => {
+      setMessages(prev =>
+        prev.map(m => m.id === tempId ? { ...m, status: 'sent' as const } : m)
+      )
+    }, 800)
+  
+    setTimeout(() => {
+      setMessages(prev =>
+        prev.map(m => m.id === tempId ? { ...m, status: 'delivered' as const } : m)
+      )
+    }, 1500)
+
+    setTimeout(() => {
+      setMessages(prev =>
+        prev.map(m => m.id === tempId ? { ...m, status: 'read' as const } : m)
+      )
+      setIsSending(false)
+    }, 2500)
+
     try {
       const res = await fetch('/api/messages/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: messageTitle,
-          content: message,
+          title: 'Announcement',
+          content: sentText,
           course: params.course,
           sender_name: 'Mentor',
         }),
@@ -104,21 +268,48 @@ export default function TeacherCoursePage() {
       if (!res.ok) {
         const data = await res.json()
         setError(data.error || 'Failed to send message')
-        setIsSending(false)
-        return
       }
-
-      setError('')
-      setShowSuccess(true)
-      setMessageTitle('')
-      setMessage('')
-      setSentMessages([...sentMessages, { title: messageTitle, content: message, timestamp: new Date() }])
-      setIsSending(false)
-      setTimeout(() => setShowSuccess(false), 3000)
     } catch (err) {
       setError('Failed to send message. Please try again.')
-      setIsSending(false)
     }
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleSendMessage()
+    }
+  }
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'sending':
+        return <Clock className="w-3.5 h-3.5 text-[#667781]" />
+      case 'sent':
+        return <Check className="w-3.5 h-3.5 text-[#667781]" />
+      case 'delivered':
+        return <Check className="w-3.5 h-3.5 text-[#667781]" />
+      case 'read':
+        return <CheckCheck className="w-3.5 h-3.5 text-[#53BDEB]" />
+      default:
+        return <Clock className="w-3.5 h-3.5 text-[#667781]" />
+    }
+  }
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  }
+
+  const formatDateSeparator = (date: Date) => {
+    const now = new Date()
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const msgDate = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+    const diffDays = Math.floor((today.getTime() - msgDate.getTime()) / (1000 * 60 * 60 * 24))
+    
+    if (diffDays === 0) return 'TODAY'
+    if (diffDays === 1) return 'YESTERDAY'
+    if (diffDays < 7) return date.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase()
+    return date.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase()
   }
 
   const navItems = [
@@ -128,32 +319,40 @@ export default function TeacherCoursePage() {
     { id: 'settings', label: 'Settings', icon: Settings },
   ]
 
+  // Group messages by date for separators
+  const groupedMessages: { date: string; messages: Message[] }[] = []
+  let currentDate = ''
+  messages.forEach(msg => {
+    const dateStr = formatDateSeparator(msg.timestamp)
+    if (dateStr !== currentDate) {
+      currentDate = dateStr
+      groupedMessages.push({ date: dateStr, messages: [msg] })
+    } else {
+      groupedMessages[groupedMessages.length - 1].messages.push(msg)
+    }
+  })
+
   return (
     <main
       className="min-h-screen font-sans"
       style={{
-        fontFamily: 'var(--font-noto-sans)',
-        backgroundColor: '#ECE5DD',
-        backgroundImage:
-          "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cg fill='%23000000' fill-opacity='0.03'%3E%3Cpath d='M0 38.59l2.83-2.83 1.41 1.41L1.41 40H0v-1.41zM0 1.4l2.83 2.83 1.41-1.41L1.41 0H0v1.41zM38.59 40l-2.83-2.83 1.41-1.41L40 38.59V40h-1.41zM40 1.41l-2.83 2.83-1.41-1.41L38.59 0H40v1.41zM20 18.6l2.83-2.83 1.41 1.41L21.41 20l2.83 2.83-1.41 1.41L20 21.41l-2.83 2.83-1.41-1.41L18.59 20l-2.83-2.83 1.41-1.41L20 18.59z'/%3E%3C/g%3E%3C/svg%3E\")",
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
       }}
     >
-      {/* Top Navigation Bar - WhatsApp Teal */}
+      {/* Top Navigation Bar */}
       <header className="sticky top-0 z-50 bg-[#008069] shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 sm:h-20">
-            {/* Logo & Course Title */}
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0">
                 <GraduationCap className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
               <div className="hidden sm:block">
                 <p className="text-sm font-bold text-white">{course.title}</p>
-                <p className="text-xs text-white/70">Mentor Dashboard</p>
+                <p className="text-xs text-white/70">{course.students} students</p>
               </div>
             </div>
           
-            {/* Centered Navigation - Desktop */}
             <nav className="hidden md:flex items-center justify-center gap-1">
               {navItems.map((item) => {
                 const NavIcon = item.icon
@@ -169,7 +368,6 @@ export default function TeacherCoursePage() {
               })}
             </nav>
             
-            {/* Right Side Actions */}
             <div className="flex items-center gap-2 sm:gap-3">
               <button className="hidden sm:flex p-2 rounded-lg hover:bg-white/10 transition-colors relative">
                 <Bell className="w-5 h-5 text-white/80" />
@@ -182,7 +380,6 @@ export default function TeacherCoursePage() {
                 <ArrowLeft className="w-4 h-4" />
                 <span>Back</span>
               </button>
-              {/* Mobile Menu Button */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="md:hidden p-2 rounded-lg hover:bg-white/10 transition-colors"
@@ -197,7 +394,6 @@ export default function TeacherCoursePage() {
           </div>
         </div>
 
-        {/* Mobile Menu Dropdown */}
         <AnimatePresence>
           {mobileMenuOpen && (
             <motion.div
@@ -233,199 +429,248 @@ export default function TeacherCoursePage() {
         </AnimatePresence>
       </header>
 
-      {/* Main Content - WhatsApp Chat Style */}
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        <div className="grid grid-cols-1 gap-4">
-          {/* Send Announcement - WhatsApp style white card */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-white rounded-lg shadow-sm p-4 sm:p-5"
+      {/* WhatsApp Chat Container */}
+      <div className="h-[calc(100vh-8rem)] sm:h-[calc(100vh-8rem)] flex flex-col">
+        
+        {/* Chat Header */}
+        <div className="bg-[#F0F2F5] border-b border-gray-200 px-4 py-2 flex items-center gap-3 shrink-0 z-10">
+          <button 
+            onClick={() => router.push('/teachers')}
+            className="shrink-0 hover:bg-gray-200 rounded-full p-1.5 transition-colors -ml-1"
           >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-lg bg-[#008069]/10 text-[#008069]">
-                <MessageSquare className="w-5 h-5" />
+            <ArrowLeft className="w-5 h-5 text-[#54656F]" />
+          </button>
+          <div className="w-10 h-10 rounded-full bg-[#DFE5E7] flex items-center justify-center shrink-0 overflow-hidden">
+            <span className="text-lg">{course.emoji}</span>
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold text-[15px] text-[#111B21] truncate leading-tight">
+              {course.title} Group
+            </p>
+            <p className="text-[12px] text-[#667781] truncate leading-tight">
+              {course.students} students &bull; Live chat
+            </p>
+          </div>
+          <div className="flex items-center gap-0.5">
+            <button 
+              onClick={() => setShowSearch(!showSearch)}
+              className="p-2 rounded-full hover:bg-gray-200 transition-colors"
+            >
+              <Search className="w-5 h-5 text-[#54656F]" />
+            </button>
+            <button className="p-2 rounded-full hover:bg-gray-200 transition-colors">
+              <MoreVertical className="w-5 h-5 text-[#54656F]" />
+            </button>
+          </div>
+        </div>
+
+        {/* Search Bar (toggled) */}
+        <AnimatePresence>
+          {showSearch && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="bg-[#F0F2F5] border-b border-gray-200 overflow-hidden"
+            >
+              <div className="px-4 py-2">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search messages..."
+                  className="w-full px-4 py-2 bg-white rounded-lg text-sm text-[#111B21] placeholder-[#667781] focus:outline-none focus:ring-1 focus:ring-[#008069]"
+                  autoFocus
+                />
               </div>
-              <div>
-                <h2 className="text-base sm:text-lg font-bold text-[#111B21]">Send Announcement</h2>
-                <p className="text-xs text-[#667781]">Send a message to all {course.title} students</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Chat Messages */}
+        <div 
+          className="flex-1 overflow-y-auto px-3 sm:px-4 py-3 space-y-1"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+            backgroundColor: '#ECE5DD',
+          }}
+        >
+          {/* Loading history */}
+          {loadingHistory && (
+            <div className="flex justify-center my-8">
+              <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg shadow">
+                <div className="w-4 h-4 border-2 border-[#008069] border-t-transparent rounded-full animate-spin" />
+                <span className="text-xs text-[#667781]">Loading chat history...</span>
               </div>
             </div>
+          )}
 
-            <div className="mb-3">
-              <label className="block text-sm font-semibold text-[#111B21] mb-1.5">Message Title</label>
-              <input
-                type="text"
-                value={messageTitle}
-                onChange={(e) => { setMessageTitle(e.target.value); setError('') }}
-                placeholder="e.g., Assignment Reminder..."
-                className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-[#F0F2F5] focus:outline-none focus:ring-2 focus:ring-[#008069]/30 text-[#111B21] placeholder-[#667781] transition-all text-sm"
-              />
+          {groupedMessages.map((group) => (
+            <div key={group.date}>
+              {/* Date Separator */}
+              <div className="flex justify-center my-3">
+                <span className="bg-[#E1F3FB] text-[11px] text-[#54656F] font-medium px-3 py-1 rounded shadow-[0_1px_1px_rgba(0,0,0,0.06)]">
+                  {group.date}
+                </span>
+              </div>
+
+              {group.messages.map((msg) => (
+                <div key={msg.id}>
+                  {msg.sender === 'system' ? (
+                    // System message (left side)
+                    <div className="flex justify-start mb-1 group">
+                      <div 
+                        className="relative max-w-[70%] sm:max-w-[60%] px-3 py-2 shadow-[0_1px_1px_rgba(0,0,0,0.06)] group-hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)] transition-shadow"
+                        style={{ 
+                          backgroundColor: '#FFFFFF',
+                          borderRadius: '4px 8px 8px 8px',
+                        }}
+                      >
+                        <p className="text-[14px] text-[#111B21] leading-[19px] break-words whitespace-pre-wrap">{msg.text}</p>
+                        <div className="flex items-center justify-end gap-1 mt-1">
+                          <span className="text-[11px] text-[#667781] leading-[13px]">
+                            {formatTime(msg.timestamp)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : msg.sender === 'student' ? (
+                    // Student message (left side, white bubble like incoming)
+                    <div className="flex justify-start mb-1 group">
+                      <div className="max-w-[70%] sm:max-w-[60%]">
+                        {/* Student name label */}
+                        <div className="flex items-center gap-2 mb-[2px] ml-[2px]">
+                          <div className="w-[20px] h-[20px] rounded-full bg-[#008069] flex items-center justify-center shrink-0">
+                            <span className="text-white text-[8px] font-bold">{msg.senderName?.charAt(0) || 'S'}</span>
+                          </div>
+                          <span className="text-[11px] font-semibold text-[#008069]">{msg.senderName || 'Student'}</span>
+                        </div>
+                        <div 
+                          className="relative px-3 py-2 shadow-[0_1px_1px_rgba(0,0,0,0.06)] group-hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)] transition-shadow"
+                          style={{ 
+                            backgroundColor: '#FFFFFF',
+                            borderRadius: '4px 8px 8px 8px',
+                          }}
+                        >
+                          <p className="text-[14px] text-[#111B21] leading-[19px] break-words whitespace-pre-wrap">{msg.text}</p>
+                          <div className="flex items-center justify-end gap-1 mt-1">
+                            <span className="text-[11px] text-[#667781] leading-[13px]">
+                              {formatTime(msg.timestamp)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    // My message (right side) - WhatsApp green
+                    <div className="flex justify-end mb-1 group relative">
+                      <div 
+                        className="relative max-w-[70%] sm:max-w-[60%] px-3 py-2 shadow-[0_1px_1px_rgba(0,0,0,0.06)] group-hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)] transition-shadow"
+                        style={{ 
+                          backgroundColor: '#D9FDD3',
+                          borderRadius: '8px 4px 8px 8px',
+                        }}
+                      >
+                        <div className="flex items-center gap-1 mb-1">
+                          <Megaphone className="w-3.5 h-3.5 text-[#008069]" />
+                          <span className="text-[11px] font-semibold text-[#008069]">Announcement</span>
+                        </div>
+                        <p className="text-[14px] text-[#111B21] leading-[19px] break-words whitespace-pre-wrap">{msg.text}</p>
+                        <div className="flex items-center justify-end gap-0.5 mt-0.5">
+                          <span className="text-[11px] text-[#667781] leading-[13px]">
+                            {formatTime(msg.timestamp)}
+                          </span>
+                          <span className="flex items-center">
+                            {getStatusIcon(msg.status)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
+          ))}
 
-            <div className="mb-3">
-              <label className="block text-sm font-semibold text-[#111B21] mb-1.5">Your Message</label>
-              <textarea
-                value={message}
-                onChange={(e) => { setMessage(e.target.value); setError('') }}
-                placeholder="Write your announcement here..."
-                rows={4}
-                className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-[#F0F2F5] focus:outline-none focus:ring-2 focus:ring-[#008069]/30 text-[#111B21] placeholder-[#667781] transition-all text-sm resize-none"
-              />
-            </div>
+          {/* Inline error message */}
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex justify-center my-2"
+            >
+              <span className="bg-red-500 text-white text-[12px] px-3 py-1.5 rounded-full shadow-sm">
+                {error}
+              </span>
+            </motion.div>
+          )}
 
-            {error && (
+          <div ref={chatEndRef} />
+        </div>
+
+        {/* Message Input Area */}
+        <div className="bg-[#F0F2F5] px-3 py-2 sm:px-4 shrink-0 z-10">
+          <AnimatePresence>
+            {showEmoji && (
               <motion.div
-                initial={{ opacity: 0, y: -5 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex items-center gap-2 mb-3 p-2.5 rounded-lg bg-red-50 border border-red-200"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden border-b border-gray-200"
               >
-                <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
-                <p className="text-sm text-red-600">{error}</p>
+                <div className="flex flex-wrap gap-1.5 p-2 bg-white">
+                  {emojis.map((emoji, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setMessage(prev => prev + emoji)}
+                      className="w-8 h-8 flex items-center justify-center text-lg hover:bg-gray-100 rounded transition-colors"
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
               </motion.div>
             )}
+          </AnimatePresence>
 
-            <AnimatePresence>
-              {showSuccess && (
-                <motion.div
-                  initial={{ opacity: 0, y: -5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -5 }}
-                  className="flex items-center gap-2 mb-3 p-2.5 rounded-lg bg-[#D9FDD3] border border-[#008069]/20"
-                >
-                  <CheckCircle2 className="w-4 h-4 text-[#008069] shrink-0" />
-                  <p className="text-sm text-[#111B21] font-medium">Announcement sent!</p>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <button
-              onClick={handleSendMessage}
-              disabled={isSending}
-              className="w-full py-2.5 sm:py-3 px-6 rounded-lg bg-[#008069] text-white font-bold text-sm sm:text-base hover:bg-[#017561] transition-all duration-300 flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
-            >
-              {isSending ? (
-                <>
-                  <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Sending...
-                </>
-              ) : (
-                <>
-                  <Send className="w-4 h-4 sm:w-5 sm:h-5" />
-                  Send to All Students
-                </>
-              )}
+          <div className="flex items-end gap-1.5">
+            <button className="p-2 rounded-full hover:bg-gray-200 transition-colors shrink-0">
+              <ImagePlus className="w-6 h-6 text-[#8696A0]" />
             </button>
-          </motion.div>
-
-        {/* WhatsApp-style Chat UI */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="rounded-lg overflow-hidden border border-black/5 shadow-sm"
-        >
-          {/* Chat Header */}
-          <div className="flex items-center gap-3 px-4 py-3 bg-[#008069] text-white">
-            <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-              <Icon className="w-5 h-5" />
+            <button className="p-2 rounded-full hover:bg-gray-200 transition-colors shrink-0">
+              <Paperclip className="w-6 h-6 text-[#8696A0]" />
+            </button>
+            
+            <div className="flex-1 bg-white rounded-lg px-4 py-2 flex items-center">
+              <input
+                ref={inputRef}
+                type="text"
+                value={message}
+                onChange={(e) => { setMessage(e.target.value); setError('') }}
+                onKeyDown={handleKeyDown}
+                placeholder="Type a message"
+                className="w-full text-[15px] text-[#111B21] placeholder-[#8696A0] bg-transparent focus:outline-none"
+              />
             </div>
-            <div className="min-w-0 flex-1">
-              <p className="font-semibold text-sm truncate">{course.title} Students</p>
-              <p className="text-xs text-white/70">Announcement channel</p>
-            </div>
-            <MessageSquare className="w-5 h-5 text-white/80" />
-          </div>
 
-          {/* Chat Body - WhatsApp background (transparent to show page bg) */}
-          <div
-            className="p-4 space-y-2 max-h-[28rem] overflow-y-auto"
-            style={{
-              backgroundColor: 'transparent',
-            }}
-          >
-            {/* Incoming system tips (left, white bubbles) */}
-            {[
-              'Use announcements for important updates',
-              'Share Zoom links for live sessions',
-              'Include deadlines in your messages',
-              'Keep a supportive and encouraging tone',
-            ].map((tip, i) => (
-              <div key={`tip-${i}`} className="flex justify-start">
-                <div className="relative max-w-[85%] bg-white rounded-lg px-3 py-2 shadow-sm" style={{ borderTopLeftRadius: 0 }}>
-                  <p className="text-xs sm:text-sm text-[#111B21]">{tip}</p>
-                  <div className="flex items-center justify-end gap-1 mt-1">
-                    <span className="text-[10px] text-[#667781]">
-                      {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
-
-            {/* Outgoing sent messages (right, WhatsApp green bubbles) */}
-            {sentMessages.map((msg, index) => (
-              <div
-                key={index}
-                onContextMenu={(e) => {
-                  e.preventDefault()
-                  if (confirm('Delete this message?')) {
-                    setSentMessages(sentMessages.filter((_, i) => i !== index))
-                  }
-                }}
-                onTouchStart={(e) => {
-                  const timer = setTimeout(() => {
-                    if (confirm('Delete this message?')) {
-                      setSentMessages(sentMessages.filter((_, i) => i !== index))
-                    }
-                  }, 800)
-                  e.currentTarget.dataset.timer = timer.toString()
-                }}
-                onTouchEnd={(e) => {
-                  const timer = e.currentTarget.dataset.timer
-                  if (timer) clearTimeout(parseInt(timer))
-                }}
-                className="flex justify-end group"
+            {message.trim() ? (
+              <button 
+                onClick={handleSendMessage}
+                disabled={isSending}
+                className="p-2 rounded-full bg-[#008069] hover:bg-[#017561] transition-colors shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <div
-                  className="relative max-w-[85%] rounded-lg px-3 py-2 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-                  style={{ backgroundColor: '#D9FDD3', borderTopRightRadius: 0 }}
-                >
-                  <h4 className="font-semibold text-xs sm:text-sm text-[#111B21] mb-0.5 break-words">{msg.title}</h4>
-                  <p className="text-xs sm:text-sm text-[#111B21] break-words whitespace-pre-wrap">{msg.content}</p>
-                  <div className="flex items-center justify-end gap-1 mt-1">
-                    <span className="text-[10px] text-[#667781]">
-                      {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                    {/* Blue double check = read */}
-                    <svg className="w-3.5 h-3.5 text-[#53BDEB]" viewBox="0 0 18 18" fill="currentColor">
-                      <path d="M1.5 9.5l3.5 3.5 7-7M8 13l3.5 3.5 7-7" stroke="currentColor" strokeWidth="1.6" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </div>
-                  <button
-                    onClick={() => {
-                      if (confirm('Delete this message?')) {
-                        setSentMessages(sentMessages.filter((_, i) => i !== index))
-                      }
-                    }}
-                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              </div>
-            ))}
-
-            {sentMessages.length === 0 && (
-              <div className="flex justify-center py-6">
-                <p className="text-xs text-[#667781] bg-white/60 rounded-full px-3 py-1">
-                  No announcements sent yet
-                </p>
-              </div>
+                {isSending ? (
+                  <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Send className="w-6 h-6 text-white" fill="white" />
+                )}
+              </button>
+            ) : (
+              <button className="p-2 rounded-full hover:bg-gray-200 transition-colors shrink-0">
+                <Send className="w-6 h-6 text-[#8696A0]" />
+              </button>
             )}
           </div>
-        </motion.div>
         </div>
       </div>
     </main>

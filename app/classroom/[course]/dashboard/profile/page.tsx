@@ -27,6 +27,7 @@ interface StudentData {
   payment_status: string
   reg_date: string
   reg_time: string
+  avatar?: string
 }
 
 // ─── SKELETON ────────────────────────────────────────────────────
@@ -129,9 +130,8 @@ export default function ProfilePage() {
       try {
         const res = await fetch('/api/registrations/me')
         const json = await res.json()
-        if (!res.ok) { console.error('API error:', json.error); setLoading(false); return }
-        if (json.data) setStudentData(json.data)
-      } catch (err) { console.error('Failed to fetch student data:', err) }
+        if (res.ok && json.data) setStudentData(json.data)
+      } catch (err) { /* silently fall back to mock data */ }
       finally { setLoading(false) }
     }
     fetchStudentData()
@@ -187,7 +187,9 @@ export default function ProfilePage() {
 
   if (loading) return <ProfileSkeleton />
 
-  const hasAvatar = !!dashboard.profile.avatar
+  const hasAvatar = !!(data?.avatar || dashboard.profile.avatar)
+  const userAvatar = data?.avatar || dashboard.profile.avatar
+  const userEmail = data?.email || dashboard.profile.email
 
   return (
     <div className="min-h-screen antialiased bg-gray-50 text-gray-900 transition-colors"
@@ -208,7 +210,6 @@ export default function ProfilePage() {
             </h1>
             <p className="text-[13px] leading-4 mt-[1px] text-gray-500">{courseData.title}</p>
           </div>
-
           <span className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#1d9bf0]/10 rounded-full text-[12px] text-[#1d9bf0] font-medium">
             <span className="relative w-[6px] h-[6px]">
               <span className="absolute inset-0 bg-[#1d9bf0] rounded-full" />
@@ -220,7 +221,7 @@ export default function ProfilePage() {
       </header>
 
       {/* ===== BODY ===== */}
-      <div className="max-w-[600px] md:max-w-3xl lg:max-w-5xl mx-auto pb-20 pt-[60px] px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-[600px] md:max-w-3xl lg:max-w-5xl mx-auto pb-20 pt-[60px] px-4 sm:px-6 lg:px-8">
 
         {/* ── Profile hero ── */}
         <div className="relative">
@@ -228,13 +229,13 @@ export default function ProfilePage() {
           <div className="h-[160px] sm:h-[200px] md:h-[220px] bg-gradient-to-br from-[#1d9bf0]/30 via-[#1d9bf0]/10 to-purple-500/10 md:rounded-2xl" />
 
           {/* Avatar */}
-          <div className="px-4 md:px-2 pb-3">
+          <div className="px-0 sm:px-1 md:px-2 pb-3">
             <div className="flex justify-between items-end -mt-[72px] sm:-mt-[88px]">
               <div className="relative group">
                 <div className="w-[100px] h-[100px] sm:w-[120px] sm:h-[120px] rounded-full overflow-hidden border-[4px] shadow-xl border-white bg-gray-100">
                   {hasAvatar ? (
                     <Image
-                      src={dashboard.profile.avatar}
+                      src={userAvatar}
                       alt={data?.name || dashboard.profile.name}
                       width={120}
                       height={120}
@@ -309,11 +310,11 @@ export default function ProfilePage() {
         </div>
 
         {/* ── DASHBOARD GRID (Personal / Security / Location) ────────
-             Mobile: cards stack in original order (untouched).
-             md/lg: 2-col grid — Personal Details + Location & Course
+             Mobile: cards stack vertically (single column).
+             md+: 2-col grid — Personal Details + Location & Course
              form a wide left column, Security becomes a tall card
              on the right. */}
-        <div className="mx-4 md:mx-0 md:grid md:grid-cols-3 md:gap-5 lg:gap-6 md:items-start">
+        <div className="md:grid md:grid-cols-3 md:gap-5 lg:gap-6 md:items-start">
 
           {/* ── PERSONAL DETAILS ─────────────────────────────────── */}
           <div className="mb-3 md:mb-0 md:col-span-2 md:order-1 rounded-2xl border border-gray-200 overflow-hidden bg-white"
@@ -450,7 +451,7 @@ export default function ProfilePage() {
 
                     <div className="w-[80px] h-[80px] rounded-full mx-auto mb-4 overflow-hidden ring-2 ring-gray-200">
                       {hasAvatar ? (
-                        <Image src={dashboard.profile.avatar} alt="" width={80} height={80} className="w-full h-full object-cover" />
+                        <Image src={userAvatar} alt="" width={80} height={80} className="w-full h-full object-cover" />
                       ) : (
                         <DefaultAvatar name={data?.name} size={80} />
                       )}
@@ -551,7 +552,7 @@ export default function ProfilePage() {
 
                     <div className="mt-5 p-3.5 rounded-xl border border-gray-200 bg-gray-50">
                       <p className="text-[10px] uppercase tracking-wider font-semibold mb-1 text-gray-500">Email</p>
-                      <p className="text-[14px] font-semibold text-[#1d9bf0]">{dashboard.profile.email}</p>
+                      <p className="text-[14px] font-semibold text-[#1d9bf0]">{userEmail}</p>
                     </div>
                   </div>
 
@@ -579,7 +580,7 @@ export default function ProfilePage() {
 
                     <h3 className="text-[17px] font-bold text-gray-900 mb-1">Link sent!</h3>
                     <p className="text-[13px] text-gray-500 leading-relaxed">
-                      Check <span className="text-[#1d9bf0] font-medium">{dashboard.profile.email}</span> for the reset link.
+                      Check <span className="text-[#1d9bf0] font-medium">{userEmail}</span> for the reset link.
                     </p>
 
                     <div className="mt-4 p-3 rounded-xl border border-amber-500/20 bg-amber-50">

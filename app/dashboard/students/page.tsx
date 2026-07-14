@@ -52,6 +52,8 @@ export default function StudentsPage() {
   const [courseFilter, setCourseFilter] = useState("all")
   const [paymentFilter, setPaymentFilter] = useState("all")
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [deleteConfirmStudent, setDeleteConfirmStudent] = useState<Student | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const itemsPerPage = 10
 
   const copyToClipboard = (text: string, id: string) => {
@@ -163,6 +165,28 @@ export default function StudentsPage() {
     } catch (err) {
       console.error("Failed to update payment status:", err)
       alert("Failed to update payment status. Please try again.")
+    }
+  }
+
+  const handleDeleteStudent = async (student: Student) => {
+    setDeletingId(student.id)
+    try {
+      const res = await fetch("/api/registrations", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ studentId: student.id }),
+      })
+      if (!res.ok) throw new Error("Failed to delete")
+      setStudents(prev => prev.filter(s => s.id !== student.id))
+      setDeleteConfirmStudent(null)
+      if (selectedStudent?.id === student.id) {
+        closePanel()
+      }
+    } catch (err) {
+      console.error("Failed to delete student:", err)
+      alert("Failed to delete student. Please try again.")
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -648,14 +672,77 @@ export default function StudentsPage() {
               </div>
             </div>
 
-            <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-border/40">
+            <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-border/40 space-y-2">
               <Button className="w-full bg-foreground text-background hover:bg-foreground/90 text-xs sm:text-sm" onClick={closePanel}>
                 Close
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600 text-xs sm:text-sm"
+                onClick={() => setDeleteConfirmStudent(selectedStudent)}
+                disabled={deletingId === selectedStudent?.id}
+              >
+                {deletingId === selectedStudent?.id ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin mr-2" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>Delete Student</>
+                )}
               </Button>
             </div>
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      {deleteConfirmStudent && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50" onClick={() => !deletingId && setDeleteConfirmStudent(null)} />
+          <div className="relative bg-background rounded-xl border border-border shadow-2xl max-w-sm w-full p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                <XCircle className="w-5 h-5 text-red-500" />
+              </div>
+              <div>
+                <h3 className="text-base font-semibold">Delete Student</h3>
+                <p className="text-xs text-muted-foreground">This action cannot be undone</p>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Are you sure you want to delete <strong className="text-foreground">{deleteConfirmStudent.name}</strong>? 
+              This will permanently remove their record from the database.
+            </p>
+            <div className="flex items-center justify-end gap-2 pt-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setDeleteConfirmStudent(null)}
+                disabled={!!deletingId}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => handleDeleteStudent(deleteConfirmStudent)}
+                disabled={!!deletingId}
+                className="bg-red-500 hover:bg-red-600 text-white"
+              >
+                {deletingId === deleteConfirmStudent.id ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                    Deleting...
+                  </>
+                ) : (
+                  'Yes, Delete'
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }
