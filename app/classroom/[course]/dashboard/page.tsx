@@ -127,6 +127,21 @@ export default function DashboardPage() {
 
     fetchMessages()
 
+    // Deduplicate messages periodically
+    const dedupInterval = setInterval(() => {
+      setMessages(prev => {
+        const seen = new Set<string>()
+        return prev.filter(msg => {
+          const key = `${msg.sender}-${msg.text}-${msg.timestamp.getTime()}`
+          if (seen.has(key)) return false
+          seen.add(key)
+          return true
+        })
+      })
+    }, 2000)
+
+    return () => clearInterval(dedupInterval)
+
     // Setup Supabase Realtime subscription for live messages
     const supabase = createClient()
     const channel = supabase
