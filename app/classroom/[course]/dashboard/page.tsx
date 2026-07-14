@@ -485,10 +485,6 @@ export default function DashboardPage() {
                                 className="relative px-3 py-2 shadow-[0_1px_1px_rgba(0,0,0,0.06)] group-hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)] transition-shadow"
                                 style={{ backgroundColor: '#FFFFFF', borderRadius: '4px 8px 8px 8px' }}
                               >
-                                <div className="flex items-center gap-1 mb-1">
-                                  <Megaphone className="w-3.5 h-3.5 text-[#008069]" />
-                                  <span className="text-[11px] font-semibold text-[#008069]">Announcement</span>
-                                </div>
                                 <p className="text-[14px] text-[#111B21] leading-[19px] break-words whitespace-pre-wrap">{msg.text}</p>
                                 <div className="flex items-center justify-end gap-1 mt-1">
                                   <span className="text-[11px] text-[#667781]">{formatTime(msg.timestamp)}</span>
