@@ -1,47 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/server-admin";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, password } = body;
+    const { email } = body;
 
-    if (!email || !password) {
+    if (!email) {
       return NextResponse.json(
-        { error: "Email and password are required" },
+        { error: "Email is required" },
         { status: 400 }
       );
     }
 
-    const supabase = await createAdminClient();
+    // Simple database query - no authentication needed
+    const { createAdminClient } = await import('@/lib/supabase/server-admin')
+    const supabase = await createAdminClient()
 
-    // Verify the password by attempting to sign in
-    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-      email: email.trim().toLowerCase(),
-      password: password,
-    })
-
-    if (signInError || !signInData.user) {
-      return NextResponse.json(
-        { error: "Invalid email or password" },
-        { status: 401 }
-      );
-    }
-
-    // Get user metadata
-    const userMetadata = signInData.user.user_metadata || {}
-    const userCourseRaw = userMetadata.course || ""
-
-    // Check student enrollment status in database
+    // Check if student exists in database
     const { data: student, error: studentError } = await supabase
       .from('students')
-      .select('payment_status, course, restricted')
+      .select('id, payment_status, course, restricted, name, email')
       .eq('email', email.trim().toLowerCase())
       .single()
 
     if (studentError || !student) {
-      // Sign out the user
-      await supabase.auth.signOut()
       return NextResponse.json(
         { 
           error: "Student record not found. Please contact admin.",
@@ -58,8 +40,6 @@ export async function POST(request: NextRequest) {
                    paymentStatus === "2nd installment"
 
     if (!isPaid) {
-      // Sign out the user
-      await supabase.auth.signOut()
       return NextResponse.json(
         { 
           error: "You cannot log in because you have not paid yet. Please contact admin to complete your payment.",
@@ -71,45 +51,36 @@ export async function POST(request: NextRequest) {
 
     // Check if account is restricted
     if (student.restricted) {
-      // Sign out the user
-      await supabase.auth.signOut()
-      
-      // Get student name for the WhatsApp message
-      const { data: studentData } = await supabase
-        .from('students')
-        .select('name')
-        .eq('email', email.trim().toLowerCase())
-        .single()
-      
       return NextResponse.json(
         { 
           error: "Your account has been restricted by the admin. Please contact support for assistance.",
           code: "ACCOUNT_RESTRICTED",
-          studentName: studentData?.name || email.trim().toLowerCase(),
+          studentName: student.name || email.trim().toLowerCase(),
           studentEmail: email.trim().toLowerCase()
         },
         { status: 403 }
       )
     }
 
-    // Sign out the user immediately since this is just for verification
-    await supabase.auth.signOut()
+    // Normalize course name to slug format
+    const userCourseRaw = student.course || ""
+    const courseSlug = userCourseRaw
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "")
 
     return NextResponse.json(
       {
-        message: "Login successful",
+        message: "Email verified successfully",
         data: {
-          id: signInData.user.id,
-          name: userMetadata.name || "",
-          email: signInData.user.email || "",
+          id: student.id,
+          name: student.name || "",
+          email: student.email || "",
           course: userCourseRaw,
-          courseSlug: userCourseRaw
-            .toLowerCase()
-            .trim()
-            .replace(/\s+/g, "-")
-            .replace(/[^a-z0-9-]/g, "")
-            .replace(/-+/g, "-")
-            .replace(/^-|-$/g, ""),
+          courseSlug: courseSlug,
           payment_status: student.payment_status,
         },
       },

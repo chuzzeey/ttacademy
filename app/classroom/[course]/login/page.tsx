@@ -38,7 +38,7 @@ export default function CourseLoginPage() {
         </div>
       </div>
     )
-  }
+  } 
   
   const [imageError, setImageError] = useState(false)
   
@@ -144,23 +144,9 @@ export default function CourseLoginPage() {
         return
       }
 
-      // PIN verified - create Supabase session
-      // Note: We'll use a magic link or OTP approach here
-      // For now, let's create a session using the email
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim().toLowerCase(),
-        password: '123456', // Default password
-      })
-
-      if (error || !data.user) {
-        setPinError('Failed to create session. Please try again.')
-        setIsVerifyingPin(false)
-        return
-      }
-
-      if (data.user) {
-        // Get user metadata to check course access
-        const userCourseRaw = data.user.user_metadata?.course || ''
+      // PIN verified - use data from PIN verification response
+      if (pinResult.data) {
+        const userCourseRaw = pinResult.data.course || ''
         const requestedCourse = courseSlug?.toLowerCase() || ''
         
         // Normalize user course to match URL slug format
@@ -174,7 +160,6 @@ export default function CourseLoginPage() {
 
         // Verify course access
         if (userCourse !== requestedCourse) {
-          await supabase.auth.signOut()
           setPinError(`You are not authorized to access this course. You registered for: ${userCourseRaw}`)
           setIsVerifyingPin(false)
           return
@@ -182,9 +167,9 @@ export default function CourseLoginPage() {
 
         // Store student info
         sessionStorage.setItem('ttacademy_student', JSON.stringify({
-          id: data.user.id,
-          name: data.user.user_metadata?.name || '',
-          email: data.user.email || '',
+          id: pinResult.data.id,
+          name: pinResult.data.name || '',
+          email: pinResult.data.email || '',
           course: userCourseRaw,
         }))
 
