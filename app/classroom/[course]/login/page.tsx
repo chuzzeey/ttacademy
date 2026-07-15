@@ -133,6 +133,7 @@ export default function CourseLoginPage() {
         },
         body: JSON.stringify({
           pin: pinCode,
+          email: email.trim().toLowerCase(),
         }),
       })
 
