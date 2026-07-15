@@ -306,9 +306,13 @@
   }
 }
 
-/* Color scheme */
-html {
+/* Color scheme - respect dark mode */
+html:not(.dark) {
   color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
 }
 
 /* Force light mode for admin login and landing pages */

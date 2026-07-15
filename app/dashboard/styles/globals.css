@@ -229,6 +229,5 @@ html.dark {
    MODAL OVERLAY IMPROVEMENTS
    ============================================ */
 .modal-overlay {
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
+  /* Darkening is handled by bg-black/40 or bg-black/50 classes */
 }

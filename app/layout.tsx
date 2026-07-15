@@ -105,11 +105,13 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               if (typeof window !== 'undefined') {
-                // Force light mode for landing and admin login pages
                 const path = window.location.pathname;
+                
                 if (path === '/' || path === '/admin-login') {
+                  // FORCE LIGHT MODE for landing and admin login pages
+                  // Remove 'dark' class but do NOT overwrite localStorage preference,
+                  // so when user navigates to dashboard their preference is preserved
                   try {
-                    localStorage.setItem('theme', 'light');
                     document.documentElement.classList.remove('dark');
                   } catch(e) {}
                 } else if (path.startsWith('/dashboard')) {
@@ -117,11 +119,6 @@ export default function RootLayout({
                   try {
                     const stored = localStorage.getItem('theme');
                     const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                    
-                    // Remove any forced light mode from login
-                    if (stored === 'light' && systemDark) {
-                      localStorage.removeItem('theme');
-                    }
                     
                     // Apply the theme immediately to prevent flash
                     const themeToApply = stored || (systemDark ? 'dark' : 'light');
