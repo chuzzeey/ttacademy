@@ -6,7 +6,7 @@ import Image from 'next/image'
 import {
   Search, MoreVertical, GraduationCap,
   Code, Palette, Globe, Database, PieChart, Brain, Shield, Lock,
-  ArrowLeft, Send, Check, CheckCheck, Clock, Smile, Megaphone
+  ArrowLeft, Send, Check, CheckCheck, Clock, Smile, Megaphone, AlertTriangle
 } from 'lucide-react'
 import { getCourseData } from '@/lib/mock-data'
 import { createClient } from '@/lib/supabase/client'
@@ -51,6 +51,10 @@ export default function DashboardPage() {
   const initialLoadCompleteRef = useRef(false)
   const prevMessagesLengthRef = useRef(0)
   const [studentData, setStudentData] = useState<{ name: string; email: string; avatar: string } | null>(null)
+  const [showPinVerification, setShowPinVerification] = useState(false)
+  const [pinInput, setPinInput] = useState('')
+  const [pinError, setPinError] = useState('')
+  const [isVerifyingPin, setIsVerifyingPin] = useState(false)
   const isRestrictedRef = useRef(false)
   const [unreadCount, setUnreadCount] = useState(0)
   const lastSeenMessageIdRef = useRef<string | null>(null)
@@ -138,6 +142,50 @@ export default function DashboardPage() {
     
     return () => subscription.unsubscribe()
   }, [courseSlug, router])
+
+  // Show PIN verification on mount
+  useEffect(() => {
+    const hasVerifiedPin = sessionStorage.getItem(`pin_verified_${courseSlug}`)
+    if (!hasVerifiedPin) {
+      setShowPinVerification(true)
+    }
+  }, [courseSlug])
+
+  const handlePinVerification = async () => {
+    if (!pinInput.trim()) {
+      setPinError('Please enter your PIN')
+      return
+    }
+
+    setIsVerifyingPin(true)
+    setPinError('')
+
+    try {
+      const res = await fetch('/api/verify-pin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin: pinInput }),
+      })
+
+      const json = await res.json()
+
+      if (!res.ok) {
+        setPinError(json.error || 'PIN verification failed')
+        setIsVerifyingPin(false)
+        return
+      }
+
+      // PIN verified successfully
+      sessionStorage.setItem(`pin_verified_${courseSlug}`, 'true')
+      setShowPinVerification(false)
+      setPinInput('')
+      setPinError('')
+    } catch (err) {
+      setPinError('An error occurred. Please try again.')
+    } finally {
+      setIsVerifyingPin(false)
+    }
+  }
 
   // RESTRICTION CHECK - polls the API every 10 seconds for instant restriction detection
   useEffect(() => {
@@ -702,6 +750,62 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* ===== PIN VERIFICATION MODAL ===== */}
+      {showPinVerification && (
+        <>
+          <div className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm" />
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <div className="bg-white border border-gray-200 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl">
+              <div className="px-6 pt-7 pb-4 text-center">
+                <div className="w-14 h-14 rounded-2xl bg-[#1d9bf0]/10 flex items-center justify-center mx-auto mb-4">
+                  <Lock className="w-7 h-7 text-[#1d9bf0]" />
+                </div>
+                <h3 className="text-[17px] font-bold text-gray-900 mb-1">Enter Your PIN</h3>
+                <p className="text-[13px] text-gray-500">Please enter your 6-8 digit PIN to access the classroom</p>
+              </div>
+              <div className="px-6 pb-4">
+                <div className="relative">
+                  <input
+                    type="password"
+                    value={pinInput}
+                    onChange={(e) => setPinInput(e.target.value.replace(/\D/g, '').slice(0, 8))}
+                    onKeyDown={(e) => e.key === 'Enter' && handlePinVerification()}
+                    maxLength={8}
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-[14px] text-gray-900 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#1d9bf0]/30 focus:border-[#1d9bf0] transition-colors text-center text-2xl tracking-widest"
+                    placeholder="••••••"
+                    autoFocus
+                    disabled={isVerifyingPin}
+                  />
+                </div>
+                {pinError && (
+                  <div className="mt-3 p-2.5 rounded-xl bg-red-50 border border-red-200">
+                    <p className="text-[11px] flex items-center gap-1.5 text-red-600">
+                      <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                      {pinError}
+                    </p>
+                  </div>
+                )}
+              </div>
+              <div className="px-6 pb-6">
+                <button
+                  onClick={handlePinVerification}
+                  disabled={isVerifyingPin}
+                  className="w-full py-3 rounded-xl bg-[#1d9bf0] hover:bg-[#1a8cd8] disabled:opacity-50 disabled:cursor-not-allowed text-[14px] text-white font-semibold transition-colors active:scale-[0.98] flex items-center justify-center gap-2"
+                >
+                  {isVerifyingPin ? (
+                    <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Verifying...</>
+                  ) : (
+                    'Access Classroom'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* ===== LOGOUT MODAL ===== */}
       {showLogoutModal && (
