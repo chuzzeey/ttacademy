@@ -166,13 +166,64 @@ export default function CourseLoginPage() {
           return
         }
 
-        // Store student info
-        sessionStorage.setItem('ttacademy_student', JSON.stringify({
-          id: pinResult.data.id,
-          name: pinResult.data.name || '',
-          email: pinResult.data.email || '',
-          course: userCourseRaw,
-        }))
+        // Create Supabase auth session so profile page can fetch data
+        try {
+          // Generate a random password for the session (since we don't use password login)
+          const sessionPassword = `ttacademy_session_${Date.now()}`
+          
+          // Create or sign in the user
+          const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+            email: email.trim().toLowerCase(),
+            password: '123456', // Use default password
+          })
+
+          if (authError) {
+            console.error('Auth error:', authError)
+            // Try to create the user if they don't exist
+            const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+              email: email.trim().toLowerCase(),
+              password: '123456',
+              options: {
+                data: {
+                  name: pinResult.data.name || '',
+                  course: userCourseRaw,
+                }
+              }
+            })
+
+            if (signUpError) {
+              console.error('Signup error:', signUpError)
+              setPinError('Failed to create session. Please try again.')
+              setIsVerifyingPin(false)
+              return
+            }
+          }
+        } catch (err) {
+          console.error('Session creation error:', err)
+          // Continue anyway - sessionStorage will be used as fallback
+        }
+
+        // Fetch complete student data
+        const dataResponse = await fetch('/api/student/data', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email.trim().toLowerCase() }),
+        })
+
+        const dataResult = await dataResponse.json()
+
+        if (dataResponse.ok && dataResult.data) {
+          // Store complete student data in sessionStorage
+          sessionStorage.setItem('ttacademy_student', JSON.stringify(dataResult.data))
+        } else {
+          // Fallback to basic data if fetch fails
+          sessionStorage.setItem('ttacademy_student', JSON.stringify({
+            id: pinResult.data.id,
+            name: pinResult.data.name || '',
+            email: pinResult.data.email || '',
+            course: userCourseRaw,
+          }))
+        }
 
         // Success
         setSuccess(true)

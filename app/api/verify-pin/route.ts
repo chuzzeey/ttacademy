@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     // Fetch the student record to verify PIN
     const { data: student, error: fetchError } = await supabase
       .from('students')
-      .select('pin, restricted, course, name, id')
+      .select('pin, restricted, course, name, id, email')
       .eq('email', email.trim().toLowerCase())
       .single();
 
@@ -46,19 +46,41 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify PIN
+    // Verify PIN (accept both old default '0000' and new default '123456')
     const dbPin = String(student.pin || '').trim()
     const inputPin = String(pin).trim()
+    
+    console.log('PIN verification:', { dbPin, inputPin, match: dbPin === inputPin, email, studentId: student.id })
 
-    if (dbPin !== inputPin) {
+    // Check if PIN matches (accept both '0000' and '123456' as defaults for backward compatibility)
+    const defaultPins = ['0000', '123456']
+    const isDefaultPin = defaultPins.includes(dbPin) && defaultPins.includes(inputPin)
+    const isValidPin = dbPin === inputPin || isDefaultPin
+    
+    console.log('PIN check:', { dbPin, inputPin, isDefaultPin, isValidPin, email })
+    
+    if (!isValidPin) {
+      console.log('PIN verification failed:', { dbPin, inputPin, email, studentId: student.id })
       return NextResponse.json(
-        { error: "Incorrect PIN" },
+        { 
+          error: "Incorrect PIN. Please try again.",
+          hint: process.env.NODE_ENV === 'development' ? `Default PIN is 123456 (DB PIN: ${dbPin || 'not set'})` : undefined
+        },
         { status: 403 }
       );
     }
 
+    // Return student data for the frontend
     return NextResponse.json(
-      { message: "PIN verified successfully" },
+      { 
+        message: "PIN verified successfully",
+        data: {
+          id: student.id,
+          name: student.name,
+          email: student.email,
+          course: student.course
+        }
+      },
       { status: 200 }
     );
 

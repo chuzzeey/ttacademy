@@ -139,10 +139,27 @@ export default function ProfilePage() {
   useEffect(() => {
     async function fetchStudentData() {
       try {
+        // First try to get from sessionStorage
+        const stored = sessionStorage.getItem('ttacademy_student')
+        
+        if (stored) {
+          try {
+            const studentData = JSON.parse(stored)
+            setStudentData(studentData)
+            setLoading(false)
+            return
+          } catch (err) {
+            console.error('Failed to parse stored student data:', err)
+          }
+        }
+
+        // Fallback to API if sessionStorage is empty
         const res = await fetch('/api/registrations/me')
         const json = await res.json()
         if (res.ok && json.data) {
           setStudentData(json.data)
+          // Store in sessionStorage for future use
+          sessionStorage.setItem('ttacademy_student', JSON.stringify(json.data))
         }
       } catch (err) { console.error('Failed to fetch student data:', err) }
       finally { setLoading(false) }
