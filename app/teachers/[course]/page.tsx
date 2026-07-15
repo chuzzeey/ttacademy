@@ -431,7 +431,7 @@ export default function TeacherCoursePage() {
 
       {/* WhatsApp Chat Container */}
       <div className="h-[calc(100vh-8rem)] sm:h-[calc(100vh-8rem)] flex flex-col">
-        
+      
         {/* Chat Header */}
         <div className="bg-[#F0F2F5] border-b border-gray-200 px-4 py-2 flex items-center gap-3 shrink-0 z-10">
           <button 

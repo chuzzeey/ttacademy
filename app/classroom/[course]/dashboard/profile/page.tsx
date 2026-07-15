@@ -235,8 +235,15 @@ export default function ProfilePage() {
       return
     }
 
-    if (newPin.length < 4) {
-      setPinError('PIN must be at least 4 characters')
+    // Validate PIN length (6-8 digits)
+    if (newPin.length < 6 || newPin.length > 8) {
+      setPinError('PIN must be between 6 and 8 digits')
+      return
+    }
+
+    // Validate PIN is numbers only
+    if (!/^\d+$/.test(newPin)) {
+      setPinError('PIN must contain only numbers')
       return
     }
 
@@ -638,8 +645,10 @@ export default function ProfilePage() {
                         <input
                           type={showCurrentPin ? 'text' : 'password'}
                           value={currentPin}
-                          onChange={(e) => setCurrentPin(e.target.value)}
-                          maxLength={10}
+                          onChange={(e) => setCurrentPin(e.target.value.replace(/\D/g, '').slice(0, 8))}
+                          maxLength={8}
+                          inputMode="numeric"
+                          pattern="[0-9]*"
                           className="w-full px-4 py-3 rounded-xl border border-gray-200 text-[14px] text-gray-900 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#1d9bf0]/30 focus:border-[#1d9bf0] transition-colors pr-10"
                           placeholder="Enter current PIN"
                           autoFocus
@@ -656,13 +665,15 @@ export default function ProfilePage() {
 
                     {/* New PIN */}
                     <div className="mb-4">
-                      <label className="text-[10px] uppercase tracking-wider font-semibold mb-1.5 text-gray-500 block">New PIN</label>
+                      <label className="text-[10px] uppercase tracking-wider font-semibold mb-1.5 text-gray-500 block">New PIN (6-8 digits)</label>
                       <div className="relative">
                         <input
                           type={showNewPin ? 'text' : 'password'}
                           value={newPin}
-                          onChange={(e) => setNewPin(e.target.value)}
-                          maxLength={10}
+                          onChange={(e) => setNewPin(e.target.value.replace(/\D/g, '').slice(0, 8))}
+                          maxLength={8}
+                          inputMode="numeric"
+                          pattern="[0-9]*"
                           className="w-full px-4 py-3 rounded-xl border border-gray-200 text-[14px] text-gray-900 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#1d9bf0]/30 focus:border-[#1d9bf0] transition-colors pr-10"
                           placeholder="Enter new PIN"
                         />
@@ -683,8 +694,10 @@ export default function ProfilePage() {
                         <input
                           type={showConfirmPin ? 'text' : 'password'}
                           value={confirmPin}
-                          onChange={(e) => setConfirmPin(e.target.value)}
-                          maxLength={10}
+                          onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, '').slice(0, 8))}
+                          maxLength={8}
+                          inputMode="numeric"
+                          pattern="[0-9]*"
                           className="w-full px-4 py-3 rounded-xl border border-gray-200 text-[14px] text-gray-900 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#1d9bf0]/30 focus:border-[#1d9bf0] transition-colors pr-10"
                           placeholder="Confirm new PIN"
                         />

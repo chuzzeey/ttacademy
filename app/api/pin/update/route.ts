@@ -13,9 +13,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (newPin.length < 4 || newPin.length > 10) {
+    // Validate PIN is numbers only
+    if (!/^\d+$/.test(newPin)) {
       return NextResponse.json(
-        { error: "PIN must be between 4 and 10 characters" },
+        { error: "PIN must contain only numbers" },
+        { status: 400 }
+      );
+    }
+
+    // Validate PIN length (6-8 digits)
+    if (newPin.length < 6 || newPin.length > 8) {
+      return NextResponse.json(
+        { error: "PIN must be between 6 and 8 digits" },
         { status: 400 }
       );
     }
