@@ -253,46 +253,6 @@ export async function PATCH(request: NextRequest) {
 }
 
 
-export async function DELETE(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const { studentId } = body;
-
-    if (!studentId) {
-      return NextResponse.json(
-        { error: "Missing studentId" },
-        { status: 400 }
-      );
-    }
-
-    const supabase = await createAdminClient()
-    const { error: deleteError } = await supabase
-      .from('students')
-      .delete()
-      .eq('id', studentId)
-
-    if (deleteError) throw deleteError
-
-    return NextResponse.json(
-      {
-        message: "Student deleted successfully",
-      },
-      {
-        status: 200,
-      }
-    );
-
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.error("Student delete error:", message);
-    return NextResponse.json(
-      { error: message },
-      { status: 500 }
-    );
-  }
-}
-
-
 export async function GET() {
   try {
     const supabase = await createAdminClient()
