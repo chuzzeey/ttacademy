@@ -130,8 +130,6 @@ export default function RootLayout({
                   try {
                     const stored = localStorage.getItem('theme');
                     const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                    
-                    // Apply the theme immediately to prevent flash
                     const themeToApply = stored || (systemDark ? 'dark' : 'light');
                     if (themeToApply === 'dark') {
                       document.documentElement.classList.add('dark');
