@@ -10,20 +10,21 @@ datasource db {
 
 model Student {
   id                        String   @id @default(uuid())
-  name                      String
-  email                     String
-  phone                     String
-  course                    String
-  sex                       String
-  country                   String
-  state                     String?
-  employment_status         String
-  has_laptop                String
-  reason                    String
-  payment_status            String   @default("Not Paid")
+  name                      String   @map("name")
+  email                     String   @map("email")
+  phone                     String   @map("phone")
+  course                    String   @map("learning_track")
+  sex                       String   @map("gender")
+  country                   String   @map("country")
+  state                     String?  @map("state_of_residence")
+  employment_status         String   @map("current_employment_status")
+  has_laptop                String   @map("has_laptop_and_internet")
+  reason                    String   @map("why_learn_this_skill")
+  payment_status            String   @map("payment_plan") @default("Not Paid Yet")
   password                  String   @default("123456")
-  reg_date                  String
-  reg_time                  String
+  pin                       String   @default("123456") @map("pin")
+  reg_date                  String   @map("reg_date")
+  reg_time                  String   @map("reg_time")
   restricted                Boolean  @default(false)
   createdAt                 DateTime @default(now()) @map("created_at")
   updatedAt                 DateTime @updatedAt @map("updated_at")

@@ -58,21 +58,48 @@ export async function POST(request: NextRequest) {
     // Fetch the student record to verify current PIN
     const { data: student, error: fetchError } = await supabase
       .from('students')
-      .select('pin')
+      .select('*')
       .ilike('email', email)
       .single();
 
     if (fetchError || !student) {
+      console.error('Student not found:', fetchError, email)
       return NextResponse.json(
         { error: "Student record not found" },
         { status: 404 }
       );
     }
 
-    // Verify current PIN
-    if (student.pin !== currentPin) {
+    // Verify current PIN (trim whitespace and compare as strings)
+    const dbPin = String(student.pin || '').trim()
+    const inputPin = String(currentPin).trim()
+    
+    console.log('PIN verification:', { 
+      email, 
+      dbPin, 
+      inputPin, 
+      match: dbPin === inputPin,
+      studentId: student.id,
+      studentData: student
+    })
+    
+    // Check if PIN matches
+    const isCorrectPin = dbPin === inputPin
+    
+    if (!isCorrectPin) {
+      // Return more helpful error for debugging
+      const errorMsg = dbPin === '' 
+        ? "No PIN set for this account. Please contact support." 
+        : "Current PIN is incorrect"
+      
       return NextResponse.json(
-        { error: "Current PIN is incorrect" },
+        { 
+          error: errorMsg,
+          debug: process.env.NODE_ENV === 'development' ? {
+            dbPin: dbPin === '' ? 'PIN is empty/NULL' : 'PIN exists',
+            inputPin: inputPin ? 'PIN provided' : 'No PIN entered'
+          } : undefined
+        },
         { status: 403 }
       );
     }
