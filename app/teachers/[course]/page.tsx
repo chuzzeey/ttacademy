@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
-import { Shield, BarChart3, Cpu, Globe, ShieldAlert, Palette, Code, Monitor, Server, Globe2, TrendingUp, Cloud, Database, ArrowLeft, Send, Bell, Menu, X, GraduationCap, LogOut, Home, BookMarked, User, Settings, Search, MoreVertical, Paperclip, ImagePlus, Check, CheckCheck, Clock, Megaphone } from 'lucide-react'
+import { Shield, BarChart3, Cpu, Globe, ShieldAlert, Palette, Code, Monitor, Server, Globe2, TrendingUp, Cloud, Database, ArrowLeft, Send, Menu, X, GraduationCap, LogOut, Home, BookMarked, User, Settings, Paperclip, ImagePlus, Check, CheckCheck, Clock, Megaphone } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 import { createClient } from '@/lib/supabase/client'
 
@@ -75,6 +75,7 @@ export default function TeacherCoursePage() {
   const router = useRouter()
   const course = courseData[params.course as string]
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [showLogoutDropdown, setShowLogoutDropdown] = useState(false)
 
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
@@ -82,11 +83,19 @@ export default function TeacherCoursePage() {
   const [messages, setMessages] = useState<Message[]>([])
   const [isTyping, setIsTyping] = useState(false)
   const [showEmoji, setShowEmoji] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [showSearch, setShowSearch] = useState(false)
   const [loadingHistory, setLoadingHistory] = useState(true)
   const chatEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  const handleLogout = async () => {
+    try {
+      const supabase = createClient()
+      await supabase.auth.signOut()
+      router.push('/teachers')
+    } catch (err) {
+      console.error('Logout error:', err)
+    }
+  }
 
   const emojis = ['😊', '👍', '🎉', '📚', '💡', '🔥', '✅', '⭐', '💪', '👏', '🎯', '📌', '📢', '💬', '🤝', '🌟']
 
@@ -140,11 +149,29 @@ export default function TeacherCoursePage() {
         },
         (payload) => {
           const newMsg = payload.new as DbMessage
-          // Avoid duplicate if teacher just sent it
           setMessages(prev => {
+            // Already have this exact DB row (by real id) - skip
             const exists = prev.some(m => m.id === newMsg.id)
             if (exists) return prev
-            
+
+            // If this INSERT is our own mentor message, it likely already exists
+            // as an optimistic "temp-..." bubble from handleSendMessage.
+            // Merge into that bubble instead of adding a second one.
+            if (newMsg.sender_name === 'Mentor') {
+              const optimisticIndex = prev.findIndex(
+                m => m.sender === 'me' && m.text === newMsg.content && m.id.startsWith('temp-')
+              )
+              if (optimisticIndex !== -1) {
+                const updated = [...prev]
+                updated[optimisticIndex] = {
+                  ...updated[optimisticIndex],
+                  id: newMsg.id,
+                  status: 'delivered',
+                }
+                return updated
+              }
+            }
+
             const msg: Message = {
               id: newMsg.id,
               text: newMsg.content,
@@ -163,34 +190,6 @@ export default function TeacherCoursePage() {
       supabase.removeChannel(channel)
     }
   }, [params.course])
-
-  // Initial system messages
-  useEffect(() => {
-    if (!course) return
-    setMessages([
-      {
-        id: 'sys-1',
-        text: `Welcome to the ${course.title} announcement channel! 👋`,
-        timestamp: new Date(Date.now() - 3600000 * 2),
-        status: 'read',
-        sender: 'system'
-      },
-      {
-        id: 'sys-2',
-        text: 'Use this channel to send important updates to your students. They will see your messages in real-time.',
-        timestamp: new Date(Date.now() - 3600000 * 1.5),
-        status: 'read',
-        sender: 'system'
-      },
-      {
-        id: 'sys-3',
-        text: 'When students reply, their messages will appear here instantly. 💬',
-        timestamp: new Date(Date.now() - 3600000),
-        status: 'read',
-        sender: 'system'
-      }
-    ])
-  }, [course?.title])
 
   // Auto scroll to bottom on new messages
   useEffect(() => {
@@ -312,13 +311,6 @@ export default function TeacherCoursePage() {
     return date.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase()
   }
 
-  const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: Home },
-    { id: 'courses', label: 'My Courses', icon: BookMarked },
-    { id: 'profile', label: 'Profile', icon: User },
-    { id: 'settings', label: 'Settings', icon: Settings },
-  ]
-
   // Group messages by date for separators
   const groupedMessages: { date: string; messages: Message[] }[] = []
   let currentDate = ''
@@ -342,104 +334,62 @@ export default function TeacherCoursePage() {
       {/* Top Navigation Bar */}
       <header className="sticky top-0 z-50 bg-[#008069] shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 sm:h-20">
+          <div className="flex items-center justify-between h-14 sm:h-16 lg:h-20">
+            {/* Left side - Back button and Course name */}
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-                <GraduationCap className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-              </div>
-              <div className="hidden sm:block">
-                <p className="text-sm font-bold text-white">{course.title}</p>
-                <p className="text-xs text-white/70">{course.students} students</p>
+              <button 
+                onClick={() => router.push('/teachers')}
+                className="shrink-0 p-2 rounded-lg hover:bg-white/10 transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5 text-white" />
+              </button>
+              <div>
+                <p className="text-sm sm:text-base font-bold text-white">{course.title}</p>
+                <p className="text-[10px] sm:text-xs text-white/70 hidden sm:block">Mentor Portal</p>
               </div>
             </div>
-          
-            <nav className="hidden md:flex items-center justify-center gap-1">
-              {navItems.map((item) => {
-                const NavIcon = item.icon
-                return (
-                  <button
-                    key={item.id}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-white/80 hover:bg-white/10 hover:text-white transition-all duration-200"
-                  >
-                    <NavIcon className="w-4 h-4" />
-                    <span>{item.label}</span>
-                  </button>
-                )
-              })}
-            </nav>
-            
-            <div className="flex items-center gap-2 sm:gap-3">
-              <button className="hidden sm:flex p-2 rounded-lg hover:bg-white/10 transition-colors relative">
-                <Bell className="w-5 h-5 text-white/80" />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
-              </button>
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-xs sm:text-sm">
-                M
-              </div>
-              <button onClick={() => router.push('/teachers')} className="hidden lg:inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors font-medium text-sm">
-                <ArrowLeft className="w-4 h-4" />
-                <span>Back</span>
-              </button>
+
+            {/* Right side - Logout dropdown */}
+            <div className="relative">
               <button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="md:hidden p-2 rounded-lg hover:bg-white/10 transition-colors"
+                onClick={() => setShowLogoutDropdown(!showLogoutDropdown)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors"
               >
-                {mobileMenuOpen ? (
-                  <X className="w-5 h-5 text-white" />
-                ) : (
-                  <Menu className="w-5 h-5 text-white" />
-                )}
+                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-sm">
+                  M
+                </div>
+                <span className="hidden sm:block text-sm font-medium text-white">Menu</span>
               </button>
+
+              {/* Logout Dropdown */}
+              <AnimatePresence>
+                {showLogoutDropdown && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg overflow-hidden z-50"
+                  >
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span>Logout</span>
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </div>
-
-        <AnimatePresence>
-          {mobileMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="md:hidden border-t border-white/10 bg-[#008069]"
-            >
-              <nav className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
-                <div className="flex flex-col gap-1">
-                  {navItems.map((item) => {
-                    const NavIcon = item.icon
-                    return (
-                      <button
-                        key={item.id}
-                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-white/80 hover:bg-white/10 transition-all duration-200"
-                      >
-                        <NavIcon className="w-5 h-5 text-white/70" />
-                        <span>{item.label}</span>
-                      </button>
-                    )
-                  })}
-                  <div className="border-t border-white/10 mt-2 pt-2">
-                    <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-red-200 hover:bg-red-500/20 transition-all duration-200">
-                      <LogOut className="w-5 h-5" />
-                      <span>Sign Out</span>
-                    </button>
-                  </div>
-                </div>
-              </nav>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </header>
 
       {/* WhatsApp Chat Container */}
       <div className="h-[calc(100vh-8rem)] sm:h-[calc(100vh-8rem)] flex flex-col">
-      
+        
         {/* Chat Header */}
         <div className="bg-[#F0F2F5] border-b border-gray-200 px-4 py-2 flex items-center gap-3 shrink-0 z-10">
-          <button 
-            onClick={() => router.push('/teachers')}
-            className="shrink-0 hover:bg-gray-200 rounded-full p-1.5 transition-colors -ml-1"
-          >
-            <ArrowLeft className="w-5 h-5 text-[#54656F]" />
-          </button>
           <div className="w-10 h-10 rounded-full bg-[#DFE5E7] flex items-center justify-center shrink-0 overflow-hidden">
             <span className="text-lg">{course.emoji}</span>
           </div>
@@ -448,44 +398,10 @@ export default function TeacherCoursePage() {
               {course.title} Group
             </p>
             <p className="text-[12px] text-[#667781] truncate leading-tight">
-              {course.students} students &bull; Live chat
+              {course.students} students • Live chat
             </p>
           </div>
-          <div className="flex items-center gap-0.5">
-            <button 
-              onClick={() => setShowSearch(!showSearch)}
-              className="p-2 rounded-full hover:bg-gray-200 transition-colors"
-            >
-              <Search className="w-5 h-5 text-[#54656F]" />
-            </button>
-            <button className="p-2 rounded-full hover:bg-gray-200 transition-colors">
-              <MoreVertical className="w-5 h-5 text-[#54656F]" />
-            </button>
-          </div>
         </div>
-
-        {/* Search Bar (toggled) */}
-        <AnimatePresence>
-          {showSearch && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="bg-[#F0F2F5] border-b border-gray-200 overflow-hidden"
-            >
-              <div className="px-4 py-2">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search messages..."
-                  className="w-full px-4 py-2 bg-white rounded-lg text-sm text-[#111B21] placeholder-[#667781] focus:outline-none focus:ring-1 focus:ring-[#008069]"
-                  autoFocus
-                />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         {/* Chat Messages */}
         <div 
