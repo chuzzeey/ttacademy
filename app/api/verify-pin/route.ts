@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { pin } = body;
+    const { pin, email } = body;
 
     if (!pin) {
       return NextResponse.json(
@@ -13,30 +13,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get the authenticated user
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: "Not authenticated" },
-        { status: 401 }
-      );
-    }
-
-    const email = user.email?.toLowerCase();
     if (!email) {
       return NextResponse.json(
-        { error: "Authenticated user has no email" },
+        { error: "Email is required" },
         { status: 400 }
       );
     }
 
+    // Use admin client to query database without authentication
+    const { createAdminClient } = await import('@/lib/supabase/server-admin')
+    const supabase = await createAdminClient()
+
     // Fetch the student record to verify PIN
     const { data: student, error: fetchError } = await supabase
       .from('students')
-      .select('pin, restricted')
-      .ilike('email', email)
+      .select('pin, restricted, course, name, id')
+      .eq('email', email.trim().toLowerCase())
       .single();
 
     if (fetchError || !student) {
