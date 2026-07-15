@@ -80,7 +80,8 @@ export function Header() {
   }, [])
 
   const toggleTheme = () => {
-    setTheme(theme === "dark" ? "light" : "dark")
+    const newTheme = theme === "dark" ? "light" : "dark"
+    setTheme(newTheme)
   }
 
   return (
@@ -187,17 +188,19 @@ export function Header() {
                   3
                 </span>
               </Button>
-              <button
-                onClick={toggleTheme}
-                className="flex items-center justify-center w-9 h-9 rounded-full bg-muted/30 hover:bg-muted transition-colors"
-                aria-label={mounted && theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-              >
-                {mounted && theme === "dark" ? (
-                  <Sun className="w-4 h-4" />
-                ) : (
-                  <Moon className="w-4 h-4" />
-                )}
-              </button>
+              {mounted && (
+                <button
+                  onClick={toggleTheme}
+                  className="flex items-center justify-center w-9 h-9 rounded-full bg-muted/30 hover:bg-muted transition-colors"
+                  aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+                >
+                  {theme === "dark" ? (
+                    <Sun className="w-4 h-4" />
+                  ) : (
+                    <Moon className="w-4 h-4" />
+                  )}
+                </button>
+              )}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button id="user-menu-trigger" className="flex items-center gap-1.5 cursor-pointer p-1 pr-1.5 sm:pr-2 rounded-xl hover:bg-muted/50 transition-colors">

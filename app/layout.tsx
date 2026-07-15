@@ -113,14 +113,22 @@ export default function RootLayout({
                     document.documentElement.classList.remove('dark');
                   } catch(e) {}
                 } else if (path.startsWith('/dashboard')) {
-                  // For dashboard, let the dashboard's ThemeProvider handle the theme
-                  // Just remove any forced light mode from login page
+                  // For dashboard, immediately apply the correct theme before React hydrates
                   try {
-                    const currentTheme = localStorage.getItem('theme');
-                    if (currentTheme === 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                      // User has system dark mode, remove the forced light mode
+                    const stored = localStorage.getItem('theme');
+                    const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    
+                    // Remove any forced light mode from login
+                    if (stored === 'light' && systemDark) {
                       localStorage.removeItem('theme');
+                    }
+                    
+                    // Apply the theme immediately to prevent flash
+                    const themeToApply = stored || (systemDark ? 'dark' : 'light');
+                    if (themeToApply === 'dark') {
                       document.documentElement.classList.add('dark');
+                    } else {
+                      document.documentElement.classList.remove('dark');
                     }
                   } catch(e) {}
                 }
@@ -205,9 +213,10 @@ export default function RootLayout({
         <QueryProvider>
           <ThemeProvider
             attribute="class"
-            defaultTheme="dark"
-            enableSystem={false}
+            defaultTheme="system"
+            enableSystem
             disableTransitionOnChange
+            storageKey="theme"
           >
             <SmoothScrollProvider>
               {children}
