@@ -94,6 +94,60 @@ export default function DashboardPage() {
     
     return () => subscription.unsubscribe()
   }, [courseSlug, router])
+
+  // Real-time restriction check - logout immediately if admin restricts the student
+  useEffect(() => {
+    const supabase = createClient()
+    
+    // Get current user email
+    const checkRestriction = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session?.user?.email) return
+        
+        const userEmail = session.user.email.toLowerCase()
+        
+        // Subscribe to changes in the students table for this specific user
+        const channel = supabase
+          .channel('student-restriction-check')
+          .on(
+            'postgres_changes',
+            {
+              event: 'UPDATE',
+              schema: 'public',
+              table: 'students',
+              filter: `email=eq.${userEmail}`,
+            },
+            (payload) => {
+              console.log('Student record updated:', payload)
+              
+              // Check if restricted field was set to true
+              if (payload.new.restricted === true) {
+                // Immediately sign out the user
+                supabase.auth.signOut().then(() => {
+                  // Show alert before redirecting
+                  alert('Your account has been restricted by the admin. You have been logged out.')
+                  router.push(`/classroom/${courseSlug}/login`)
+                })
+              }
+            }
+          )
+          .subscribe()
+        
+        return () => {
+          supabase.removeChannel(channel)
+        }
+      } catch (err) {
+        console.error('Restriction check error:', err)
+      }
+    }
+    
+    const cleanup = checkRestriction()
+    
+    return () => {
+      if (cleanup) cleanup.then(fn => fn && fn())
+    }
+  }, [courseSlug, router])
   
   // Fetch existing messages from DB + setup realtime subscription
   useEffect(() => {

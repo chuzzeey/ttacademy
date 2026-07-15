@@ -110,20 +110,20 @@ export default function DashboardPage() {
         title='Welcome, Precious <span class="animate-wave">👋</span>'
         description="An overview of students insights, and revenue analytics."
       >
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <div className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground">
           {timeAgo && <span>Last updated: {timeAgo}</span>}
         </div>
-        <Button variant="outline" className="flex items-center gap-2 bg-transparent" onClick={handleRefresh}>
-          <RefreshCw className="w-4 h-4" />
-          Refresh
+        <Button variant="outline" className="flex items-center gap-2 bg-transparent h-9 text-xs" onClick={handleRefresh}>
+          <RefreshCw className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">Refresh</span>
         </Button>
-        <Button variant="outline" className="flex items-center gap-2 bg-transparent" onClick={() => setShowPopup(true)}>
+        <Button variant="outline" className="hidden sm:flex items-center gap-2 bg-transparent" onClick={() => setShowPopup(true)}>
           Export Report
         </Button>
       </PageHeader>
 
-      {/* Metric Cards - Render instantly with current values */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6">
+      {/* Metric Cards - 2 cols on mobile, 4 cols on desktop */}
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 mb-5 sm:mb-7">
         <MetricCard title="Total Students" value={totalStudents} icon={Users} description="Total registrations" />
         <MetricCard title="Enrolled Students" value={enrolledStudents} icon={AlertCircle} description="Acquisition needs attention" />
         <MetricCard title="Total Revenue" value={totalRevenue} icon={DollarSign} description="Total revenue collected" />
@@ -131,16 +131,16 @@ export default function DashboardPage() {
       </div>
 
       {showPopup && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-[80]">
-          <div className="bg-card border border-border rounded-lg p-6 max-w-sm">
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-[80] modal-overlay">
+          <div className="bg-card border border-border rounded-xl p-6 max-w-sm shadow-2xl">
             <p className="text-sm font-medium">Feature coming soon!</p>
             <Button className="mt-4 w-full" onClick={() => setShowPopup(false)}>Close</Button>
           </div>
         </div>
       )}
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 mb-6">
+      {/* Charts Row - stack on mobile, side by side on desktop */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6 mb-5 sm:mb-7">
         <div className="lg:col-span-2">
           <ProfitChart />
         </div>
@@ -150,7 +150,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Bottom Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
         <div className="h-full">
           <MostRegisteredCourses />
         </div>

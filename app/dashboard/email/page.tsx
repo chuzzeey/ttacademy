@@ -173,62 +173,62 @@ export default function EmailPage() {
       />
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
-        <Card className="dashboard-card">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-5 sm:mb-7">
+        <Card className="dashboard-card stat-card">
           <CardContent className="p-4 sm:p-5">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs sm:text-sm text-muted-foreground">Total Students</span>
-              <div className="p-1.5 sm:p-2 bg-muted rounded-lg">
-                <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">Total Students</span>
+              <div className="p-1.5 sm:p-2 bg-amber-500/10 text-amber-600 rounded-lg">
+                <User className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
             </div>
-            <p className="text-2xl sm:text-3xl font-semibold">{students.length}</p>
+            <p className="text-xl sm:text-2xl font-semibold">{students.length}</p>
             <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">Available for email</p>
           </CardContent>
         </Card>
-        <Card className="dashboard-card">
+        <Card className="dashboard-card stat-card">
           <CardContent className="p-4 sm:p-5">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs sm:text-sm text-muted-foreground">New Students</span>
-              <div className="p-1.5 sm:p-2 bg-muted rounded-lg">
-                <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">New Students</span>
+              <div className="p-1.5 sm:p-2 bg-amber-500/10 text-amber-600 rounded-lg">
+                <User className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
             </div>
-            <p className="text-2xl sm:text-3xl font-semibold">
+            <p className="text-xl sm:text-2xl font-semibold">
               {Math.min(5, students.length)}
             </p>
             <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">Recently joined</p>
           </CardContent>
         </Card>
-        <Card className="dashboard-card">
+        <Card className="dashboard-card stat-card">
           <CardContent className="p-4 sm:p-5">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs sm:text-sm text-muted-foreground">Courses</span>
-              <div className="p-1.5 sm:p-2 bg-muted rounded-lg">
-                <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">Courses</span>
+              <div className="p-1.5 sm:p-2 bg-amber-500/10 text-amber-600 rounded-lg">
+                <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
             </div>
-            <p className="text-2xl sm:text-3xl font-semibold">
+            <p className="text-xl sm:text-2xl font-semibold">
               {[...new Set(students.map(s => s.course))].length}
             </p>
             <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">Active courses</p>
           </CardContent>
         </Card>
-        <Card className="dashboard-card">
+        <Card className="dashboard-card stat-card">
           <CardContent className="p-4 sm:p-5">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs sm:text-sm text-muted-foreground">Emails Sent</span>
-              <div className="p-1.5 sm:p-2 bg-muted rounded-lg">
-                <Mail className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">Emails Sent</span>
+              <div className="p-1.5 sm:p-2 bg-amber-500/10 text-amber-600 rounded-lg">
+                <Mail className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
             </div>
-            <p className="text-2xl sm:text-3xl font-semibold">{sentEmails.length}</p>
+            <p className="text-xl sm:text-2xl font-semibold">{sentEmails.length}</p>
             <div className="flex items-center justify-between mt-1">
               <p className="text-[10px] sm:text-xs text-muted-foreground">Total sent this session</p>
               <Button
                 size="sm"
                 onClick={() => setViewAllModal(true)}
-                className="h-6 text-xs bg-foreground text-background hover:bg-foreground/90 px-2"
+                className="h-7 text-xs bg-foreground text-background hover:bg-foreground/90 px-2 rounded-lg"
               >
                 View All
               </Button>
@@ -239,38 +239,38 @@ export default function EmailPage() {
 
       {/* Sent Emails Section */}
       {sentEmails.length > 0 && (
-        <Card className="dashboard-card mb-4 sm:mb-6">
+        <Card className="dashboard-card mb-5 sm:mb-7">
           <CardHeader className="pb-4 border-b border-border/40">
             <CardTitle className="text-base font-medium">Sent Emails</CardTitle>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Recently sent emails this session
             </p>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full">
+            <div className="table-container">
+              <table className="w-full min-w-[500px]">
                 <thead>
                   <tr className="border-b border-border">
-                    <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">To</th>
-                    <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">Subject</th>
-                    <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">Status</th>
-                    <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">Date</th>
-                    <th className="text-right py-3 px-2 text-sm font-medium text-muted-foreground">Action</th>
+                    <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground">To</th>
+                    <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground">Subject</th>
+                    <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground">Status</th>
+                    <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground">Date</th>
+                    <th className="text-right py-3 px-3 text-xs font-medium text-muted-foreground">Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {sentEmails.map((email) => (
                     <tr key={email.id} className="border-b border-border last:border-0">
-                      <td className="py-3 px-2 text-sm font-medium">{email.to}</td>
-                      <td className="py-3 px-2 text-sm text-muted-foreground max-w-[300px] truncate">{email.subject}</td>
-                      <td className="py-3 px-2">
-                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-green-100 text-green-800 text-xs font-medium">
+                      <td className="py-3 px-3 text-sm font-medium">{email.to}</td>
+                      <td className="py-3 px-3 text-sm text-muted-foreground max-w-[300px] truncate">{email.subject}</td>
+                      <td className="py-3 px-3">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-green-50 dark:bg-green-500/10 text-green-600 text-xs font-medium">
                           <CheckCircle className="w-3 h-3" />
                           {email.status}
                         </span>
                       </td>
-                      <td className="py-3 px-2 text-xs text-muted-foreground whitespace-nowrap">{email.date}</td>
-                      <td className="py-3 px-2 text-right">
+                      <td className="py-3 px-3 text-xs text-muted-foreground whitespace-nowrap">{email.date}</td>
+                      <td className="py-3 px-3 text-right">
                         <Button
                           variant="ghost"
                           size="sm"
@@ -295,18 +295,18 @@ export default function EmailPage() {
 
       {/* Students Table */}
       <Card className="dashboard-card">
-        <CardHeader className="pb-2">
+        <CardHeader className="pb-3">
           <CardTitle className="text-base font-medium">Student Directory</CardTitle>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             View students and send them email follow-ups
           </p>
 
           {/* Search */}
-          <div className="relative w-full sm:w-[300px] mt-3">
+          <div className="relative w-full sm:w-[300px] mt-4">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Search by name, email, or course..."
-              className="pl-9 w-full"
+              className="pl-9 pr-9 w-full h-10 rounded-xl bg-muted/30 border-border/60 focus:bg-background transition-all"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -322,11 +322,11 @@ export default function EmailPage() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />
+            <div className="flex items-center justify-center py-16">
+              <div className="w-6 h-6 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />
             </div>
           ) : filteredStudents.length === 0 ? (
-            <div className="py-12 text-center">
+            <div className="py-16 text-center">
               <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-muted flex items-center justify-center">
                 <Search className="w-5 h-5 text-muted-foreground" />
               </div>
@@ -337,20 +337,20 @@ export default function EmailPage() {
           ) : (
             <>
               {/* Desktop Table */}
-              <div className="hidden lg:block overflow-x-auto">
+              <div className="hidden lg:block table-container">
                 <table className="w-full min-w-[600px]">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">Student</th>
-                      <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">Email</th>
-                      <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">Course</th>
-                      <th className="text-right py-3 px-2 text-sm font-medium text-muted-foreground">Action</th>
+                      <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground">Student</th>
+                      <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground">Email</th>
+                      <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground">Course</th>
+                      <th className="text-right py-3 px-3 text-xs font-medium text-muted-foreground">Action</th>
                     </tr>
                   </thead>
                   <tbody>
                     {currentStudents.map((student) => (
                       <tr key={student.id} className="border-b border-border last:border-0">
-                        <td className="py-3 px-2">
+                        <td className="py-3 px-3">
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
                               <User className="w-4 h-4 text-muted-foreground" />
@@ -358,18 +358,18 @@ export default function EmailPage() {
                             <span className="text-sm font-medium">{student.name}</span>
                           </div>
                         </td>
-                        <td className="py-3 px-2 text-sm text-muted-foreground">{student.email}</td>
-                        <td className="py-3 px-2 text-sm text-muted-foreground">
-                          <Badge variant="secondary" className="text-xs">
+                        <td className="py-3 px-3 text-sm text-muted-foreground">{student.email}</td>
+                        <td className="py-3 px-3 text-sm text-muted-foreground">
+                          <Badge variant="secondary" className="text-xs font-normal">
                             {student.course}
                           </Badge>
                         </td>
-                        <td className="py-3 px-2 text-right">
+                        <td className="py-3 px-3 text-right">
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => handleSendEmail(student)}
-                            className="flex items-center gap-1 text-xs h-8 border-border/60"
+                            className="flex items-center gap-1.5 text-xs h-9 border-border/60 rounded-xl"
                           >
                             <Mail className="w-3.5 h-3.5" />
                             Send Email
@@ -384,9 +384,9 @@ export default function EmailPage() {
               {/* Mobile/Tablet Cards */}
               <div className="lg:hidden space-y-3">
                 {currentStudents.map((student) => (
-                  <div key={student.id} className="border border-border rounded-lg p-3 sm:p-4 space-y-3">
-                    <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                      <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+                  <div key={student.id} className="border border-border/60 rounded-xl p-4 space-y-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center shrink-0">
                         <User className="w-4 h-4 text-muted-foreground" />
                       </div>
                       <div className="min-w-0 flex-1">
@@ -395,7 +395,7 @@ export default function EmailPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2 text-xs">
-                      <Badge variant="secondary" className="text-[10px]">
+                      <Badge variant="secondary" className="text-[10px] font-normal">
                         {student.course}
                       </Badge>
                     </div>
@@ -403,7 +403,7 @@ export default function EmailPage() {
                       variant="outline"
                       size="sm"
                       onClick={() => handleSendEmail(student)}
-                      className="w-full flex items-center gap-1.5 text-xs h-8 border-border/60"
+                      className="w-full flex items-center gap-1.5 text-xs h-9 border-border/60 rounded-xl"
                     >
                       <Mail className="w-3.5 h-3.5" />
                       Send Email
@@ -413,27 +413,27 @@ export default function EmailPage() {
               </div>
 
               {/* Results count & Pagination */}
-              <div className="flex flex-col sm:flex-row items-center justify-between mt-4 pt-4 border-t border-border gap-3">
-                <p className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
+              <div className="flex flex-col sm:flex-row items-center justify-between mt-5 pt-4 border-t border-border gap-3">
+                <p className="text-xs text-muted-foreground text-center sm:text-left">
                   Showing {startIndex + 1}-{endIndex} of {filteredStudents.length} student{filteredStudents.length !== 1 ? "s" : ""}
                 </p>
                 {totalPages > 1 && (
-                  <div className="flex items-center gap-1.5 sm:gap-2">
-                    <Button variant="outline" size="sm" className="h-8 w-8 p-0" disabled={currentPage === 1} onClick={() => goToPage(currentPage - 1)}>
+                  <div className="flex items-center gap-1">
+                    <Button variant="outline" size="sm" className="h-9 w-9 p-0 rounded-xl" disabled={currentPage === 1} onClick={() => goToPage(currentPage - 1)}>
                       <ChevronLeft className="w-4 h-4" />
                     </Button>
                     {getPageNumbers().map((page, idx) =>
                       page === "..." ? (
-                        <span key={`ellipsis-${idx}`} className="text-xs sm:text-sm text-muted-foreground px-1">...</span>
+                        <span key={`ellipsis-${idx}`} className="text-xs text-muted-foreground px-1">...</span>
                       ) : (
                         <Button key={page} variant="outline" size="sm"
-                          className={`h-8 w-8 p-0 text-xs sm:text-sm ${currentPage === page ? "bg-muted font-medium" : ""}`}
+                          className={`h-9 w-9 p-0 text-xs rounded-xl ${currentPage === page ? "bg-amber-500/10 text-amber-600 font-medium border-amber-500/20" : ""}`}
                           onClick={() => goToPage(page)}>
                           {page}
                         </Button>
                       )
                     )}
-                    <Button variant="outline" size="sm" className="h-8 w-8 p-0" disabled={currentPage === totalPages} onClick={() => goToPage(currentPage + 1)}>
+                    <Button variant="outline" size="sm" className="h-9 w-9 p-0 rounded-xl" disabled={currentPage === totalPages} onClick={() => goToPage(currentPage + 1)}>
                       <ChevronRight className="w-4 h-4" />
                     </Button>
                   </div>
@@ -446,15 +446,15 @@ export default function EmailPage() {
 
       {/* View All Sent Emails Modal */}
       {viewAllModal && (
-        <div className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setViewAllModal(false)}>
+        <div className="fixed inset-0 z-[60] bg-black/40 modal-overlay flex items-center justify-center p-4" onClick={() => setViewAllModal(false)}>
           <div className="bg-background border border-border/60 shadow-2xl rounded-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-border/40">
+            <div className="flex items-center justify-between p-5 sm:p-6 border-b border-border/40">
               <h2 className="text-base sm:text-lg font-semibold">Sent Emails Overview</h2>
-              <button onClick={() => setViewAllModal(false)} className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-muted transition-colors">
+              <button onClick={() => setViewAllModal(false)} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-muted transition-colors">
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <div className="p-4 sm:p-6">
+            <div className="p-5 sm:p-6">
               {sentEmails.length === 0 ? (
                 <div className="py-12 text-center">
                   <Mail className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
@@ -462,28 +462,28 @@ export default function EmailPage() {
                   <p className="text-xs text-muted-foreground mt-1">Send an email to see it here.</p>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
+                <div className="table-container">
+                  <table className="w-full min-w-[500px]">
                     <thead>
                       <tr className="border-b border-border">
-                        <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">To</th>
-                        <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">Subject</th>
-                        <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">Status</th>
-                        <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">Date</th>
+                        <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground">To</th>
+                        <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground">Subject</th>
+                        <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground">Status</th>
+                        <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground">Date</th>
                       </tr>
                     </thead>
                     <tbody>
                       {sentEmails.map((email) => (
                         <tr key={email.id} className="border-b border-border last:border-0">
-                          <td className="py-3 px-2 text-sm font-medium">{email.to}</td>
-                          <td className="py-3 px-2 text-sm text-muted-foreground max-w-[300px] truncate">{email.subject}</td>
-                          <td className="py-3 px-2">
-                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-green-100 text-green-800 text-xs font-medium">
+                          <td className="py-3 px-3 text-sm font-medium">{email.to}</td>
+                          <td className="py-3 px-3 text-sm text-muted-foreground max-w-[300px] truncate">{email.subject}</td>
+                          <td className="py-3 px-3">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-green-50 dark:bg-green-500/10 text-green-600 text-xs font-medium">
                               <CheckCircle className="w-3 h-3" />
                               {email.status}
                             </span>
                           </td>
-                          <td className="py-3 px-2 text-xs text-muted-foreground whitespace-nowrap">{email.date}</td>
+                          <td className="py-3 px-3 text-xs text-muted-foreground whitespace-nowrap">{email.date}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -491,7 +491,7 @@ export default function EmailPage() {
                 </div>
               )}
             </div>
-            <div className="flex items-center justify-end p-4 sm:p-6 border-t border-border/40">
+            <div className="flex items-center justify-end p-5 sm:p-6 border-t border-border/40">
               <Button variant="outline" onClick={() => setViewAllModal(false)}>
                 Close
               </Button>
@@ -502,15 +502,15 @@ export default function EmailPage() {
 
       {/* View Email Modal */}
       {viewEmailModal && selectedEmail && (
-        <div className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setViewEmailModal(false)}>
+        <div className="fixed inset-0 z-[60] bg-black/40 modal-overlay flex items-center justify-center p-4" onClick={() => setViewEmailModal(false)}>
           <div className="bg-background border border-border/60 shadow-2xl rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-border/40">
+            <div className="flex items-center justify-between p-5 sm:p-6 border-b border-border/40">
               <h2 className="text-base sm:text-lg font-semibold">Email Details</h2>
-              <button onClick={() => setViewEmailModal(false)} className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-muted transition-colors">
+              <button onClick={() => setViewEmailModal(false)} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-muted transition-colors">
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <div className="p-4 sm:p-6 space-y-4">
+            <div className="p-5 sm:p-6 space-y-4">
               <div className="space-y-2">
                 <Label className="text-xs font-medium text-muted-foreground">To</Label>
                 <p className="text-sm font-medium">{selectedEmail.to}</p>
@@ -525,7 +525,7 @@ export default function EmailPage() {
               </div>
               <div className="space-y-2">
                 <Label className="text-xs font-medium text-muted-foreground">Status</Label>
-                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-green-100 text-green-800 text-xs font-medium">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-green-50 dark:bg-green-500/10 text-green-600 text-xs font-medium">
                   <CheckCircle className="w-3 h-3" />
                   {selectedEmail.status}
                 </span>
@@ -533,12 +533,12 @@ export default function EmailPage() {
               <Separator className="bg-border/40" />
               <div className="space-y-2">
                 <Label className="text-xs font-medium text-muted-foreground">Message</Label>
-                <div className="p-4 bg-muted/30 rounded-lg border border-border/60">
+                <div className="p-4 bg-muted/30 rounded-xl border border-border/60">
                   <p className="text-sm whitespace-pre-wrap">{selectedEmail.body}</p>
                 </div>
               </div>
             </div>
-            <div className="flex items-center justify-end p-4 sm:p-6 border-t border-border/40">
+            <div className="flex items-center justify-end p-5 sm:p-6 border-t border-border/40">
               <Button variant="outline" onClick={() => setViewEmailModal(false)}>
                 Close
               </Button>
@@ -549,22 +549,22 @@ export default function EmailPage() {
 
       {/* Email Modal */}
       {emailModal && (
-        <div className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setEmailModal(false)}>
+        <div className="fixed inset-0 z-[60] bg-black/40 modal-overlay flex items-center justify-center p-4" onClick={() => setEmailModal(false)}>
           <div className="bg-background border border-border/60 shadow-2xl rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-border/40">
+            <div className="flex items-center justify-between p-5 sm:p-6 border-b border-border/40">
               <h2 className="text-base sm:text-lg font-semibold">Send Email</h2>
-              <button onClick={() => setEmailModal(false)} className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-muted transition-colors">
+              <button onClick={() => setEmailModal(false)} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-muted transition-colors">
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <div className="p-4 sm:p-6 space-y-4">
+            <div className="p-5 sm:p-6 space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="to" className="text-xs font-medium">To</Label>
                 <Input
                   id="to"
                   value={emailContent.to}
                   onChange={(e) => setEmailContent({ ...emailContent, to: e.target.value })}
-                  className="h-10 bg-muted/30 border-border/60"
+                  className="h-10 bg-muted/30 border-border/60 rounded-xl"
                   disabled
                 />
               </div>
@@ -576,9 +576,9 @@ export default function EmailPage() {
                     <button
                       key={type}
                       onClick={() => handleSelectEmailType(type)}
-                      className="w-full text-left p-4 rounded-xl border border-border/60 hover:border-primary/50 hover:bg-primary/5 transition-all duration-200 group"
+                      className="w-full text-left p-4 rounded-xl border border-border/60 hover:border-amber-500/30 hover:bg-amber-500/5 transition-all duration-200 group"
                     >
-                      <p className="text-sm font-medium group-hover:text-primary transition-colors">{type}</p>
+                      <p className="text-sm font-medium group-hover:text-amber-600 transition-colors">{type}</p>
                       <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
                         {emailTemplates[type].subject}
                       </p>
@@ -592,12 +592,12 @@ export default function EmailPage() {
                       <Label className="text-xs font-medium">Email Type</Label>
                       <button
                         onClick={() => { setShowEmailForm(false); setEmailType("") }}
-                        className="text-xs text-primary hover:text-primary/80"
+                        className="text-xs text-amber-600 hover:text-amber-700"
                       >
                         Change
                       </button>
                     </div>
-                    <p className="text-sm font-medium text-primary">{emailType}</p>
+                    <p className="text-sm font-medium text-amber-600">{emailType}</p>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="subject" className="text-xs font-medium">Subject</Label>
@@ -605,7 +605,7 @@ export default function EmailPage() {
                       id="subject"
                       value={emailContent.subject}
                       onChange={(e) => setEmailContent({ ...emailContent, subject: e.target.value })}
-                      className="h-10 bg-muted/30 border-border/60"
+                      className="h-10 bg-muted/30 border-border/60 rounded-xl"
                     />
                   </div>
                   <div className="space-y-2">
@@ -615,18 +615,18 @@ export default function EmailPage() {
                       value={emailContent.body}
                       onChange={(e) => setEmailContent({ ...emailContent, body: e.target.value })}
                       rows={8}
-                      className="w-full px-3 py-2 text-sm bg-muted/30 border border-border/60 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 resize-none"
+                      className="w-full px-3 py-2 text-sm bg-muted/30 border border-border/60 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500/40 resize-none"
                     />
                   </div>
                   <div className="flex items-center gap-3 pt-2">
                     <Button
                       onClick={handleSend}
                       disabled={sending || !emailContent.subject || !emailContent.body}
-                      className="flex-1 bg-foreground text-background hover:bg-foreground/90"
+                      className="flex-1 bg-foreground text-background hover:bg-foreground/90 rounded-xl"
                     >
                       {sending ? "Sending..." : "Send Email"}
                     </Button>
-                    <Button variant="outline" onClick={() => setEmailModal(false)} className="flex-1">
+                    <Button variant="outline" onClick={() => setEmailModal(false)} className="flex-1 rounded-xl">
                       Cancel
                     </Button>
                   </div>

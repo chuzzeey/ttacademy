@@ -53,21 +53,21 @@ export default function ProfilePage() {
 
         {/* Profile Tab */}
         <TabsContent value="profile" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-6">
             {/* Profile Card */}
-            <Card className="dashboard-card hover:shadow-md transition-shadow duration-300 overflow-hidden">
-              <div className="h-24 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent" />
+            <Card className="dashboard-card overflow-hidden">
+              <div className="h-24 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent" />
               <CardContent className="p-6 -mt-12">
                 <div className="flex flex-col items-center text-center">
                   <div className="relative mb-4 group">
-                    <div className="absolute -inset-0.5 bg-gradient-to-r from-primary via-primary/50 to-primary/30 rounded-full blur opacity-30 group-hover:opacity-50 transition-opacity" />
+                    <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-500 via-amber-500/50 to-amber-500/30 rounded-full blur opacity-30 group-hover:opacity-50 transition-opacity" />
                     <Avatar className="h-24 w-24 ring-4 ring-background relative">
                       <AvatarImage
                         className="object-cover"
                         src="https://res.cloudinary.com/djdbcoyot/image/upload/v1783729773/gyit83lrhi65fpfrtsrg.jpg"
                         alt="Amah Precious"
                       />
-                      <AvatarFallback className="text-2xl bg-gradient-to-br from-primary/20 to-primary/10">
+                      <AvatarFallback className="text-2xl bg-gradient-to-br from-amber-500/20 to-amber-500/10">
                         AP
                       </AvatarFallback>
                     </Avatar>
@@ -77,8 +77,8 @@ export default function ProfilePage() {
                   </div>
                   <h2 className="text-xl font-semibold tracking-tight">Amah Precious</h2>
                   <p className="text-sm text-muted-foreground">amahchibu@gmail.com</p>
-                  <Badge className="mt-3 bg-primary/10 text-primary hover:bg-primary/15 border border-primary/20 px-3 py-0.5">
-                    <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-primary animate-pulse inline-block" />
+                  <Badge className="mt-3 bg-amber-500/10 text-amber-600 hover:bg-amber-500/15 border border-amber-500/20 px-3 py-0.5">
+                    <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse inline-block" />
                     Admin
                   </Badge>
 
@@ -86,8 +86,8 @@ export default function ProfilePage() {
 
                   <div className="w-full space-y-3.5 text-left">
                     <div className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/50 transition-colors group">
-                      <div className="p-2 rounded-md bg-primary/5 group-hover:bg-primary/10 transition-colors">
-                        <Mail className="w-4 h-4 text-primary" />
+                      <div className="p-2 rounded-md bg-amber-500/5 group-hover:bg-amber-500/10 transition-colors">
+                        <Mail className="w-4 h-4 text-amber-600" />
                       </div>
                       <span className="text-sm flex-1 truncate">amahchibu@gmail.com</span>
                       <button
@@ -108,8 +108,8 @@ export default function ProfilePage() {
                       </p>
                     )}
                     <div className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/50 transition-colors group">
-                      <div className="p-2 rounded-md bg-primary/5 group-hover:bg-primary/10 transition-colors">
-                        <Phone className="w-4 h-4 text-primary" />
+                      <div className="p-2 rounded-md bg-amber-500/5 group-hover:bg-amber-500/10 transition-colors">
+                        <Phone className="w-4 h-4 text-amber-600" />
                       </div>
                       <span className="text-sm flex-1">+2348034826276</span>
                       <button
@@ -130,20 +130,20 @@ export default function ProfilePage() {
                       </p>
                     )}
                     <div className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/50 transition-colors group">
-                      <div className="p-2 rounded-md bg-primary/5 group-hover:bg-primary/10 transition-colors">
-                        <MapPin className="w-4 h-4 text-primary" />
+                      <div className="p-2 rounded-md bg-amber-500/5 group-hover:bg-amber-500/10 transition-colors">
+                        <MapPin className="w-4 h-4 text-amber-600" />
                       </div>
                       <span className="text-sm">Ph, Nigeria</span>
                     </div>
                     <div className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/50 transition-colors group">
-                      <div className="p-2 rounded-md bg-primary/5 group-hover:bg-primary/10 transition-colors">
-                        <Building className="w-4 h-4 text-primary" />
+                      <div className="p-2 rounded-md bg-amber-500/5 group-hover:bg-amber-500/10 transition-colors">
+                        <Building className="w-4 h-4 text-amber-600" />
                       </div>
-                      <span className="text-sm">Founder | Tech trailblazer Academy</span>
+                      <span className="text-sm">Founder | Tech Trailblazer Academy</span>
                     </div>
                     <div className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/50 transition-colors group">
-                      <div className="p-2 rounded-md bg-primary/5 group-hover:bg-primary/10 transition-colors">
-                        <Calendar className="w-4 h-4 text-primary" />
+                      <div className="p-2 rounded-md bg-amber-500/5 group-hover:bg-amber-500/10 transition-colors">
+                        <Calendar className="w-4 h-4 text-amber-600" />
                       </div>
                       <span className="text-sm">Admin since July, 2026</span>
                     </div>
@@ -176,8 +176,8 @@ export default function ProfilePage() {
             </Card>
 
             {/* Personal Information */}
-            <div className="lg:col-span-2 space-y-6">
-              <Card className="dashboard-card hover:shadow-md transition-shadow duration-300">
+            <div className="lg:col-span-2 space-y-5">
+              <Card className="dashboard-card">
                 <CardHeader className="pb-4 border-b border-border/40">
                   <div className="flex items-center justify-between">
                     <div>
@@ -186,7 +186,7 @@ export default function ProfilePage() {
                         Manage your personal details and contact information
                       </CardDescription>
                     </div>
-                    <Badge variant="secondary" className="bg-primary/5 text-primary border-primary/10 text-xs">
+                    <Badge variant="secondary" className="bg-amber-500/5 text-amber-600 border-amber-500/10 text-xs">
                       Verified
                     </Badge>
                   </div>
@@ -244,7 +244,7 @@ export default function ProfilePage() {
 
         {/* Notifications Tab */}
         <TabsContent value="notifications" className="space-y-6">
-          <Card className="dashboard-card hover:shadow-md transition-shadow duration-300">
+          <Card className="dashboard-card">
             <CardHeader className="pb-4 border-b border-border/40">
               <div>
                 <CardTitle className="text-base font-semibold">Notification Preferences</CardTitle>
@@ -293,7 +293,7 @@ export default function ProfilePage() {
                       <p className="text-xs text-muted-foreground">{item.description}</p>
                     </div>
                   </div>
-                  <Switch defaultChecked={item.defaultChecked} className="data-[state=checked]:bg-primary" />
+                  <Switch defaultChecked={item.defaultChecked} className="data-[state=checked]:bg-amber-500" />
                 </div>
               ))}
             </CardContent>

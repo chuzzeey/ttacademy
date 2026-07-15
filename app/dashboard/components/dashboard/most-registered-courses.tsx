@@ -90,13 +90,13 @@ export function MostRegisteredCourses() {
             <span className="text-xs text-muted-foreground">{isPositive ? "+" : ""}{change}</span>
           </div>
         </div>
-        <div className="h-[120px]">
+        <div className="h-[140px] sm:h-[160px]">
           {chartData.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={chartData}>
                 <defs>
                   <linearGradient id="orderGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3} />
+                    <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.25} />
                     <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
                   </linearGradient>
                 </defs>

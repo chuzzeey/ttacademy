@@ -9,7 +9,6 @@ import { Input } from "../components/ui/input"
 import { Label } from "../components/ui/label"
 import { Switch } from "../components/ui/switch"
 import { Separator } from "../components/ui/separator"
-import { Badge } from "../components/ui/badge"
 import {
   Settings as SettingsIcon,
   User,
@@ -74,7 +73,7 @@ export default function SettingsPage() {
           description="Manage your application settings and preferences."
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-5 lg:gap-6">
           {/* Settings Navigation - Sidebar */}
           <Card className="lg:col-span-1 dashboard-card h-fit">
             <CardContent className="p-3">
@@ -85,14 +84,14 @@ export default function SettingsPage() {
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
                         activeTab === tab.id
-                          ? "bg-primary/10 text-primary shadow-sm"
+                          ? "bg-amber-500/10 text-amber-600 shadow-sm"
                           : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                       }`}
                     >
-                      <div className={`p-1.5 rounded-md ${
-                        activeTab === tab.id ? "bg-primary/10" : "bg-muted/50"
+                      <div className={`p-1.5 rounded-lg ${
+                        activeTab === tab.id ? "bg-amber-500/10" : "bg-muted/50"
                       }`}>
                         <Icon className="w-3.5 h-3.5" />
                       </div>
@@ -108,14 +107,14 @@ export default function SettingsPage() {
           </Card>
 
           {/* Settings Content */}
-          <div className="lg:col-span-4 space-y-6">
+          <div className="lg:col-span-4 space-y-5">
             {activeTab === "general" && (
               <>
                 <Card className="dashboard-card">
                   <CardHeader className="pb-4 border-b border-border/40">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-primary/5">
-                        <Globe className="w-4 h-4 text-primary" />
+                      <div className="p-2 rounded-lg bg-amber-500/10">
+                        <Globe className="w-4 h-4 text-amber-600" />
                       </div>
                       <div>
                         <CardTitle className="text-base font-semibold">General Settings</CardTitle>
@@ -132,7 +131,7 @@ export default function SettingsPage() {
                         id="siteName"
                         value={settings.siteName}
                         onChange={(e) => setSettings({ ...settings, siteName: e.target.value })}
-                        className="h-10 bg-muted/30 border-border/60 focus:bg-background transition-colors"
+                        className="h-10 bg-muted/30 border-border/60 focus:bg-background transition-colors rounded-xl"
                       />
                     </div>
                     <div className="space-y-2">
@@ -141,19 +140,18 @@ export default function SettingsPage() {
                         id="siteDescription"
                         value={settings.siteDescription}
                         onChange={(e) => setSettings({ ...settings, siteDescription: e.target.value })}
-                        className="h-10 bg-muted/30 border-border/60 focus:bg-background transition-colors"
+                        className="h-10 bg-muted/30 border-border/60 focus:bg-background transition-colors rounded-xl"
                       />
                     </div>
                     <Separator className="bg-border/40" />
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                 
                       <div className="space-y-2">
                         <Label htmlFor="timezone" className="text-xs font-medium">Timezone</Label>
                         <Input
                           id="timezone"
                           value={settings.timezone}
                           onChange={(e) => setSettings({ ...settings, timezone: e.target.value })}
-                          className="h-10 bg-muted/30 border-border/60 focus:bg-background transition-colors"
+                          className="h-10 bg-muted/30 border-border/60 focus:bg-background transition-colors rounded-xl"
                         />
                       </div>
                       <div className="space-y-2">
@@ -162,14 +160,12 @@ export default function SettingsPage() {
                           id="language"
                           value={settings.language}
                           onChange={(e) => setSettings({ ...settings, language: e.target.value })}
-                          className="h-10 bg-muted/30 border-border/60 focus:bg-background transition-colors"
+                          className="h-10 bg-muted/30 border-border/60 focus:bg-background transition-colors rounded-xl"
                         />
                       </div>
                     </div>
                   </CardContent>
                 </Card>
-
-             
               </>
             )}
 
@@ -177,8 +173,8 @@ export default function SettingsPage() {
               <Card className="dashboard-card">
                 <CardHeader className="pb-4 border-b border-border/40">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-primary/5">
-                      <Bell className="w-4 h-4 text-primary" />
+                    <div className="p-2 rounded-lg bg-amber-500/10">
+                      <Bell className="w-4 h-4 text-amber-600" />
                     </div>
                     <div>
                       <CardTitle className="text-base font-semibold">Notification Settings</CardTitle>
@@ -213,7 +209,7 @@ export default function SettingsPage() {
                           id={item.id}
                           checked={item.enabled}
                           onCheckedChange={() => toggleNotification(item.id)}
-                          className="data-[state=checked]:bg-primary"
+                          className="data-[state=checked]:bg-amber-500"
                         />
                       </div>
                     )
@@ -222,13 +218,12 @@ export default function SettingsPage() {
               </Card>
             )}
 
-
             {activeTab === "appearance" && (
               <Card className="dashboard-card">
                 <CardHeader className="pb-4 border-b border-border/40">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-primary/5">
-                      <PaletteIcon className="w-4 h-4 text-primary" />
+                    <div className="p-2 rounded-lg bg-amber-500/10">
+                      <PaletteIcon className="w-4 h-4 text-amber-600" />
                     </div>
                     <div>
                       <CardTitle className="text-base font-semibold">Appearance Settings</CardTitle>
@@ -254,15 +249,15 @@ export default function SettingsPage() {
                             onClick={() => setTheme(themeOption.id)}
                             className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all duration-200 ${
                               isSelected
-                                ? "border-primary/30 bg-primary/5 shadow-sm"
+                                ? "border-amber-500/30 bg-amber-500/5 shadow-sm"
                                 : "border-border/60 hover:border-border hover:bg-muted/30"
                             }`}
                           >
                             <Icon className={`w-5 h-5 ${
-                              isSelected ? "text-primary" : "text-muted-foreground"
+                              isSelected ? "text-amber-600" : "text-muted-foreground"
                             }`} />
                             <span className={`text-xs font-medium ${
-                              isSelected ? "text-primary" : "text-muted-foreground"
+                              isSelected ? "text-amber-600" : "text-muted-foreground"
                             }`}>
                               {themeOption.label}
                             </span>
@@ -280,7 +275,7 @@ export default function SettingsPage() {
                         <Label className="text-sm font-medium cursor-pointer">Animations</Label>
                         <p className="text-xs text-muted-foreground">Enable smooth transitions and micro-interactions</p>
                       </div>
-                      <Switch defaultChecked className="data-[state=checked]:bg-primary" />
+                      <Switch defaultChecked className="data-[state=checked]:bg-amber-500" />
                     </div>
                   </div>
                 </CardContent>

@@ -24,18 +24,18 @@ export function RecentlyJoined() {
 
   return (
     <Card className="dashboard-card h-full">
-      <CardHeader className="flex flex-row items-center justify-between border-b pb-2">
-        <CardTitle className="text-base font-medium">Recently Joined Students</CardTitle>
-        <span className="text-sm font-medium ml-2">Joined</span>
+      <CardHeader className="flex flex-row items-center justify-between border-b border-border/40 pb-3">
+        <CardTitle className="text-sm font-medium">Recently Joined</CardTitle>
+        <span className="text-xs text-muted-foreground">Joined</span>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-3 pt-3">
         {recentStudents.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-4">No students yet</p>
         ) : (
           recentStudents.map((student, index) => (
-            <div key={index} className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-lg bg-muted overflow-hidden">
+            <div key={index} className="flex items-center justify-between py-1.5">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div className="w-9 h-9 rounded-lg bg-muted overflow-hidden shrink-0">
                   <img
                     src={student.image || "/placeholder.svg"}
                     alt={student.name}
@@ -50,7 +50,7 @@ export function RecentlyJoined() {
                   <p className="text-xs text-muted-foreground truncate">{student.course}</p>
                 </div>
               </div>
-              <span className="text-xs text-muted-foreground text-right">{student.joined}</span>
+              <span className="text-[11px] text-muted-foreground text-right shrink-0 ml-2">{student.joined}</span>
             </div>
           ))
         )}

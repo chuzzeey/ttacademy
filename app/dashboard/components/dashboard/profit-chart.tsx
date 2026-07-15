@@ -78,8 +78,8 @@ export function ProfitChart() {
         <div>
           <CardTitle className="text-base font-medium">Revenue Overview</CardTitle>
           <div className="flex items-center gap-2 mt-1">
-            <span className="text-3xl font-semibold">{totalRevenue}</span>
-            <span className={`text-xs px-2 py-0.5 rounded-full flex items-center gap-1 ${isPositive ? "bg-amber-500/30 text-foreground" : "bg-red-500/30 text-foreground"}`}>
+            <span className="text-2xl sm:text-3xl font-semibold">{totalRevenue}</span>
+            <span className={`text-xs px-2 py-0.5 rounded-full flex items-center gap-1 ${isPositive ? "bg-amber-500/10 text-amber-600" : "bg-red-500/10 text-red-600"}`}>
               {isPositive ? "+" : ""}{percentageChange}%
               <span className="text-[10px]">{isPositive ? "↗" : "↘"}</span>
             </span>
@@ -87,17 +87,17 @@ export function ProfitChart() {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="flex items-center gap-6 mb-4">
+        <div className="flex items-center gap-4 mb-4">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-muted-foreground/30" />
+            <div className="w-2.5 h-2.5 rounded-full bg-muted-foreground/30" />
             <span className="text-xs text-muted-foreground">Total Students</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-amber-500" />
+            <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
             <span className="text-xs text-muted-foreground">Total Revenue</span>
           </div>
         </div>
-        <div className="h-[200px]">
+        <div className="h-[220px] sm:h-[250px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} barGap={-1}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" />
@@ -124,7 +124,7 @@ export function ProfitChart() {
               />
               <Bar dataKey="joined" radius={[4, 4, 0, 0]} maxBarSize={40}>
                 {chartData.map((entry, index) => (
-                  <Cell key={`joined-${index}`} fill="var(--color-muted-foreground)" fillOpacity={0.2} />
+                  <Cell key={`joined-${index}`} fill="var(--color-muted-foreground)" fillOpacity={0.15} />
                 ))}
               </Bar>
               <Bar dataKey="enrolled" radius={[4, 4, 0, 0]} maxBarSize={40}>

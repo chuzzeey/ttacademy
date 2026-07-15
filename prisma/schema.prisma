@@ -24,6 +24,7 @@ model Student {
   password                  String   @default("123456")
   reg_date                  String
   reg_time                  String
+  restricted                Boolean  @default(false)
   createdAt                 DateTime @default(now()) @map("created_at")
   updatedAt                 DateTime @updatedAt @map("updated_at")
 

@@ -97,15 +97,15 @@ export default function AnalyticsPage() {
       </PageHeader>
 
       {/* Performance Metrics */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-5 sm:mb-7">
         {performanceMetrics.map((metric) => (
-          <Card key={metric.label} className="dashboard-card">
-            <CardContent className="p-4">
-              <p className="text-sm text-muted-foreground mb-1">{metric.label}</p>
+          <Card key={metric.label} className="dashboard-card stat-card">
+            <CardContent className="p-4 sm:p-5">
+              <p className="text-xs text-muted-foreground mb-1.5">{metric.label}</p>
               <div className="flex items-end justify-between">
-                <p className="text-2xl font-semibold">{metric.value}</p>
+                <p className="text-xl sm:text-2xl font-semibold">{metric.value}</p>
                 <span className={`text-xs font-medium flex items-center gap-0.5 ${
-                  metric.isPositive ? "text-[var(--color-positive)]" : "text-[var(--color-negative)]"
+                  metric.isPositive ? "text-green-500" : "text-red-500"
                 }`}>
                   {metric.isPositive ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
                   {metric.change}
@@ -117,7 +117,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6 mb-5 sm:mb-7">
         {/* Revenue Comparison Chart */}
         <Card className="lg:col-span-2 dashboard-card">
           <CardHeader className="pb-2">
@@ -131,46 +131,47 @@ export default function AnalyticsPage() {
               </div>
               <div className="flex items-center gap-4 text-sm">
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-[var(--color-accent)]" />
+                  <div className="w-3 h-3 rounded-full bg-amber-500" />
                   <span className="text-muted-foreground">2026</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-muted" />
+                  <div className="w-3 h-3 rounded-full bg-muted-foreground/30" />
                   <span className="text-muted-foreground">2025</span>
                 </div>
               </div>
             </div>
           </CardHeader>
           <CardContent>
-            <div className="h-[250px]">
+            <div className="h-[250px] sm:h-[280px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={revenueComparisonData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E5E5" />
-                  <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#9CA3AF" />
-                  <YAxis tick={{ fontSize: 12 }} stroke="#9CA3AF" tickFormatter={(v) => `$${v/1000}k`} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+                  <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="var(--color-muted-foreground)" />
+                  <YAxis tick={{ fontSize: 12 }} stroke="var(--color-muted-foreground)" tickFormatter={(v) => `$${v/1000}k`} />
                   <Tooltip 
                     formatter={(value: number) => [`$${value.toLocaleString()}`, ""]}
                     contentStyle={{ 
-                      backgroundColor: "white", 
-                      border: "1px solid #E5E5E5",
+                      backgroundColor: "var(--color-card)", 
+                      border: "1px solid var(--color-border)",
                       borderRadius: "8px",
-                      fontSize: "12px"
+                      fontSize: "12px",
+                      color: "var(--color-foreground)"
                     }}
                   />
                   <Area 
                     type="monotone" 
                     dataKey="lastYear" 
-                    stroke="#D1D5DB" 
-                    fill="#F3F4F6" 
+                    stroke="var(--color-muted-foreground)" 
+                    fill="var(--color-muted)" 
                     strokeWidth={2}
                     name="2025"
                   />
                   <Area 
                     type="monotone" 
                     dataKey="thisYear" 
-                    stroke="#B4D4A5" 
-                    fill="#B4D4A5" 
-                    fillOpacity={0.3}
+                    stroke="#f59e0b" 
+                    fill="#f59e0b" 
+                    fillOpacity={0.15}
                     strokeWidth={2}
                     name="2026"
                   />
@@ -190,7 +191,7 @@ export default function AnalyticsPage() {
             <CardDescription>Distribution of revenue</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-[200px]">
+            <div className="h-[200px] sm:h-[220px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <RechartsPieChart>
                   <Pie
@@ -209,20 +210,21 @@ export default function AnalyticsPage() {
                   <Tooltip 
                     formatter={(value: number) => [`${value}%`, ""]}
                     contentStyle={{ 
-                      backgroundColor: "white", 
-                      border: "1px solid #E5E5E5",
+                      backgroundColor: "var(--color-card)", 
+                      border: "1px solid var(--color-border)",
                       borderRadius: "8px",
-                      fontSize: "12px"
+                      fontSize: "12px",
+                      color: "var(--color-foreground)"
                     }}
                   />
                 </RechartsPieChart>
               </ResponsiveContainer>
             </div>
-            <div className="grid grid-cols-2 gap-2 mt-2">
+            <div className="grid grid-cols-2 gap-2 mt-3">
               {salesByCategory.map((cat) => (
                 <div key={cat.name} className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: cat.color }} />
-                  <span className="text-xs text-muted-foreground">{cat.name}</span>
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: cat.color }} />
+                  <span className="text-xs text-muted-foreground truncate">{cat.name}</span>
                   <span className="text-xs font-medium ml-auto">{cat.value}%</span>
                 </div>
               ))}
@@ -233,7 +235,7 @@ export default function AnalyticsPage() {
 
       {/* Available Reports */}
       <Card className="dashboard-card">
-        <CardHeader className="pb-2">
+        <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-base font-medium">Available Reports</CardTitle>
@@ -249,13 +251,13 @@ export default function AnalyticsPage() {
             {availableReports.map((report) => (
               <div 
                 key={report.name} 
-                className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors"
+                className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-border/60 hover:bg-muted/30 transition-colors gap-3"
               >
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-muted rounded-lg">
+                <div className="flex items-start gap-3 min-w-0">
+                  <div className="p-2 bg-muted rounded-lg shrink-0">
                     <FileText className="w-5 h-5 text-muted-foreground" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-sm font-medium">{report.name}</p>
                     <p className="text-xs text-muted-foreground mt-0.5">{report.description}</p>
                     <div className="flex items-center gap-3 mt-1.5">
@@ -267,7 +269,7 @@ export default function AnalyticsPage() {
                     </div>
                   </div>
                 </div>
-                <Button variant="outline" size="sm" className="bg-transparent flex items-center gap-2">
+                <Button variant="outline" size="sm" className="bg-transparent flex items-center gap-2 shrink-0">
                   <Download className="w-4 h-4" />
                   Download
                 </Button>

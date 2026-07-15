@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { BookOpen, Lock, Mail, ArrowRight, Eye, EyeOff, AlertCircle, CheckCircle, GraduationCap, Shield, Star } from 'lucide-react'
+import { BookOpen, Lock, Mail, ArrowRight, Eye, EyeOff, AlertCircle, CheckCircle, GraduationCap, Shield, ShieldOff, Star, MessageCircle } from 'lucide-react'
 import { getCourseData } from '@/lib/mock-data'
 import { createClient } from '@/lib/supabase/client'
 
@@ -69,6 +69,7 @@ export default function CourseLoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+  const [restrictedStudentInfo, setRestrictedStudentInfo] = useState<{name: string, email: string} | null>(null)
   const supabase = createClient()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -77,13 +78,43 @@ export default function CourseLoginPage() {
     setIsLoading(true)
 
     try {
-      // Sign in with Supabase
+      // Use custom login API to check enrollment status
+      const response = await fetch('/api/student-login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          password: password,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        // Handle specific error codes
+        if (result.code === 'NOT_ENROLLED') {
+          setError('You cannot log in because you have not paid yet. Please contact admin to complete your payment.')
+        } else if (result.code === 'NO_STUDENT_RECORD') {
+          setError('Student record not found. Please contact admin.')
+        } else if (result.code === 'ACCOUNT_RESTRICTED') {
+          setError('ACCOUNT_RESTRICTED')
+          setRestrictedStudentInfo({ name: result.studentName || email, email: result.studentEmail || email })
+        } else {
+          setError(result.error || 'Invalid email or password')
+        }
+        setIsLoading(false)
+        return
+      }
+
+      // Login successful - sign in with Supabase to get session
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim().toLowerCase(),
         password: password,
       })
 
-      if (error) {
+      if (error || !data.user) {
         setError('Invalid email or password')
         setIsLoading(false)
         return
@@ -293,10 +324,34 @@ export default function CourseLoginPage() {
                 </div>
 
                 {/* Error Message */}
-                {error && (
+                {error && error !== 'ACCOUNT_RESTRICTED' && (
                   <div className="flex items-start gap-2.5 p-3.5 bg-red-500/10 border border-red-500/20 rounded-xl">
                     <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
                     <p className="text-sm text-red-400">{error}</p>
+                  </div>
+                )}
+
+                {/* Account Restricted Message with Contact Support */}
+                {error === 'ACCOUNT_RESTRICTED' && (
+                  <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl space-y-3">
+                    <div className="flex items-start gap-2.5">
+                      <ShieldOff className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold text-red-400 mb-1">Account Restricted</p>
+                        <p className="text-xs text-red-400/80 leading-relaxed">
+                          Your account has been restricted by the admin. You are currently banned from accessing the classroom.
+                        </p>
+                      </div>
+                    </div>
+                    <a
+                      href={`https://wa.me/2349012345678?text=${encodeURIComponent(`Hello Support, I need assistance. My account has been restricted. Name: ${restrictedStudentInfo?.name || email} Email: ${restrictedStudentInfo?.email || email}`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 w-full py-2.5 px-4 bg-[#25d366] hover:bg-[#20bd5a] text-white text-sm font-semibold rounded-xl transition-all shadow-lg"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      Contact Support
+                    </a>
                   </div>
                 )}
 

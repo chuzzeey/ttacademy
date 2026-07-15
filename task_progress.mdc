@@ -1,0 +1,10 @@
+- [x] Analyze all dashboard files (page.tsx, layout, metric-card, charts, students page)
+- [ ] Update layout.tsx - increase overall page padding on mobile
+- [ ] Update metric-card.tsx - more compact on mobile, smaller text/icons
+- [ ] Update dashboard page.tsx - tighter spacing, more compact grid gaps
+- [ ] Update profit-chart.tsx - add more inner padding
+- [ ] Update most-registered-courses.tsx - add more inner padding
+- [ ] Update recently-joined.tsx - add more inner padding
+- [ ] Update regional-info.tsx - add more inner padding
+- [ ] Update students page.tsx - improve search area, compact cards, better mobile layout
+</write_to_file>

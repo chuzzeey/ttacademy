@@ -55,6 +55,24 @@ export async function POST(request: NextRequest) {
     ).padStart(2, "0")}`;
 
     const supabase = await createAdminClient()
+    
+    // Check if email already exists
+    const { data: existingStudent, error: checkError } = await supabase
+      .from('students')
+      .select('email')
+      .eq('email', email.trim().toLowerCase())
+      .single()
+
+    if (existingStudent) {
+      return NextResponse.json(
+        { 
+          error: "This email is already registered. Please use a different email or contact support if you need to access your existing account.",
+          code: "EMAIL_EXISTS"
+        },
+        { status: 409 }
+      )
+    }
+
     const { data: student, error: insertError } = await supabase
       .from('students')
       .insert({
@@ -155,30 +173,13 @@ export async function PATCH(request: NextRequest) {
     const {
       studentId,
       payment_status,
+      restricted,
     } = body;
 
-    if (!studentId || !payment_status) {
+    if (!studentId) {
       return NextResponse.json(
         {
-          error: "Missing studentId or payment_status",
-        },
-        {
-          status: 400,
-        }
-      );
-    }
-
-    const validStatuses = [
-      "Not Paid",
-      "Fully Paid",
-      "1st Installment",
-      "2nd Installment",
-    ];
-
-    if (!validStatuses.includes(payment_status)) {
-      return NextResponse.json(
-        {
-          error: "Invalid payment status",
+          error: "Missing studentId",
         },
         {
           status: 400,
@@ -187,9 +188,38 @@ export async function PATCH(request: NextRequest) {
     }
 
     const supabase = await createAdminClient()
+    
+    // Build update object
+    const updateData: any = {}
+    
+    if (payment_status) {
+      const validStatuses = [
+        "Not Paid",
+        "Fully Paid",
+        "1st Installment",
+        "2nd Installment",
+      ];
+
+      if (!validStatuses.includes(payment_status)) {
+        return NextResponse.json(
+          {
+            error: "Invalid payment status",
+          },
+          {
+            status: 400,
+          }
+        );
+      }
+      updateData.payment_status = payment_status
+    }
+
+    if (restricted !== undefined) {
+      updateData.restricted = restricted
+    }
+
     const { data: updatedStudent, error: updateError } = await supabase
       .from('students')
-      .update({ payment_status })
+      .update(updateData)
       .eq('id', studentId)
       .select()
       .single()
@@ -198,7 +228,7 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json(
       {
-        message: "Payment status updated successfully",
+        message: "Student updated successfully",
         data: updatedStudent,
       },
       {
@@ -209,7 +239,7 @@ export async function PATCH(request: NextRequest) {
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
 
-    console.error("Payment status update error:", message);
+    console.error("Student update error:", message);
 
     return NextResponse.json(
       {
