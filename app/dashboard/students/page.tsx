@@ -5,9 +5,15 @@ import { PageHeader } from "../components/dashboard/page-header"
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Button } from "../components/ui/button"
 import { Input } from "../components/ui/input"
-import { Search, Eye, ChevronLeft, ChevronRight, User, X, Mail, BookOpen, Clock, Phone, MapPin, Copy, Check, Shield, ShieldOff, SlidersHorizontal } from "lucide-react"
+import { Search, Eye, ChevronLeft, ChevronRight, User, X, Mail, BookOpen, Clock, Phone, MapPin, Copy, Check, Shield, ShieldOff, SlidersHorizontal, ChevronDown } from "lucide-react"
 import { formatLocation } from "@/lib/state-utils"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../components/ui/dropdown-menu"
 
 const COURSES = [
   "Cybersecurity", "Data Science", "AI Automation", "Computer Networking",
@@ -56,6 +62,7 @@ export default function StudentsPage() {
   const [restrictConfirmStudent, setRestrictConfirmStudent] = useState<Student | null>(null)
   const [restrictingId, setRestrictingId] = useState<string | null>(null)
   const [showFilters, setShowFilters] = useState(false)
+  const [updatingPaymentMap, setUpdatingPaymentMap] = useState<Record<string, boolean>>({})
   const itemsPerPage = 10
 
   const copyToClipboard = (text: string, id: string) => {
@@ -148,17 +155,20 @@ export default function StudentsPage() {
     if (payment === "Not Paid") return "text-red-500"
     if (payment === "Fully Paid") return "text-green-500"
     if (payment === "1st Installment") return "text-amber-500"
-    return "text-blue-500"
+    if (payment === "2nd Installment") return "text-blue-500"
+    return "text-muted-foreground"
   }
 
   const getPaymentBg = (payment: string) => {
-    if (payment === "Not Paid") return "bg-red-50 dark:bg-red-500/10"
-    if (payment === "Fully Paid") return "bg-green-50 dark:bg-green-500/10"
-    if (payment === "1st Installment") return "bg-amber-50 dark:bg-amber-500/10"
-    return "bg-blue-50 dark:bg-blue-500/10"
+    if (payment === "Not Paid") return "bg-red-50"
+    if (payment === "Fully Paid") return "bg-green-50"
+    if (payment === "1st Installment") return "bg-amber-50"
+    if (payment === "2nd Installment") return "bg-blue-50"
+    return "bg-muted"
   }
 
   const updatePaymentStatus = async (studentId: string, payment_status: string) => {
+    setUpdatingPaymentMap(prev => ({ ...prev, [studentId]: true }))
     try {
       const res = await fetch("/api/registrations", {
         method: "PATCH",
@@ -167,9 +177,14 @@ export default function StudentsPage() {
       })
       if (!res.ok) throw new Error("Failed to update")
       setStudents(prev => prev.map(s => s.id === studentId ? { ...s, payment_status } : s))
+      if (selectedStudent?.id === studentId) {
+        setSelectedStudent({ ...selectedStudent, payment_status })
+      }
     } catch (err) {
       console.error("Failed to update payment status:", err)
       alert("Failed to update payment status. Please try again.")
+    } finally {
+      setUpdatingPaymentMap(prev => ({ ...prev, [studentId]: false }))
     }
   }
 
@@ -210,6 +225,8 @@ export default function StudentsPage() {
       .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
       .join(" ")
   }
+
+  const paymentOptions = ["Not Paid", "Fully Paid", "1st Installment", "2nd Installment"]
 
   return (
     <>
@@ -376,9 +393,55 @@ export default function StudentsPage() {
                             <p className="text-sm font-medium truncate">{student.name}</p>
                             <p className="text-[11px] text-muted-foreground truncate">{student.email}</p>
                             <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
-                              <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${getPaymentBg(student.payment_status)} ${getPaymentColor(student.payment_status)}`}>
-                                {student.payment_status}
-                              </span>
+                              {/* Payment Dropdown */}
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <button
+                                    onClick={(e) => e.stopPropagation()}
+                                    className={`inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full ${getPaymentBg(student.payment_status)} ${getPaymentColor(student.payment_status)} hover:opacity-80 transition-opacity`}
+                                    disabled={updatingPaymentMap[student.id]}
+                                  >
+                                    {updatingPaymentMap[student.id] ? (
+                                      <span className="flex items-center gap-1">
+                                        <span className="w-2.5 h-2.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                        Updating...
+                                      </span>
+                                    ) : (
+                                      <>
+                                        {student.payment_status}
+                                        <ChevronDown className="w-2.5 h-2.5" />
+                                      </>
+                                    )}
+                                  </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                  align="start"
+                                  className="min-w-[140px] p-1 rounded-xl border-border/60"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  {paymentOptions.map((option) => (
+                                    <DropdownMenuItem
+                                      key={option}
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        updatePaymentStatus(student.id, option)
+                                      }}
+                                      className={`rounded-lg text-xs py-2 cursor-pointer ${
+                                        student.payment_status === option
+                                          ? "bg-amber-500/10 text-amber-600 font-medium"
+                                          : ""
+                                      }`}
+                                    >
+                                      {option === "Not Paid" && <span className="text-red-500 mr-2">●</span>}
+                                      {option === "Fully Paid" && <span className="text-green-500 mr-2">●</span>}
+                                      {option === "1st Installment" && <span className="text-amber-500 mr-2">●</span>}
+                                      {option === "2nd Installment" && <span className="text-blue-500 mr-2">●</span>}
+                                      {option}
+                                    </DropdownMenuItem>
+                                  ))}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+
                               {student.restricted && (
                                 <span className="px-2 py-0.5 bg-red-500/10 text-red-600 text-[9px] font-semibold rounded-full">
                                   RESTRICTED
@@ -534,15 +597,41 @@ export default function StudentsPage() {
                 <h3 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Status</h3>
                 <div className="space-y-2">
                   <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/30">
-                    <div>
+                    <div className="flex-1">
                       <p className="text-[10px] text-muted-foreground">Payment</p>
-                      <p className={`text-xs font-medium ${getPaymentColor(selectedStudent.payment_status)}`}>{selectedStudent.payment_status}</p>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className={`inline-flex items-center gap-1 text-xs font-medium mt-0.5 ${getPaymentColor(selectedStudent.payment_status)} hover:opacity-80 transition-opacity`}>
+                            {selectedStudent.payment_status}
+                            <ChevronDown className="w-3 h-3" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" className="min-w-[140px] p-1 rounded-xl border-border/60">
+                          {paymentOptions.map((option) => (
+                            <DropdownMenuItem
+                              key={option}
+                              onClick={() => updatePaymentStatus(selectedStudent.id, option)}
+                              className={`rounded-lg text-xs py-2 cursor-pointer ${
+                                selectedStudent.payment_status === option
+                                  ? "bg-amber-500/10 text-amber-600 font-medium"
+                                  : ""
+                              }`}
+                            >
+                              {option === "Not Paid" && <span className="text-red-500 mr-2">●</span>}
+                              {option === "Fully Paid" && <span className="text-green-500 mr-2">●</span>}
+                              {option === "1st Installment" && <span className="text-amber-500 mr-2">●</span>}
+                              {option === "2nd Installment" && <span className="text-blue-500 mr-2">●</span>}
+                              {option}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/30">
                     <div className="flex-1">
                       <p className="text-[10px] text-muted-foreground">Account</p>
-                      <p className="text-xs font-medium">{selectedStudent.restricted ? "Restricted" : "Active"}</p>
+                      <p className="text-xs font-medium mt-0.5">{selectedStudent.restricted ? "Restricted" : "Active"}</p>
                     </div>
                   </div>
                 </div>
@@ -567,8 +656,8 @@ export default function StudentsPage() {
                 variant="outline"
                 className={`w-full text-xs rounded-xl h-10 ${
                   selectedStudent.restricted
-                    ? "text-green-500 border-green-200 hover:bg-green-50 hover:text-green-600 dark:hover:bg-green-500/10"
-                    : "text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10"
+                    ? "text-green-500 border-green-200 hover:bg-green-50 hover:text-green-600"
+                    : "text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600"
                 }`}
                 onClick={() => setRestrictConfirmStudent(selectedStudent)}
                 disabled={restrictingId === selectedStudent?.id}
@@ -592,7 +681,7 @@ export default function StudentsPage() {
           <div className="absolute inset-0 bg-black/50 modal-overlay" onClick={() => !restrictingId && setRestrictConfirmStudent(null)} />
           <div className="relative bg-background rounded-xl border border-border shadow-2xl max-w-sm w-full p-6 space-y-4">
             <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${restrictConfirmStudent.restricted ? "bg-green-100 dark:bg-green-500/10" : "bg-red-100 dark:bg-red-500/10"}`}>
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${restrictConfirmStudent.restricted ? "bg-green-100" : "bg-red-100"}`}>
                 {restrictConfirmStudent.restricted ? <Shield className="w-4 h-4 text-green-500" /> : <ShieldOff className="w-4 h-4 text-red-500" />}
               </div>
               <div>

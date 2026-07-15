@@ -306,25 +306,6 @@
   }
 }
 
-/* Color scheme - respect dark mode */
-html:not(.dark) {
-  color-scheme: light;
-}
-
-html.dark {
-  color-scheme: dark;
-}
-
-/* Force light mode for admin login and landing pages */
-html:has(body[data-admin-login]),
-html:has(body[data-landing-page]) {
-  color-scheme: light !important;
-}
-
-html:has(body[data-admin-login]) *,
-html:has(body[data-landing-page]) * {
-  color-scheme: light !important;
-}
 
 /* Lenis smooth scroll */
 html.lenis,

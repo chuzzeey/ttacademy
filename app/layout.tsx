@@ -2,7 +2,6 @@ import { Noto_Sans } from "next/font/google";
 import type { Metadata } from "next";
 import "./globals.css";
 import { SmoothScrollProvider } from "@/components/smooth-scroll";
-import { ThemeProvider } from "@/components/theme-provider";
 import { QueryProvider } from "@/lib/query-provider";
 
 const notoSans = Noto_Sans({
@@ -105,40 +104,6 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               if (typeof window !== 'undefined') {
-                const path = window.location.pathname;
-                
-                if (path === '/' || path === '/admin-login') {
-                  // FORCE LIGHT MODE for landing and admin login pages
-                  // Save user's existing theme preference to data attribute
-                  // then set localStorage to 'light' to prevent next-themes from
-                  // flashing dark mode during hydration
-                  try {
-                    const stored = localStorage.getItem('theme');
-                    if (stored && stored !== 'light') {
-                      document.documentElement.dataset.savedTheme = stored;
-                    } else if (!stored) {
-                      const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                      if (systemDark) {
-                        document.documentElement.dataset.savedTheme = 'system-dark';
-                      }
-                    }
-                    localStorage.setItem('theme', 'light');
-                    document.documentElement.classList.remove('dark');
-                  } catch(e) {}
-                } else if (path.startsWith('/dashboard')) {
-                  // For dashboard, immediately apply the correct theme before React hydrates
-                  try {
-                    const stored = localStorage.getItem('theme');
-                    const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                    const themeToApply = stored || (systemDark ? 'dark' : 'light');
-                    if (themeToApply === 'dark') {
-                      document.documentElement.classList.add('dark');
-                    } else {
-                      document.documentElement.classList.remove('dark');
-                    }
-                  } catch(e) {}
-                }
-                
                 // Disable browser scroll restoration
                 window.history.scrollRestoration = 'manual';
                 
@@ -217,17 +182,9 @@ export default function RootLayout({
       </head>
       <body className={notoSans.variable}>
         <QueryProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-            storageKey="theme"
-          >
-            <SmoothScrollProvider>
-              {children}
-            </SmoothScrollProvider>
-          </ThemeProvider>
+          <SmoothScrollProvider>
+            {children}
+          </SmoothScrollProvider>
         </QueryProvider>
       </body>
     </html>

@@ -47,10 +47,55 @@ export default function DashboardPage() {
   const [showEmoji, setShowEmoji] = useState(false)
   const chatEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
-  const processedMessagesRef = useRef<Set<string>>(new Set()) // Track processed message IDs
-  const initialLoadCompleteRef = useRef(false) // Track if initial load is complete
-  const prevMessagesLengthRef = useRef(0) // Track previous message count
+  const processedMessagesRef = useRef<Set<string>>(new Set())
+  const initialLoadCompleteRef = useRef(false)
+  const prevMessagesLengthRef = useRef(0)
   const [studentData, setStudentData] = useState<{ name: string; email: string; avatar: string } | null>(null)
+  const isRestrictedRef = useRef(false)
+  const [unreadCount, setUnreadCount] = useState(0)
+  const lastSeenMessageIdRef = useRef<string | null>(null)
+
+  // Load last seen message ID from localStorage on mount
+  useEffect(() => {
+    const stored = localStorage.getItem(`lastSeenMessage_${courseSlug}`)
+    if (stored) {
+      lastSeenMessageIdRef.current = stored
+    }
+  }, [courseSlug])
+
+  // Calculate unread count whenever messages change
+  useEffect(() => {
+    if (!lastSeenMessageIdRef.current || messages.length === 0) {
+      // If no last seen message, all mentor messages are unread
+      const count = messages.filter(m => m.sender === 'mentor').length
+      setUnreadCount(count)
+      return
+    }
+
+    // Find the index of the last seen message
+    const lastSeenIndex = messages.findIndex(m => m.id === lastSeenMessageIdRef.current)
+    
+    if (lastSeenIndex === -1) {
+      // Last seen message not found in current list, all mentor messages are unread
+      const count = messages.filter(m => m.sender === 'mentor').length
+      setUnreadCount(count)
+    } else {
+      // Count only mentor messages AFTER the last seen message
+      const unread = messages.slice(lastSeenIndex + 1).filter(m => m.sender === 'mentor').length
+      setUnreadCount(unread)
+    }
+  }, [messages])
+
+  // Save last seen message ID when chat is opened
+  const markMessagesAsRead = () => {
+    if (messages.length > 0) {
+      // Mark the last message as seen
+      const lastMessage = messages[messages.length - 1]
+      lastSeenMessageIdRef.current = lastMessage.id
+      localStorage.setItem(`lastSeenMessage_${courseSlug}`, lastMessage.id)
+      setUnreadCount(0)
+    }
+  }
 
   const emojis = ['😊', '👍', '🎉', '📚', '💡', '🔥', '✅', '⭐', '💪', '👏', '🎯', '📌', '📢', '💬', '🤝', '🌟']
 
@@ -85,7 +130,6 @@ export default function DashboardPage() {
       }
     })
     
-    // Also check current session on mount
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) {
         router.push(`/classroom/${courseSlug}/login`)
@@ -95,57 +139,57 @@ export default function DashboardPage() {
     return () => subscription.unsubscribe()
   }, [courseSlug, router])
 
-  // Real-time restriction check - logout immediately if admin restricts the student
+  // RESTRICTION CHECK - polls the API every 10 seconds for instant restriction detection
   useEffect(() => {
     const supabase = createClient()
-    
-    // Get current user email
+    let checkInterval: NodeJS.Timeout | null = null
+    let userEmail: string | null = null
+
     const checkRestriction = async () => {
       try {
+        // Get current session
         const { data: { session } } = await supabase.auth.getSession()
         if (!session?.user?.email) return
+
+        // If we haven't stored the email yet, do so now
+        if (!userEmail) {
+          userEmail = session.user.email.toLowerCase()
+        }
+
+        // Fetch the student record to check restriction status
+        const res = await fetch('/api/registrations/me', {
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache' }
+        })
         
-        const userEmail = session.user.email.toLowerCase()
+        if (!res.ok) return
         
-        // Subscribe to changes in the students table for this specific user
-        const channel = supabase
-          .channel('student-restriction-check')
-          .on(
-            'postgres_changes',
-            {
-              event: 'UPDATE',
-              schema: 'public',
-              table: 'students',
-              filter: `email=eq.${userEmail}`,
-            },
-            (payload) => {
-              console.log('Student record updated:', payload)
-              
-              // Check if restricted field was set to true
-              if (payload.new.restricted === true) {
-                // Immediately sign out the user
-                supabase.auth.signOut().then(() => {
-                  // Show alert before redirecting
-                  alert('Your account has been restricted by the admin. You have been logged out.')
-                  router.push(`/classroom/${courseSlug}/login`)
-                })
-              }
-            }
-          )
-          .subscribe()
+        const json = await res.json()
         
-        return () => {
-          supabase.removeChannel(channel)
+        if (json.data && json.data.restricted === true && !isRestrictedRef.current) {
+          isRestrictedRef.current = true
+          // Immediately sign out
+          try {
+            await supabase.auth.signOut()
+          } catch (_) {}
+          alert('Your account has been restricted by the admin. You have been logged out.')
+          router.push(`/classroom/${courseSlug}/login`)
+        } else if (json.data && json.data.restricted === false) {
+          isRestrictedRef.current = false
         }
       } catch (err) {
-        console.error('Restriction check error:', err)
+        // Silently handle errors - don't disrupt the user
       }
     }
-    
-    const cleanup = checkRestriction()
-    
+
+    // Check immediately on mount
+    checkRestriction()
+
+    // Then check every 10 seconds
+    checkInterval = setInterval(checkRestriction, 10000)
+
     return () => {
-      if (cleanup) cleanup.then(fn => fn && fn())
+      if (checkInterval) clearInterval(checkInterval)
     }
   }, [courseSlug, router])
   
@@ -167,7 +211,6 @@ export default function DashboardPage() {
             senderName: msg.sender_name,
           }))
           
-          // Deduplicate by ID before setting state
           const seen = new Set<string>()
           const uniqueDbMessages = dbMessages.filter(msg => {
             if (seen.has(msg.id)) {
@@ -178,7 +221,6 @@ export default function DashboardPage() {
             return true
           })
           
-          // Replace all messages with fetched ones (system messages are preserved)
           setMessages(prev => {
             const systemMessages = prev.filter(m => m.sender === 'system')
             return [...systemMessages, ...uniqueDbMessages]
@@ -194,7 +236,6 @@ export default function DashboardPage() {
 
     fetchMessages()
 
-    // Setup Supabase Realtime subscription for live messages
     const supabase = createClient()
     const channel = supabase
       .channel(`student-messages:${courseSlug}`)
@@ -207,7 +248,6 @@ export default function DashboardPage() {
           filter: `course=eq.${courseSlug}`,
         },
         (payload) => {
-          // Skip realtime events during initial load to prevent duplicates
           if (!initialLoadCompleteRef.current) return
           
           const newMsg = payload.new as DbMessage
@@ -224,7 +264,6 @@ export default function DashboardPage() {
               senderName: newMsg.sender_name,
             }
             
-            // Check if this is an optimistic update (sending status) that needs to be replaced
             const optimisticIndex = prev.findIndex(m => 
               m.sender === (newMsg.sender_name === 'Mentor' ? 'mentor' : 'me') &&
               m.text === msg.text &&
@@ -232,7 +271,6 @@ export default function DashboardPage() {
             )
             
             if (optimisticIndex >= 0) {
-              // Replace the optimistic message with the real one
               const updated = [...prev]
               updated[optimisticIndex] = msg
               return updated
@@ -249,7 +287,7 @@ export default function DashboardPage() {
     }
   }, [courseSlug])
 
-  // Deduplicate messages whenever they change (prevent infinite loop)
+  // Deduplicate messages
   useEffect(() => {
     if (messages.length > prevMessagesLengthRef.current) {
       setMessages(prev => {
@@ -329,7 +367,6 @@ export default function DashboardPage() {
     const tempId = `temp-${Date.now()}`
     const sentText = message.trim()
     
-    // Track this temp ID
     processedMessagesRef.current.add(tempId)
     
     const newMsg: Message = {
@@ -390,7 +427,7 @@ export default function DashboardPage() {
   })
 
   const dummyChats = [
-    { name: `${courseData.title} Classroom`, lastMsg: messages.length > 0 ? messages[messages.length - 1].text : 'No messages yet', time: messages.length > 0 ? formatTime(messages[messages.length - 1].timestamp) : '', unread: messages.filter(m => m.sender === 'mentor').length, active: true },
+    { name: `${courseData.title} Classroom`, lastMsg: messages.length > 0 ? messages[messages.length - 1].text : 'No messages yet', time: messages.length > 0 ? formatTime(messages[messages.length - 1].timestamp) : '', unread: unreadCount, active: true },
   ]
 
   return (
@@ -435,7 +472,7 @@ export default function DashboardPage() {
                 <div
                   key={chat.name}
                   className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-[#F0F2F5] transition-colors border-b border-gray-100 ${chat.active ? 'bg-[#F0F2F5]' : ''}`}
-                  onClick={() => setShowChatList(false)}
+                  onClick={() => { markMessagesAsRead(); setShowChatList(false) }}
                 >
                   <div className="w-[49px] h-[49px] rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-gray-200">
                     <span className="text-[#008069] text-xl font-bold">{courseData.title.charAt(0)}</span>
@@ -543,7 +580,6 @@ export default function DashboardPage() {
                     {group.messages.map((msg) => (
                       <div key={msg.id}>
                         {msg.sender === 'system' ? (
-                          // System message (left, white bubble)
                           <div className="flex justify-start mb-1 group">
                             <div 
                               className="relative max-w-[70%] sm:max-w-[60%] px-3 py-2 shadow-[0_1px_1px_rgba(0,0,0,0.06)]"
@@ -556,7 +592,6 @@ export default function DashboardPage() {
                             </div>
                           </div>
                         ) : msg.sender === 'mentor' ? (
-                          // Mentor message (left, white bubble with name)
                           <div className="flex justify-start mb-1 group">
                             <div className="max-w-[70%] sm:max-w-[60%]">
                               <div className="flex items-center gap-2 mb-[2px] ml-[2px]">
@@ -581,7 +616,6 @@ export default function DashboardPage() {
                             </div>
                           </div>
                         ) : (
-                          // My message (right, green bubble)
                           <div className="flex justify-end mb-1 group relative">
                             <div 
                               className="relative max-w-[70%] sm:max-w-[60%] px-3 py-2 shadow-[0_1px_1px_rgba(0,0,0,0.06)] group-hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)] transition-shadow"
@@ -602,7 +636,6 @@ export default function DashboardPage() {
                   </div>
                 ))}
 
-                {/* Empty state */}
                 {!loadingMessages && messages.length === 0 && (
                   <div className="flex justify-center my-8">
                     <div className="bg-white rounded-lg px-4 py-3 text-center max-w-sm shadow">
@@ -619,7 +652,6 @@ export default function DashboardPage() {
 
             {/* Message Input Area */}
             <div className="bg-[#F0F2F5] px-3 py-2 sm:px-4 shrink-0 z-10 mb-20">
-              {/* Emoji picker */}
               <div className={`overflow-hidden transition-all duration-200 ${showEmoji ? 'max-h-28 mb-2' : 'max-h-0'}`}>
                 <div className="flex flex-wrap gap-1.5 p-2 bg-white rounded-lg">
                   {emojis.map((emoji, i) => (

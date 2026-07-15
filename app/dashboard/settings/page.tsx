@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, Suspense } from "react"
-import { useTheme } from "next-themes"
 import { PageHeader } from "../components/dashboard/page-header"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card"
 import { Button } from "../components/ui/button"
@@ -13,11 +12,8 @@ import {
   Settings as SettingsIcon,
   User,
   Bell,
-  Palette as PaletteIcon,
   Globe,
   Mail,
-  Sun,
-  Moon,
   ChevronRight,
   BookOpen,
 } from "lucide-react"
@@ -43,13 +39,6 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("general")
   const [settings, setSettings] = useState(generalSettings)
   const [notifications, setNotifications] = useState(notificationSettings)
-  const { theme, setTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
-
-  // Avoid hydration mismatch
-  useState(() => {
-    setMounted(true)
-  })
 
   const toggleNotification = (id: string) => {
     setNotifications(prev =>
@@ -62,7 +51,6 @@ export default function SettingsPage() {
   const tabs = [
     { id: "general", label: "General", icon: SettingsIcon },
     { id: "notifications", label: "Notifications", icon: Bell },
-    { id: "appearance", label: "Appearance", icon: PaletteIcon },
   ]
 
   return (
@@ -218,69 +206,6 @@ export default function SettingsPage() {
               </Card>
             )}
 
-            {activeTab === "appearance" && (
-              <Card className="dashboard-card">
-                <CardHeader className="pb-4 border-b border-border/40">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-amber-500/10">
-                      <PaletteIcon className="w-4 h-4 text-amber-600" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-base font-semibold">Appearance Settings</CardTitle>
-                      <CardDescription className="text-xs mt-0.5">
-                        Customize the look and feel of your dashboard
-                      </CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-6 space-y-6">
-                  <div>
-                    <Label className="text-xs font-medium mb-3 block">Theme Mode</Label>
-                    <div className="grid grid-cols-2 gap-3">
-                      {[
-                        { id: "light", label: "Light", icon: Sun },
-                        { id: "dark", label: "Dark", icon: Moon },
-                      ].map((themeOption) => {
-                        const Icon = themeOption.icon
-                        const isSelected = mounted && theme === themeOption.id
-                        return (
-                          <button
-                            key={themeOption.id}
-                            onClick={() => setTheme(themeOption.id)}
-                            className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all duration-200 ${
-                              isSelected
-                                ? "border-amber-500/30 bg-amber-500/5 shadow-sm"
-                                : "border-border/60 hover:border-border hover:bg-muted/30"
-                            }`}
-                          >
-                            <Icon className={`w-5 h-5 ${
-                              isSelected ? "text-amber-600" : "text-muted-foreground"
-                            }`} />
-                            <span className={`text-xs font-medium ${
-                              isSelected ? "text-amber-600" : "text-muted-foreground"
-                            }`}>
-                              {themeOption.label}
-                            </span>
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </div>
-
-                  <Separator className="bg-border/40" />
-
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between py-1 group">
-                      <div className="space-y-0.5">
-                        <Label className="text-sm font-medium cursor-pointer">Animations</Label>
-                        <p className="text-xs text-muted-foreground">Enable smooth transitions and micro-interactions</p>
-                      </div>
-                      <Switch defaultChecked className="data-[state=checked]:bg-amber-500" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
           </div>
         </div>
       </>

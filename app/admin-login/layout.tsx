@@ -12,18 +12,6 @@ export default function AdminLoginLayout({
 }) {
   return (
     <div>
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `
-            (function() {
-              try {
-                localStorage.setItem('theme', 'light');
-                document.documentElement.classList.remove('dark');
-              } catch(e) {}
-            })();
-          `,
-        }}
-      />
       {children}
     </div>
   )

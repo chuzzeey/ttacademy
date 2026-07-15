@@ -5,7 +5,6 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Eye, EyeOff, LogIn, ArrowLeft } from 'lucide-react'
-import { ForceLightMode } from '@/components/force-light-mode'
 
 function LoginForm() {
   const [email, setEmail] = useState('')
@@ -68,7 +67,6 @@ function LoginForm() {
 
   return (
     <>
-      <ForceLightMode page="admin-login" />
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white via-red-50/20 to-white relative overflow-hidden">
         {/* Decorative Elements */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-[#ef4444]/10 to-transparent rounded-full blur-3xl" />

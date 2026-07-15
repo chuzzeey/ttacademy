@@ -8,13 +8,10 @@ import Join from '@/components/join'
 import FAQ from '@/components/faq'
 import Footer from '@/components/footer'
 import { FadeIn, ScaleIn, SlideInLeft, SlideInRight, StaggerContainer, StaggerItem, HoverScale } from '@/components/motion-components'
-import { ForceLightMode } from '@/components/force-light-mode'
 
 export default function HomePage() {
   return (
-    <>
-      <ForceLightMode page="landing" />
-      <main>
+    <main>
       <Home />
 
       <StaggerContainer>
@@ -69,6 +66,5 @@ export default function HomePage() {
         <Footer />
       </FadeIn>
     </main>
-    </>
   )
 }

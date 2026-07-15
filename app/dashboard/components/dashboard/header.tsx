@@ -3,8 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { useTheme } from "next-themes"
-import { Bell, ChevronDown, Menu, X, LayoutDashboard, Users, BarChart3, Mail, Settings, User, Sun, Moon, LogOut, ChevronRight } from "lucide-react"
+import { Bell, ChevronDown, Menu, X, LayoutDashboard, Users, BarChart3, Mail, Settings, User, LogOut, ChevronRight } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
 import { Button } from "../ui/button"
@@ -41,7 +40,6 @@ export function Header() {
 
     try {
       await supabase.auth.signOut()
-      localStorage.setItem('theme', 'light')
       toast.success("Logged out successfully")
       router.push('/admin-login')
       router.refresh()
@@ -71,18 +69,6 @@ export function Header() {
       document.body.style.overflow = "unset"
     }
   }, [mobileMenuOpen])
-
-  const { theme, setTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  const toggleTheme = () => {
-    const newTheme = theme === "dark" ? "light" : "dark"
-    setTheme(newTheme)
-  }
 
   return (
     <>
@@ -188,19 +174,6 @@ export function Header() {
                   3
                 </span>
               </Button>
-              {mounted && (
-                <button
-                  onClick={toggleTheme}
-                  className="flex items-center justify-center w-9 h-9 rounded-full bg-muted/30 hover:bg-muted transition-colors"
-                  aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-                >
-                  {theme === "dark" ? (
-                    <Sun className="w-4 h-4" />
-                  ) : (
-                    <Moon className="w-4 h-4" />
-                  )}
-                </button>
-              )}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button id="user-menu-trigger" className="flex items-center gap-1.5 cursor-pointer p-1 pr-1.5 sm:pr-2 rounded-xl hover:bg-muted/50 transition-colors">

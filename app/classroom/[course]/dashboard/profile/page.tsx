@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import {
@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { getCourseData } from '@/lib/mock-data'
 import { getStateDisplayName } from '@/lib/state-utils'
+import { createClient } from '@/lib/supabase/client'
 
 interface StudentData {
   id: string
@@ -28,6 +29,7 @@ interface StudentData {
   reg_date: string
   reg_time: string
   avatar?: string
+  restricted?: boolean
 }
 
 // ─── SKELETON ────────────────────────────────────────────────────
@@ -130,6 +132,7 @@ export default function ProfilePage() {
   const [photoUploading, setPhotoUploading] = useState(false)
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false)
   const [copied, setCopied] = useState(false)
+  const isRestrictedRef = useRef(false)
 
   useEffect(() => { setMounted(true) }, [])
 
@@ -146,6 +149,51 @@ export default function ProfilePage() {
     }
     fetchStudentData()
   }, [])
+
+  // RESTRICTION CHECK - polls the API every 10 seconds for instant restriction detection
+  useEffect(() => {
+    const supabase = createClient()
+    let checkInterval: NodeJS.Timeout | null = null
+
+    const checkRestriction = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session?.user?.email) return
+
+        const res = await fetch('/api/registrations/me', {
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache' }
+        })
+        
+        if (!res.ok) return
+        
+        const json = await res.json()
+        
+        if (json.data && json.data.restricted === true && !isRestrictedRef.current) {
+          isRestrictedRef.current = true
+          try {
+            await supabase.auth.signOut()
+          } catch (_) {}
+          alert('Your account has been restricted by the admin. You have been logged out.')
+          router.push(`/classroom/${courseSlug}/login`)
+        } else if (json.data && json.data.restricted === false) {
+          isRestrictedRef.current = false
+        }
+      } catch (err) {
+        // Silently handle errors
+      }
+    }
+
+    // Check immediately on mount
+    checkRestriction()
+
+    // Then check every 10 seconds
+    checkInterval = setInterval(checkRestriction, 10000)
+
+    return () => {
+      if (checkInterval) clearInterval(checkInterval)
+    }
+  }, [courseSlug, router])
 
   const data = studentData
 

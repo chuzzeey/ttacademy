@@ -264,7 +264,7 @@ export default function EmailPage() {
                       <td className="py-3 px-3 text-sm font-medium">{email.to}</td>
                       <td className="py-3 px-3 text-sm text-muted-foreground max-w-[300px] truncate">{email.subject}</td>
                       <td className="py-3 px-3">
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-green-50 dark:bg-green-500/10 text-green-600 text-xs font-medium">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-green-50 text-green-600 text-xs font-medium">
                           <CheckCircle className="w-3 h-3" />
                           {email.status}
                         </span>
@@ -478,7 +478,7 @@ export default function EmailPage() {
                           <td className="py-3 px-3 text-sm font-medium">{email.to}</td>
                           <td className="py-3 px-3 text-sm text-muted-foreground max-w-[300px] truncate">{email.subject}</td>
                           <td className="py-3 px-3">
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-green-50 dark:bg-green-500/10 text-green-600 text-xs font-medium">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-green-50 text-green-600 text-xs font-medium">
                               <CheckCircle className="w-3 h-3" />
                               {email.status}
                             </span>
@@ -525,7 +525,7 @@ export default function EmailPage() {
               </div>
               <div className="space-y-2">
                 <Label className="text-xs font-medium text-muted-foreground">Status</Label>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-green-50 dark:bg-green-500/10 text-green-600 text-xs font-medium">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-green-50 text-green-600 text-xs font-medium">
                   <CheckCircle className="w-3 h-3" />
                   {selectedEmail.status}
                 </span>
