@@ -390,15 +390,9 @@ export default function TeacherCoursePage() {
         
         {/* Chat Header */}
         <div className="bg-[#F0F2F5] border-b border-gray-200 px-4 py-2 flex items-center gap-3 shrink-0 z-10">
-          <div className="w-10 h-10 rounded-full bg-[#DFE5E7] flex items-center justify-center shrink-0 overflow-hidden">
-            <span className="text-lg">{course.emoji}</span>
-          </div>
           <div className="min-w-0 flex-1">
             <p className="font-semibold text-[15px] text-[#111B21] truncate leading-tight">
-              {course.title} Group
-            </p>
-            <p className="text-[12px] text-[#667781] truncate leading-tight">
-              {course.students} students • Live chat
+              Live chat
             </p>
           </div>
         </div>
