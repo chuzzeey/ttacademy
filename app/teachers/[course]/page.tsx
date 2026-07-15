@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
-import { Shield, BarChart3, Cpu, Globe, ShieldAlert, Palette, Code, Monitor, Server, Globe2, TrendingUp, Cloud, Database, ArrowLeft, Send, Menu, X, GraduationCap, LogOut, Home, BookMarked, User, Settings, Paperclip, ImagePlus, Check, CheckCheck, Clock, Megaphone } from 'lucide-react'
+import { Shield, BarChart3, Cpu, Globe, ShieldAlert, Palette, Code, Monitor, Server, Globe2, TrendingUp, Cloud, Database, ArrowLeft, Send, Menu, X, GraduationCap, LogOut, Home, BookMarked, User, Settings, Paperclip, ImagePlus, Check, CheckCheck, Clock, Megaphone, UserCircle } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 import { createClient } from '@/lib/supabase/client'
 
