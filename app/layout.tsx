@@ -109,9 +109,20 @@ export default function RootLayout({
                 
                 if (path === '/' || path === '/admin-login') {
                   // FORCE LIGHT MODE for landing and admin login pages
-                  // Remove 'dark' class but do NOT overwrite localStorage preference,
-                  // so when user navigates to dashboard their preference is preserved
+                  // Save user's existing theme preference to data attribute
+                  // then set localStorage to 'light' to prevent next-themes from
+                  // flashing dark mode during hydration
                   try {
+                    const stored = localStorage.getItem('theme');
+                    if (stored && stored !== 'light') {
+                      document.documentElement.dataset.savedTheme = stored;
+                    } else if (!stored) {
+                      const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                      if (systemDark) {
+                        document.documentElement.dataset.savedTheme = 'system-dark';
+                      }
+                    }
+                    localStorage.setItem('theme', 'light');
                     document.documentElement.classList.remove('dark');
                   } catch(e) {}
                 } else if (path.startsWith('/dashboard')) {
