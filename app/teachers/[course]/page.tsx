@@ -76,6 +76,7 @@ export default function TeacherCoursePage() {
   const course = courseData[params.course as string]
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [showLogoutDropdown, setShowLogoutDropdown] = useState(false)
+  const [confirmingLogout, setConfirmingLogout] = useState(false)
 
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
@@ -85,7 +86,15 @@ export default function TeacherCoursePage() {
   const [showEmoji, setShowEmoji] = useState(false)
   const [loadingHistory, setLoadingHistory] = useState(true)
   const chatEndRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  // Auto-resize textarea
+  const autoResizeTextarea = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const el = e.target
+    el.style.height = 'auto'
+    el.style.height = Math.min(el.scrollHeight, 76) + 'px'
+  }
 
   const handleLogout = async () => {
     try {
@@ -95,6 +104,12 @@ export default function TeacherCoursePage() {
     } catch (err) {
       console.error('Logout error:', err)
     }
+  }
+
+  // Reset the confirmation state whenever the menu is closed
+  const closeMenu = () => {
+    setShowLogoutDropdown(false)
+    setConfirmingLogout(false)
   }
 
   const emojis = ['😊', '👍', '🎉', '📚', '💡', '🔥', '✅', '⭐', '💪', '👏', '🎯', '📌', '📢', '💬', '🤝', '🌟']
@@ -232,6 +247,11 @@ export default function TeacherCoursePage() {
     setMessage('')
     setIsSending(true)
 
+    // Reset textarea height after sending
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'
+    }
+
     // Simulate send status changes
     setTimeout(() => {
       setMessages(prev =>
@@ -273,11 +293,37 @@ export default function TeacherCoursePage() {
     }
   }
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       handleSendMessage()
     }
+  }
+
+  // Auto-link URLs in message text
+  const renderMessageText = (text: string) => {
+    const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)/gi
+    const parts = text.split(/(https?:\/\/[^\s]+|www\.[^\s]+)/gi)
+    
+    return parts.map((part, i) => {
+      if (urlRegex.test(part)) {
+        urlRegex.lastIndex = 0 // reset regex state
+        const href = part.startsWith('http') ? part : `https://${part}`
+        return (
+          <a
+            key={i}
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[#53BDEB] hover:underline"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {part}
+          </a>
+        )
+      }
+      return part
+    })
   }
 
   const getStatusIcon = (status: string) => {
@@ -349,34 +395,62 @@ export default function TeacherCoursePage() {
               </div>
             </div>
 
-            {/* Right side - Logout dropdown */}
+            {/* Right side - Hamburger menu */}
             <div className="relative">
               <button
-                onClick={() => setShowLogoutDropdown(!showLogoutDropdown)}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors"
+                onClick={() => {
+                  if (showLogoutDropdown) {
+                    closeMenu()
+                  } else {
+                    setShowLogoutDropdown(true)
+                  }
+                }}
+                className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+                aria-label="Menu"
               >
-                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-sm">
-                  M
-                </div>
-                <span className="hidden sm:block text-sm font-medium text-white">Menu</span>
+                <Menu className="w-6 h-6 text-white" />
               </button>
 
-              {/* Logout Dropdown */}
+              {/* Dropdown */}
               <AnimatePresence>
                 {showLogoutDropdown && (
                   <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg overflow-hidden z-50"
+                    className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg overflow-hidden z-50"
                   >
-                    <button
-                      onClick={handleLogout}
-                      className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      <span>Logout</span>
-                    </button>
+                    {!confirmingLogout ? (
+                      // Step 1: menu with Logout option
+                      <button
+                        onClick={() => setConfirmingLogout(true)}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        <span>Logout</span>
+                      </button>
+                    ) : (
+                      // Step 2: confirmation
+                      <div className="p-4">
+                        <p className="text-sm font-medium text-[#111B21] mb-3">
+                          Are you sure you want to log out?
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={handleLogout}
+                            className="flex-1 px-3 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition-colors"
+                          >
+                            Log out
+                          </button>
+                          <button
+                            onClick={closeMenu}
+                            className="flex-1 px-3 py-2 rounded-lg bg-gray-100 text-[#111B21] text-sm font-semibold hover:bg-gray-200 transition-colors"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -436,7 +510,7 @@ export default function TeacherCoursePage() {
                           borderRadius: '4px 8px 8px 8px',
                         }}
                       >
-                        <p className="text-[14px] text-[#111B21] leading-[19px] break-words whitespace-pre-wrap">{msg.text}</p>
+                        <p className="text-[14px] text-[#111B21] leading-[19px] break-words whitespace-pre-wrap">{renderMessageText(msg.text)}</p>
                         <div className="flex items-center justify-end gap-1 mt-1">
                           <span className="text-[11px] text-[#667781] leading-[13px]">
                             {formatTime(msg.timestamp)}
@@ -462,7 +536,7 @@ export default function TeacherCoursePage() {
                             borderRadius: '4px 8px 8px 8px',
                           }}
                         >
-                          <p className="text-[14px] text-[#111B21] leading-[19px] break-words whitespace-pre-wrap">{msg.text}</p>
+                          <p className="text-[14px] text-[#111B21] leading-[19px] break-words whitespace-pre-wrap">{renderMessageText(msg.text)}</p>
                           <div className="flex items-center justify-end gap-1 mt-1">
                             <span className="text-[11px] text-[#667781] leading-[13px]">
                               {formatTime(msg.timestamp)}
@@ -481,7 +555,7 @@ export default function TeacherCoursePage() {
                             borderRadius: '8px 4px 8px 8px',
                           }}
                         >
-                          <p className="text-[14px] text-[#111B21] leading-[19px] break-words whitespace-pre-wrap">{msg.text}</p>
+                          <p className="text-[14px] text-[#111B21] leading-[19px] break-words whitespace-pre-wrap">{renderMessageText(msg.text)}</p>
                         <div className="flex items-center justify-end gap-0.5 mt-0.5">
                           <span className="text-[11px] text-[#667781] leading-[13px]">
                             {formatTime(msg.timestamp)}
@@ -540,22 +614,33 @@ export default function TeacherCoursePage() {
           </AnimatePresence>
 
           <div className="flex items-end gap-1.5">
-            <button className="p-2 rounded-full hover:bg-gray-200 transition-colors shrink-0">
+            <button
+              onClick={() => alert('Feature unavailable for now')}
+              className="p-2 rounded-full hover:bg-gray-200 transition-colors shrink-0"
+            >
               <ImagePlus className="w-6 h-6 text-[#8696A0]" />
             </button>
-            <button className="p-2 rounded-full hover:bg-gray-200 transition-colors shrink-0">
+            <button
+              onClick={() => alert('Feature unavailable for now')}
+              className="p-2 rounded-full hover:bg-gray-200 transition-colors shrink-0"
+            >
               <Paperclip className="w-6 h-6 text-[#8696A0]" />
             </button>
             
             <div className="flex-1 bg-white rounded-lg px-4 py-2 flex items-center">
-              <input
-                ref={inputRef}
-                type="text"
+              <textarea
+                ref={textareaRef}
                 value={message}
-                onChange={(e) => { setMessage(e.target.value); setError('') }}
+                onChange={(e) => {
+                  setMessage(e.target.value)
+                  setError('')
+                  autoResizeTextarea(e)
+                }}
                 onKeyDown={handleKeyDown}
                 placeholder="Type a message"
-                className="w-full text-[15px] text-[#111B21] placeholder-[#8696A0] bg-transparent focus:outline-none"
+                rows={1}
+                className="w-full text-[15px] text-[#111B21] placeholder-[#8696A0] bg-transparent focus:outline-none resize-none overflow-hidden leading-[19px]"
+                style={{ minHeight: '19px', maxHeight: '76px' }}
               />
             </div>
 

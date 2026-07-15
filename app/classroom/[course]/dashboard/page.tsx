@@ -46,18 +46,47 @@ export default function DashboardPage() {
   const [isSending, setIsSending] = useState(false)
   const [showEmoji, setShowEmoji] = useState(false)
   const chatEndRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const processedMessagesRef = useRef<Set<string>>(new Set())
   const initialLoadCompleteRef = useRef(false)
   const prevMessagesLengthRef = useRef(0)
   const [studentData, setStudentData] = useState<{ name: string; email: string; avatar: string } | null>(null)
-  const [showPinVerification, setShowPinVerification] = useState(false)
-  const [pinInput, setPinInput] = useState('')
-  const [pinError, setPinError] = useState('')
-  const [isVerifyingPin, setIsVerifyingPin] = useState(false)
   const isRestrictedRef = useRef(false)
   const [unreadCount, setUnreadCount] = useState(0)
   const lastSeenMessageIdRef = useRef<string | null>(null)
+
+  // Auto-resize textarea — max 4 lines (~76px)
+  const autoResizeTextarea = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const el = e.target
+    el.style.height = 'auto'
+    el.style.height = Math.min(el.scrollHeight, 76) + 'px'
+  }
+
+  // Auto-link URLs in message text
+  const renderMessageText = (text: string) => {
+    const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)/gi
+    const parts = text.split(/(https?:\/\/[^\s]+|www\.[^\s]+)/gi)
+    
+    return parts.map((part, i) => {
+      if (urlRegex.test(part)) {
+        urlRegex.lastIndex = 0
+        const href = part.startsWith('http') ? part : `https://${part}`
+        return (
+          <a
+            key={i}
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[#53BDEB] hover:underline"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {part}
+          </a>
+        )
+      }
+      return part
+    })
+  }
 
   // Load last seen message ID from localStorage on mount
   useEffect(() => {
@@ -70,21 +99,17 @@ export default function DashboardPage() {
   // Calculate unread count whenever messages change
   useEffect(() => {
     if (!lastSeenMessageIdRef.current || messages.length === 0) {
-      // If no last seen message, all mentor messages are unread
       const count = messages.filter(m => m.sender === 'mentor').length
       setUnreadCount(count)
       return
     }
 
-    // Find the index of the last seen message
     const lastSeenIndex = messages.findIndex(m => m.id === lastSeenMessageIdRef.current)
     
     if (lastSeenIndex === -1) {
-      // Last seen message not found in current list, all mentor messages are unread
       const count = messages.filter(m => m.sender === 'mentor').length
       setUnreadCount(count)
     } else {
-      // Count only mentor messages AFTER the last seen message
       const unread = messages.slice(lastSeenIndex + 1).filter(m => m.sender === 'mentor').length
       setUnreadCount(unread)
     }
@@ -93,7 +118,6 @@ export default function DashboardPage() {
   // Save last seen message ID when chat is opened
   const markMessagesAsRead = () => {
     if (messages.length > 0) {
-      // Mark the last message as seen
       const lastMessage = messages[messages.length - 1]
       lastSeenMessageIdRef.current = lastMessage.id
       localStorage.setItem(`lastSeenMessage_${courseSlug}`, lastMessage.id)
@@ -143,50 +167,6 @@ export default function DashboardPage() {
     return () => subscription.unsubscribe()
   }, [courseSlug, router])
 
-  // Show PIN verification on mount
-  useEffect(() => {
-    const hasVerifiedPin = sessionStorage.getItem(`pin_verified_${courseSlug}`)
-    if (!hasVerifiedPin) {
-      setShowPinVerification(true)
-    }
-  }, [courseSlug])
-
-  const handlePinVerification = async () => {
-    if (!pinInput.trim()) {
-      setPinError('Please enter your PIN')
-      return
-    }
-
-    setIsVerifyingPin(true)
-    setPinError('')
-
-    try {
-      const res = await fetch('/api/verify-pin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pin: pinInput }),
-      })
-
-      const json = await res.json()
-
-      if (!res.ok) {
-        setPinError(json.error || 'PIN verification failed')
-        setIsVerifyingPin(false)
-        return
-      }
-
-      // PIN verified successfully
-      sessionStorage.setItem(`pin_verified_${courseSlug}`, 'true')
-      setShowPinVerification(false)
-      setPinInput('')
-      setPinError('')
-    } catch (err) {
-      setPinError('An error occurred. Please try again.')
-    } finally {
-      setIsVerifyingPin(false)
-    }
-  }
-
   // RESTRICTION CHECK - polls the API every 10 seconds for instant restriction detection
   useEffect(() => {
     const supabase = createClient()
@@ -195,16 +175,13 @@ export default function DashboardPage() {
 
     const checkRestriction = async () => {
       try {
-        // Get current session
         const { data: { session } } = await supabase.auth.getSession()
         if (!session?.user?.email) return
 
-        // If we haven't stored the email yet, do so now
         if (!userEmail) {
           userEmail = session.user.email.toLowerCase()
         }
 
-        // Fetch the student record to check restriction status
         const res = await fetch('/api/registrations/me', {
           cache: 'no-store',
           headers: { 'Cache-Control': 'no-cache' }
@@ -216,7 +193,6 @@ export default function DashboardPage() {
         
         if (json.data && json.data.restricted === true && !isRestrictedRef.current) {
           isRestrictedRef.current = true
-          // Immediately sign out
           try {
             await supabase.auth.signOut()
           } catch (_) {}
@@ -226,14 +202,11 @@ export default function DashboardPage() {
           isRestrictedRef.current = false
         }
       } catch (err) {
-        // Silently handle errors - don't disrupt the user
+        // Silently handle errors
       }
     }
 
-    // Check immediately on mount
     checkRestriction()
-
-    // Then check every 10 seconds
     checkInterval = setInterval(checkRestriction, 10000)
 
     return () => {
@@ -429,6 +402,11 @@ export default function DashboardPage() {
     setMessage('')
     setIsSending(true)
 
+    // Reset textarea height after sending
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'
+    }
+
     try {
       const res = await fetch('/api/messages/send', {
         method: 'POST',
@@ -454,7 +432,7 @@ export default function DashboardPage() {
       }
   }
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       handleSendMessage()
@@ -633,7 +611,7 @@ export default function DashboardPage() {
                               className="relative max-w-[70%] sm:max-w-[60%] px-3 py-2 shadow-[0_1px_1px_rgba(0,0,0,0.06)]"
                               style={{ backgroundColor: '#FFFFFF', borderRadius: '4px 8px 8px 8px' }}
                             >
-                              <p className="text-[14px] text-[#111B21] leading-[19px] break-words whitespace-pre-wrap">{msg.text}</p>
+                              <p className="text-[14px] text-[#111B21] leading-[19px] break-words whitespace-pre-wrap">{renderMessageText(msg.text)}</p>
                               <div className="flex items-center justify-end gap-1 mt-1">
                                 <span className="text-[11px] text-[#667781]">{formatTime(msg.timestamp)}</span>
                               </div>
@@ -652,7 +630,7 @@ export default function DashboardPage() {
                                 className="relative px-3 py-2 shadow-[0_1px_1px_rgba(0,0,0,0.06)] group-hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)] transition-shadow"
                                 style={{ backgroundColor: '#FFFFFF', borderRadius: '4px 8px 8px 8px' }}
                               >
-                                <p className="text-[14px] text-[#111B21] leading-[19px] break-words whitespace-pre-wrap">{msg.text}</p>
+                                <p className="text-[14px] text-[#111B21] leading-[19px] break-words whitespace-pre-wrap">{renderMessageText(msg.text)}</p>
                                 <div className="flex items-center justify-end gap-1 mt-1">
                                   <span className="text-[11px] text-[#667781]">{formatTime(msg.timestamp)}</span>
                                   <svg viewBox="0 0 16 11" className="w-[14px] h-[10px]">
@@ -669,7 +647,7 @@ export default function DashboardPage() {
                               className="relative max-w-[70%] sm:max-w-[60%] px-3 py-2 shadow-[0_1px_1px_rgba(0,0,0,0.06)] group-hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)] transition-shadow"
                               style={{ backgroundColor: '#D9FDD3', borderRadius: '8px 4px 8px 8px' }}
                             >
-                              <p className="text-[14px] text-[#111B21] leading-[19px] break-words whitespace-pre-wrap">{msg.text}</p>
+                              <p className="text-[14px] text-[#111B21] leading-[19px] break-words whitespace-pre-wrap">{renderMessageText(msg.text)}</p>
                               <div className="flex items-center justify-end gap-0.5 mt-0.5">
                                 <span className="text-[11px] text-[#667781]">{formatTime(msg.timestamp)}</span>
                                 {msg.status === 'sending' && <Clock className="w-3.5 h-3.5 text-[#667781]" />}
@@ -716,14 +694,19 @@ export default function DashboardPage() {
 
               <div className="flex items-end gap-1.5">
                 <div className="flex-1 bg-white rounded-lg px-4 py-2 flex items-center">
-                  <input
-                    ref={inputRef}
-                    type="text"
+                  <textarea
+                    ref={textareaRef}
                     value={message}
-                    onChange={(e) => { setMessage(e.target.value); setError('') }}
+                    onChange={(e) => {
+                      setMessage(e.target.value)
+                      setError('')
+                      autoResizeTextarea(e)
+                    }}
                     onKeyDown={handleKeyDown}
                     placeholder="Reply to your mentor..."
-                    className="w-full text-[16px] text-[#111B21] placeholder-[#8696A0] bg-transparent focus:outline-none"
+                    rows={1}
+                    className="w-full text-[16px] text-[#111B21] placeholder-[#8696A0] bg-transparent focus:outline-none resize-none overflow-hidden leading-[19px]"
+                    style={{ minHeight: '19px', maxHeight: '76px' }}
                   />
                 </div>
 
@@ -750,62 +733,6 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
-
-      {/* ===== PIN VERIFICATION MODAL ===== */}
-      {showPinVerification && (
-        <>
-          <div className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm" />
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <div className="bg-white border border-gray-200 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl">
-              <div className="px-6 pt-7 pb-4 text-center">
-                <div className="w-14 h-14 rounded-2xl bg-[#1d9bf0]/10 flex items-center justify-center mx-auto mb-4">
-                  <Lock className="w-7 h-7 text-[#1d9bf0]" />
-                </div>
-                <h3 className="text-[17px] font-bold text-gray-900 mb-1">Enter Your PIN</h3>
-                <p className="text-[13px] text-gray-500">Please enter your 6-8 digit PIN to access the classroom</p>
-              </div>
-              <div className="px-6 pb-4">
-                <div className="relative">
-                  <input
-                    type="password"
-                    value={pinInput}
-                    onChange={(e) => setPinInput(e.target.value.replace(/\D/g, '').slice(0, 8))}
-                    onKeyDown={(e) => e.key === 'Enter' && handlePinVerification()}
-                    maxLength={8}
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-[14px] text-gray-900 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#1d9bf0]/30 focus:border-[#1d9bf0] transition-colors text-center text-2xl tracking-widest"
-                    placeholder="••••••"
-                    autoFocus
-                    disabled={isVerifyingPin}
-                  />
-                </div>
-                {pinError && (
-                  <div className="mt-3 p-2.5 rounded-xl bg-red-50 border border-red-200">
-                    <p className="text-[11px] flex items-center gap-1.5 text-red-600">
-                      <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-                      {pinError}
-                    </p>
-                  </div>
-                )}
-              </div>
-              <div className="px-6 pb-6">
-                <button
-                  onClick={handlePinVerification}
-                  disabled={isVerifyingPin}
-                  className="w-full py-3 rounded-xl bg-[#1d9bf0] hover:bg-[#1a8cd8] disabled:opacity-50 disabled:cursor-not-allowed text-[14px] text-white font-semibold transition-colors active:scale-[0.98] flex items-center justify-center gap-2"
-                >
-                  {isVerifyingPin ? (
-                    <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Verifying...</>
-                  ) : (
-                    'Access Classroom'
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
 
       {/* ===== LOGOUT MODAL ===== */}
       {showLogoutModal && (

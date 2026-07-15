@@ -140,9 +140,7 @@ export default function TeachersPage() {
 
   return (
     <main className="relative overflow-x-hidden min-h-screen bg-gradient-to-br from-white via-indigo-50/30 to-white">
-      {/* Decorative Elements — now correctly scoped to `main` (relative)
-          and clipped by overflow-x-hidden so they can't push out a
-          horizontal scrollbar on wide screens */}
+      {/* Decorative Elements */}
       <div className="absolute top-20 right-0 w-96 h-96 bg-gradient-to-bl from-[#6366f1]/10 to-transparent rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-40 left-20 w-64 h-64 bg-gradient-to-tr from-[#4338ca]/8 to-transparent rounded-full blur-3xl pointer-events-none" />
 
@@ -184,11 +182,6 @@ export default function TeachersPage() {
       </div>
 
       {/* Course Grid */}
-      {/* Single source of truth for horizontal spacing on this section —
-          the grid no longer carries its own conflicting lg:pl/pr rules.
-          Column count now climbs smoothly: 2 -> 3 -> 4 -> 5 -> 6, so
-          large/xl screens actually fill out instead of stretching 5
-          columns across with dead px-45 padding that never applied. */}
       <div className="max-w-[1600px] mx-auto px-6 sm:px-8 md:px-10 lg:px-12 xl:px-16 2xl:px-20 py-6 pb-16">
         {filteredCourses.length === 0 ? (
           <div className="text-center py-12">
@@ -199,7 +192,7 @@ export default function TeachersPage() {
             {filteredCourses.map((course) => (
               <div
                 key={course.id}
-                onClick={() => router.push(`/teachers/${course.id}`)}
+                onClick={() => router.push(`/teachers/login/${course.id}`)}
                 className="group bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col hover:-translate-y-1"
               >
                 {/* Course Image */}
