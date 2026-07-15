@@ -112,6 +112,17 @@ export default function RootLayout({
                     localStorage.setItem('theme', 'light');
                     document.documentElement.classList.remove('dark');
                   } catch(e) {}
+                } else if (path.startsWith('/dashboard')) {
+                  // For dashboard, let the dashboard's ThemeProvider handle the theme
+                  // Just remove any forced light mode from login page
+                  try {
+                    const currentTheme = localStorage.getItem('theme');
+                    if (currentTheme === 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                      // User has system dark mode, remove the forced light mode
+                      localStorage.removeItem('theme');
+                      document.documentElement.classList.add('dark');
+                    }
+                  } catch(e) {}
                 }
                 
                 // Disable browser scroll restoration
