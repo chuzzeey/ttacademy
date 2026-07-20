@@ -12,6 +12,10 @@ import { FadeIn, ScaleIn, SlideInLeft, SlideInRight, StaggerContainer, StaggerIt
 export default function HomePage() {
   return (
     <main>
+        <FadeIn>
+        <Contact />
+      </FadeIn>
+
       <Home />
 
       <StaggerContainer>
@@ -20,10 +24,7 @@ export default function HomePage() {
         </StaggerItem>
       </StaggerContainer>
 
-      <FadeIn>
-        <Contact />
-      </FadeIn>
-
+    
       <ScaleIn>
         <WhatYouGet />
       </ScaleIn>

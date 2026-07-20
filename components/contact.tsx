@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import Image from 'next/image'
 
 const COURSES = [
   "Cybersecurity", "Data Science", "AI Automation", "Computer Networking",
@@ -101,6 +102,73 @@ const FALLBACK_STATES: Record<string, { code: string; name: string }[]> = {
     { code: "MIL", name: "Mila" }, { code: "AIN", name: "Aïn Defla" }, { code: "NAAMA", name: "Naâma" },
     { code: "AIM", name: "Aïn Témouchent" }, { code: "GHA", name: "Ghardaïa" }, { code: "REL", name: "Relizane" }
   ]
+}
+
+function HeaderNav() {
+  const [scrolled, setScrolled] = useState(false)
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20)
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const scrollToContact = () => {
+    const contactSection = document.getElementById('contact')
+    if (contactSection) {
+      contactSection.scrollIntoView({ behavior: 'smooth' })
+    }
+  }
+
+  const scrollToFAQ = () => {
+    const faqSection = document.getElementById('faq-section')
+    if (faqSection) {
+      faqSection.scrollIntoView({ behavior: 'smooth' })
+    }
+  }
+
+  return (
+    <nav className={`sticky top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'glass shadow-sm' : 'bg-transparent'}`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16 md:h-20">
+          <button
+            onClick={() => window.location.reload()}
+            className="flex flex-col items-start gap-1 bg-transparent border-none cursor-pointer hover:opacity-80 transition-opacity"
+          >
+            <Image src="/rad.jpeg" alt="Tech Trailblazer Academy" width={80} height={32} className="h-7 md:h-8 w-auto" priority loading="eager" />
+            <span className="text-[9px] md:text-[10px] font-bold text-gray-900 tracking-wide">
+              Tech Trailblazer Academy
+            </span>
+          </button>
+
+          <div className="hidden lg:flex items-center gap-2 bg-white/60 backdrop-blur-md rounded-full p-1 border border-gray-100/50 shadow-sm">
+            {['Home', 'Register', 'FAQ'].map((item) => {
+              const handleClick = () => {
+                switch(item) {
+                  case 'Home': scrollToTop(); break
+                  case 'Register': scrollToContact(); break
+                  case 'FAQ': scrollToFAQ(); break
+                }
+              }
+              return (
+                <button
+                  key={item}
+                  onClick={handleClick}
+                  className="text-sm font-medium text-gray-900 hover:text-white px-5 py-2 rounded-full hover:bg-gradient-to-r hover:from-red-500 hover:to-red-600/80 transition-all duration-200"
+                >
+                  {item}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+    </nav>
+  )
 }
 
 export default function Contact() {
@@ -306,7 +374,9 @@ export default function Contact() {
   }
 
   return (
-    <section id="contact" className="w-full px-4 md:px-8 lg:px-16 py-16 md:py-24 bg-white relative overflow-hidden">
+    <>
+      <HeaderNav />
+      <section id="contact" className="w-full px-4 md:px-8 lg:px-16 py-16 md:py-24 bg-white relative overflow-hidden">
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-[#ef4444]/8 to-transparent rounded-full blur-3xl" />
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-[#991b1b]/6 to-transparent rounded-full blur-3xl" />
@@ -536,6 +606,7 @@ export default function Contact() {
       
         </div>
       </div>
-    </section>
+      </section>
+    </>
   )
 }
