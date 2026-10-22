@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { ChevronDown } from 'lucide-react'
 
 const faqs = [
     {
@@ -33,7 +34,7 @@ const FAQ = () => {
     const [openIndex, setOpenIndex] = useState<number | null>(null)
 
     return (
-        <section id="faq-section" aria-labelledby="faq-title" className="bg-white px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <section id="faq-section" aria-labelledby="faq-title" className="scroll-mt-16 bg-white px-5 py-16 sm:px-8 sm:py-20 md:scroll-mt-20 lg:px-10">
             <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.7fr_1.3fr] lg:gap-16">
                 <div className="max-w-md">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.17em] text-emerald-800">Support</p>
@@ -43,10 +44,6 @@ const FAQ = () => {
                     <p className="mt-4 text-sm leading-7 text-slate-500">
                         A few useful details about learning with Tech Trailblazer Academy.
                     </p>
-                    <a href="#contact" className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 underline decoration-emerald-300 underline-offset-4 transition hover:text-emerald-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700">
-                        Continue to application
-                        <span aria-hidden="true">→</span>
-                    </a>
                 </div>
 
                 <div className="divide-y divide-slate-200 border-y border-slate-200">
@@ -67,10 +64,8 @@ const FAQ = () => {
                                         onClick={() => setOpenIndex(isOpen ? null : index)}
                                     >
                                         {faq.question}
-                                        <span className={`flex h-8 w-8 shrink-0 items-center justify-center border border-slate-200 text-emerald-800 transition ${isOpen ? 'rotate-45 border-emerald-200 bg-emerald-50' : ''}`} aria-hidden="true">
-                                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                                                <path strokeLinecap="round" d="M12 5v14M5 12h14" />
-                                            </svg>
+                                        <span className={`flex h-8 w-8 shrink-0 items-center justify-center text-emerald-800 transition ${isOpen ? 'rotate-180' : ''}`} aria-hidden="true">
+                                            <ChevronDown className="h-4 w-4" strokeWidth={2} />
                                         </span>
                                     </button>
                                 </h3>

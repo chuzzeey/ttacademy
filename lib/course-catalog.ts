@@ -13,4 +13,7 @@ export const COURSE_CATALOG = [
   { slug: "digital-marketing", title: "Digital Marketing" },
   { slug: "cloud-computing", title: "Cloud Computing" },
   { slug: "data-analysis", title: "Data Analysis" },
+  { slug: "ai-video-creation", title: "AI Video Creation" },
+  { slug: "ai-agent-development", title: "AI Agent Development" },
+  { slug: "graphic-design-branding", title: "Graphic Design / Branding" },
 ] as const

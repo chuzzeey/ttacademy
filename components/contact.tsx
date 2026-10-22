@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
+import { Menu, X } from 'lucide-react'
 import { BRAND_LOGO_URL } from '@/lib/brand'
 import { COURSE_CATALOG } from '@/lib/course-catalog'
 
@@ -101,6 +102,7 @@ const FALLBACK_STATES: Record<string, { code: string; name: string }[]> = {
 
 export function HeaderNav() {
   const [scrolled, setScrolled] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20)
@@ -111,31 +113,61 @@ export function HeaderNav() {
   return (
     <nav
       aria-label="Main navigation"
-      className={`sticky top-0 z-50 border-b border-slate-200/80 transition-colors duration-200 ${
-        scrolled ? 'bg-white/95 shadow-sm' : 'bg-white'
+      className={`sticky top-0 z-50 border-b border-white/10 transition-colors duration-200 ${
+        scrolled ? 'bg-[#10251b]/95 shadow-sm' : 'bg-[#10251b]'
       }`}
     >
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 sm:px-8 lg:h-20 lg:px-10">
+      <div className="relative mx-auto flex h-16 max-w-7xl items-center justify-between px-5 sm:px-8 lg:h-20 lg:px-10">
         <a href="#home" aria-label="Tech Trailblazer Academy home" className="flex items-center gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700">
-          <Image src={BRAND_LOGO_URL} alt="" width={80} height={32} style={{ width: 'auto', height: 32 }} priority />
-          <span className="hidden text-xs font-semibold tracking-tight text-slate-900 sm:block">
+          <Image src={BRAND_LOGO_URL} alt="" width={120} height={48} style={{ width: 'auto', height: 44 }} priority />
+          <span className="hidden text-xs font-semibold tracking-tight text-white sm:block">
             Tech Trailblazer Academy
           </span>
         </a>
 
         <div className="flex items-center gap-4 sm:gap-6">
           <div className="hidden items-center gap-5 md:flex">
-            <a href="#home" className="text-sm font-medium text-slate-600 transition hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700">Home</a>
-            <a href="#benefits-section" className="text-sm font-medium text-slate-600 transition hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700">Programs</a>
-            <a href="#faq-section" className="text-sm font-medium text-slate-600 transition hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700">FAQ</a>
+            <a href="#home" className="text-sm font-medium text-emerald-50/75 transition hover:text-[#82b310] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300">Home</a>
+            <a href="#application-process" className="text-sm font-medium text-emerald-50/75 transition hover:text-[#82b310] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300">Courses</a>
+            <a href="#benefits-section" className="text-sm font-medium text-emerald-50/75 transition hover:text-[#82b310] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300">Benefits</a>
+            <a href="#faq-section" className="text-sm font-medium text-emerald-50/75 transition hover:text-[#82b310] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300">FAQ</a>
+            <a href="#join-section" className="text-sm font-medium text-emerald-50/75 transition hover:text-[#82b310] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300">Community</a>
           </div>
-          <a
-            href="#contact"
-            className="inline-flex min-h-10 items-center justify-center bg-emerald-800 px-4 text-xs font-semibold text-white transition hover:bg-emerald-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2 sm:px-5 sm:text-sm"
+          <button
+            type="button"
+            aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-navigation"
+            onClick={() => setMobileMenuOpen((open) => !open)}
+            className="inline-flex h-10 w-10 items-center justify-center text-emerald-50 transition hover:text-[#82b310] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 md:hidden"
           >
-            Apply now
-          </a>
+            {mobileMenuOpen ? <X aria-hidden="true" className="h-5 w-5" /> : <Menu aria-hidden="true" className="h-5 w-5" />}
+          </button>
         </div>
+      </div>
+      <div
+        id="mobile-navigation"
+        hidden={!mobileMenuOpen}
+        className="absolute inset-x-0 top-full border-t border-white/10 bg-[#10251b] px-5 py-3 shadow-lg md:hidden"
+      >
+        <nav aria-label="Mobile navigation" className="mx-auto flex max-w-7xl flex-col">
+          {[
+            { label: 'Home', href: '#home' },
+            { label: 'Courses', href: '#application-process' },
+            { label: 'Benefits', href: '#benefits-section' },
+            { label: 'FAQ', href: '#faq-section' },
+            { label: 'Community', href: '#join-section' },
+          ].map(({ label, href }) => (
+            <a
+              key={href}
+              href={href}
+              onClick={() => setMobileMenuOpen(false)}
+              className="border-b border-white/10 py-3 text-sm font-medium text-emerald-50/85 transition last:border-0 hover:text-[#82b310] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
+            >
+              {label}
+            </a>
+          ))}
+        </nav>
       </div>
     </nav>
   )
@@ -163,6 +195,16 @@ export default function Contact() {
   const [showEmailExistsPopup, setShowEmailExistsPopup] = useState(false)
   const formRef = useRef<HTMLDivElement>(null)
   const successRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const requestedCourse = new URLSearchParams(window.location.search).get("course")
+    if (!requestedCourse) return
+
+    const selectedCourse = COURSE_CATALOG.find(({ slug }) => slug === requestedCourse)
+    if (selectedCourse) {
+      setForm((current) => ({ ...current, course: selectedCourse.title.toLowerCase() }))
+    }
+  }, [])
 
   useEffect(() => {
     if (submitted && successRef.current) {
@@ -293,7 +335,7 @@ export default function Contact() {
 
   if (submitted) {
     return (
-      <section ref={successRef} id="contact" className="w-full px-4 md:px-8 lg:px-16 py-16 md:py-24 bg-white relative overflow-hidden">
+      <section ref={successRef} id="contact" className="scroll-mt-16 bg-white relative w-full overflow-hidden px-4 py-16 md:scroll-mt-20 md:px-8 md:py-24 lg:px-16">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-br from-emerald-500/5 to-transparent rounded-full blur-3xl" />
         </div>
@@ -345,7 +387,7 @@ export default function Contact() {
 
   return (
     <>
-      <section id="contact" aria-labelledby="registration-title" className="scroll-mt-16 bg-[#f7f8f7] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+      <section id="contact" aria-labelledby="registration-title" className="scroll-mt-16 bg-[#f7f8f7] px-5 py-16 sm:px-8 sm:py-20 md:scroll-mt-20 lg:px-10">
       <div className="mx-auto grid max-w-7xl items-start gap-10 lg:grid-cols-[0.72fr_1.28fr] lg:gap-14">
         <aside className="lg:sticky lg:top-28">
           <p className="text-[10px] font-semibold uppercase tracking-[0.17em] text-emerald-800">Registration</p>
@@ -355,12 +397,6 @@ export default function Contact() {
           <p className="mt-4 max-w-md text-sm leading-7 text-slate-600 sm:text-base">
             Fill out the form below and we&apos;ll get you enrolled in no time.
           </p>
-          <div className="mt-8 border-l-2 border-emerald-700 pl-4">
-            <p className="text-sm font-semibold text-slate-900">What happens next</p>
-            <p className="mt-1 text-sm leading-6 text-slate-500">
-              After you submit, we&apos;ll contact you using the email and WhatsApp details you provide.
-            </p>
-          </div>
           <p className="mt-6 text-xs leading-5 text-slate-500">
             Fields marked with <span className="font-semibold text-emerald-800">*</span> are required.
           </p>

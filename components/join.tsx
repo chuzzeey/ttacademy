@@ -4,7 +4,7 @@ import TelegramButton from './tele'
 const learners = ['/stud1.jpeg', '/stud2.jpeg', '/stud3.jpeg', '/stud4.jpeg']
 
 const Join = () => (
-    <section id="join-section" aria-labelledby="community-title" className="bg-slate-900 px-5 py-14 text-white sm:px-8 sm:py-16 lg:px-10">
+    <section id="join-section" aria-labelledby="community-title" className="scroll-mt-16 bg-slate-900 px-5 py-14 text-white sm:px-8 sm:py-16 md:scroll-mt-20 lg:px-10">
         <div className="mx-auto grid max-w-7xl items-center gap-8 lg:grid-cols-[1fr_0.8fr] lg:gap-16">
             <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.17em] text-emerald-300">Community</p>

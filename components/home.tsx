@@ -1,9 +1,5 @@
-'use client'
-
-import { COURSE_CATALOG } from '@/lib/course-catalog'
-
 const Home = () => (
-    <section id="home" aria-labelledby="hero-title" className="relative isolate overflow-hidden bg-[#10251b] text-white">
+    <section id="home" aria-labelledby="hero-title" className="scroll-mt-16 relative isolate overflow-hidden bg-[#10251b] text-white md:scroll-mt-20">
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[0.12] [background-image:radial-gradient(#a7f3d0_0.65px,transparent_0.65px)] [background-size:24px_24px]" />
         <div aria-hidden="true" className="hero-green-wash pointer-events-none absolute -right-44 top-1/2 h-[32rem] w-[32rem] -translate-y-1/2 rounded-full opacity-90 lg:right-[4%]" />
         <div aria-hidden="true" className="pointer-events-none absolute -bottom-64 left-[14%] h-[30rem] w-[30rem] rounded-full bg-emerald-800/25 blur-[110px]" />
@@ -18,7 +14,7 @@ const Home = () => (
 
                 <h1 id="hero-title" className="text-[clamp(2.65rem,6vw,5.5rem)] font-semibold leading-[0.99] tracking-[-0.06em] text-white">
                     <span className="block">Tuition Free Tech</span>
-                    <span className="hero-headline-accent block">Scholarships — Start</span>
+                    <span className="hero-headline-accent block">Scholarships Start</span>
                     <span className="block">Your Career Today</span>
                 </h1>
 
@@ -29,7 +25,7 @@ const Home = () => (
                 <ul className="mt-6 grid gap-3 text-sm text-emerald-50/85 sm:text-base">
                     {[
                         'Beginner Friendly — No prior experience required',
-                        'Flexible Learning — Online, Physical, or Hybrid',
+                        'Flexible Online Learning',
                         'Internship & Job Placement Support',
                     ].map((benefit) => (
                         <li key={benefit} className="flex items-start gap-3">
@@ -43,54 +39,37 @@ const Home = () => (
 
                 <div className="mt-8 flex flex-col gap-3 min-[430px]:flex-row min-[430px]:items-center">
                     <a
-                        href="#contact"
-                        className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-emerald-400 px-6 text-sm font-semibold text-emerald-950 shadow-[0_8px_24px_rgba(4,120,87,0.25)] transition duration-200 hover:-translate-y-0.5 hover:bg-emerald-300 hover:shadow-[0_12px_30px_rgba(4,120,87,0.32)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-200 motion-reduce:transform-none"
+                        href="#application-process"
+                        className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#a0c44b] px-6 text-sm font-semibold text-emerald-950 shadow-[0_8px_24px_rgba(4,120,87,0.25)] transition duration-200 hover:-translate-y-0.5 hover:bg-[#91b13f] hover:shadow-[0_12px_30px_rgba(4,120,87,0.32)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-200 motion-reduce:transform-none"
                     >
                         Explore Courses
                         <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14m-6-6 6 6-6 6" />
                         </svg>
                     </a>
-                    <a href="#contact" className="inline-flex min-h-12 items-center justify-center rounded-xl px-5 text-sm font-semibold text-emerald-100/80 transition-colors hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-200">
+                    <a href="#contact" className="inline-flex min-h-12 items-center justify-center rounded-xl border border-[#83945a] px-5 text-sm font-semibold text-emerald-100/80 transition-colors hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-200">
                         Apply
                     </a>
                 </div>
             </div>
 
-            <aside aria-label={`${COURSE_CATALOG.length} available learning paths`} className="pointer-events-none absolute right-0 top-1/2 z-0 w-[310px] -translate-y-1/2 translate-x-[54%] opacity-50 sm:w-[360px] sm:opacity-60 md:w-[420px] md:opacity-75 lg:pointer-events-auto lg:static lg:z-10 lg:ml-auto lg:w-full lg:max-w-[480px] lg:translate-x-0 lg:opacity-100">
-                <div className="hero-orbit-stage" aria-hidden="true">
+            <div aria-hidden="true" className="hero-globe pointer-events-none absolute right-[-42%] top-[46%] z-0 w-[min(120vw,520px)] -translate-y-1/2 opacity-45 sm:right-[-24%] sm:w-[min(92vw,600px)] lg:right-[2%] lg:top-1/2 lg:w-[min(58vw,700px)] lg:opacity-55">
+                <div className="hero-orbit-stage">
                     <div className="hero-orbit-glow" />
                     <div className="hero-orbit">
                         <div className="hero-orbit-ring hero-orbit-ring-outer" />
                         <div className="hero-orbit-ring hero-orbit-ring-inner" />
-                        <div className="premium-orbit-core">
-                            <div className="premium-orbit-shine" />
-                            <div className="premium-orbit-land premium-orbit-land-one" />
-                            <div className="premium-orbit-land premium-orbit-land-two" />
+                        <div className="hero-orbit-sphere">
+                            <span className="hero-globe-latitude hero-globe-latitude-one" />
+                            <span className="hero-globe-latitude hero-globe-latitude-two" />
+                            <span className="hero-globe-latitude hero-globe-equator" />
+                            <span className="hero-globe-longitude hero-globe-longitude-one" />
+                            <span className="hero-globe-longitude hero-globe-longitude-two" />
+                            <span className="hero-globe-longitude hero-globe-longitude-three" />
                         </div>
                     </div>
-                    <span className="hero-orbit-point hero-orbit-point-one" />
-                    <span className="hero-orbit-point hero-orbit-point-two" />
                 </div>
-
-                <div className="mx-auto mt-2 hidden max-w-sm rounded-2xl border border-white/15 bg-white/[0.06] p-4 shadow-[0_12px_32px_-20px_rgba(0,0,0,0.45)] backdrop-blur-sm lg:block">
-                    <div className="flex items-center justify-between gap-4">
-                        <div className="min-w-0">
-                            <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-emerald-200">Your next chapter</p>
-                            <p className="mt-1 truncate text-sm font-semibold tracking-tight text-white">Skills to move you forward</p>
-                        </div>
-                        <span className="shrink-0 text-xl font-semibold tracking-tight text-emerald-300">
-                            {COURSE_CATALOG.length}<span className="ml-1 text-xs font-medium text-emerald-50/65">paths</span>
-                        </span>
-                    </div>
-                    <div className="mt-3 flex gap-1.5" aria-hidden="true">
-                        <span className="h-1 flex-1 rounded-full bg-emerald-300" />
-                        <span className="h-1 flex-1 rounded-full bg-emerald-300/50" />
-                        <span className="h-1 flex-1 rounded-full bg-emerald-300/25" />
-                        <span className="h-1 flex-1 rounded-full bg-white/15" />
-                    </div>
-                </div>
-            </aside>
+            </div>
         </div>
     </section>
 )

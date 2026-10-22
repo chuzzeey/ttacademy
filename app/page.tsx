@@ -13,8 +13,8 @@ export default function HomePage() {
     <main className="landing-page min-w-0 overflow-x-clip bg-white text-slate-950">
       <HeaderNav />
       <Home />
-      <Contact />
       <ApplicationSteps />
+      <Contact />
       <Benefits />
       <FAQ />
       <Join />

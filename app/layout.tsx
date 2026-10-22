@@ -102,37 +102,6 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if (typeof window !== 'undefined') {
-                // Disable browser scroll restoration
-                window.history.scrollRestoration = 'manual';
-                
-                // Scroll to top immediately
-                window.scrollTo(0, 0);
-                
-                // Scroll after DOM is fully loaded
-                if (document.readyState === 'loading') {
-                  document.addEventListener('DOMContentLoaded', () => {
-                    document.documentElement.scrollTop = 0;
-                    document.body.scrollTop = 0;
-                  });
-                } else {
-                  document.documentElement.scrollTop = 0;
-                  document.body.scrollTop = 0;
-                }
-                
-                // Also scroll after a short delay to ensure it works
-                setTimeout(() => {
-                  window.scrollTo(0, 0);
-                  if (document.documentElement) document.documentElement.scrollTop = 0;
-                  if (document.body) document.body.scrollTop = 0;
-                }, 100);
-              }
-            `,
-          }}
-        />
         <meta name="facebook-domain-verification" content="duxa7kyhhskwb27009uj5ns45kvc9o" />
         {/* Meta Pixel Code */}
         <script

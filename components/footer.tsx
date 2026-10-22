@@ -6,9 +6,11 @@ const Footer = () => {
     const footerLinks = {
         Explore: [
             { label: 'Home', href: '#home' },
-            { label: 'Programs', href: '#benefits-section' },
+            { label: 'Courses', href: '#application-process' },
+            { label: 'Benefits', href: '#benefits-section' },
             { label: 'Application', href: '#contact' },
             { label: 'FAQ', href: '#faq-section' },
+            { label: 'Community', href: '#join-section' },
         ],
     }
 

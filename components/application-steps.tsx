@@ -1,60 +1,90 @@
-import { ArrowRight, BookOpenCheck, ClipboardList, MailCheck } from 'lucide-react'
+import {
+    ArrowUpRight,
+    BarChart3,
+    Bot,
+    Bug,
+    Cloud,
+    Code2,
+    Monitor,
+    Paintbrush,
+    Palette,
+    Server,
+    ShieldCheck,
+    Video,
+    Workflow,
+    type LucideIcon,
+} from 'lucide-react'
 import { COURSE_CATALOG } from '@/lib/course-catalog'
 
-const steps = [
-    {
-        number: '01',
-        title: 'Choose a course',
-        description: `Explore ${COURSE_CATALOG.length} learning paths and select one in the application form.`,
-        icon: BookOpenCheck,
-    },
-    {
-        number: '02',
-        title: 'Share your details',
-        description: 'Tell us about your goals, location, and learning setup.',
-        icon: ClipboardList,
-    },
-    {
-        number: '03',
-        title: 'Hear from our team',
-        description: 'After you apply, we follow up using your email and WhatsApp details.',
-        icon: MailCheck,
-    },
+const APPLICATION_COURSE_SLUGS = [
+    'cybersecurity',
+    'uiux-design',
+    'cloud-computing',
+    'web-development',
+    'data-analysis',
+    'ai-video-creation',
+    'ai-automation',
+    'ai-agent-development',
+    'backend-development',
+    'frontend-development',
+    'ethical-hacking',
+    'graphic-design-branding',
 ]
+
+const applicationCourses = COURSE_CATALOG.filter(({ slug }) => APPLICATION_COURSE_SLUGS.includes(slug))
+
+const courseIcons: Record<string, LucideIcon> = {
+    cybersecurity: ShieldCheck,
+    'uiux-design': Palette,
+    'cloud-computing': Cloud,
+    'web-development': Code2,
+    'data-analysis': BarChart3,
+    'ai-video-creation': Video,
+    'ai-automation': Workflow,
+    'ai-agent-development': Bot,
+    'backend-development': Server,
+    'frontend-development': Monitor,
+    'ethical-hacking': Bug,
+    'graphic-design-branding': Paintbrush,
+}
 
 function ApplicationSteps() {
     return (
-    <section id="application-process" aria-labelledby="application-process-title" className="bg-white px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+    <section id="application-process" aria-labelledby="application-process-title" className="scroll-mt-16 bg-white px-5 py-16 sm:px-8 sm:py-20 md:scroll-mt-20 lg:px-10">
         <div className="mx-auto max-w-7xl">
             <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                     <p className="text-[10px] font-semibold uppercase tracking-[0.17em] text-emerald-800">Application process</p>
                     <h2 id="application-process-title" className="mt-2 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">
-                        A straightforward way to get started
+                        Choose a course and apply
                     </h2>
                 </div>
                 <p className="max-w-sm text-sm leading-6 text-slate-500">
-                    Three clear steps take you from choosing a learning path to hearing from our team.
+                    Find the learning path that interests you and start your application.
                 </p>
             </div>
 
-            <ol className="grid gap-3 md:grid-cols-3">
-                {steps.map(({ number, title, description, icon: Icon }, index) => (
-                    <li key={number} className="relative min-w-0 rounded-2xl border border-slate-200/90 bg-white p-5 shadow-[0_2px_12px_rgba(15,23,42,0.025)] sm:p-6">
-                        <div className="mb-7 flex items-center justify-between">
-                            <span className="text-xs font-semibold tabular-nums tracking-[0.12em] text-emerald-800">{number} / 03</span>
-                            <span className="flex h-9 w-9 items-center justify-center bg-emerald-50 text-emerald-800">
-                                <Icon aria-hidden="true" className="h-4 w-4" strokeWidth={1.8} />
-                            </span>
-                        </div>
-                        <h3 className="text-base font-semibold tracking-tight text-slate-950">{title}</h3>
-                        <p className="mt-2 max-w-sm text-sm leading-6 text-slate-500">{description}</p>
-                        {index < steps.length - 1 && (
-                            <ArrowRight aria-hidden="true" className="absolute -right-3 top-1/2 z-10 hidden h-5 w-5 -translate-y-1/2 bg-white p-0.5 text-emerald-700 md:block" />
-                        )}
+            <ul className="grid gap-3 sm:grid-cols-2">
+                {applicationCourses.map(({ slug, title }) => {
+                    const CourseIcon = courseIcons[slug]
+
+                    return (
+                    <li key={slug} className="flex min-w-0 items-center justify-between gap-4 border border-slate-200/90 bg-white px-4 py-4 transition-colors hover:border-[#83945a] sm:px-5">
+                        <span className="flex min-w-0 items-center gap-3 text-sm font-medium text-slate-800">
+                            <CourseIcon aria-hidden="true" className="h-4 w-4 shrink-0 text-emerald-700" strokeWidth={1.8} />
+                            <span>{title}</span>
+                        </span>
+                        <a
+                            href={`/?course=${encodeURIComponent(slug)}#contact`}
+                            className="inline-flex shrink-0 items-center gap-1 rounded-md border border-[#83945a] px-3 py-1.5 text-xs font-semibold text-emerald-800 transition-colors hover:border-[#82b310] hover:text-[#82b310] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700"
+                        >
+                            Apply
+                            <ArrowUpRight aria-hidden="true" className="h-3.5 w-3.5" />
+                        </a>
                     </li>
-                ))}
-            </ol>
+                    )
+                })}
+            </ul>
         </div>
     </section>
     )
