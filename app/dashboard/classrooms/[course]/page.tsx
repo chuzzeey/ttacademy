@@ -76,7 +76,18 @@ export default function AdminClassroomPage() {
       const { data: { user }, error: userError } = await supabase.auth.getUser()
       if (userError || !user) throw new Error("Your admin session has expired.")
       const { data: currentRole, error: roleError } = await supabase.rpc("classroom_user_role", { p_course_slug: courseSlug })
-      if (roleError || currentRole !== "admin") throw new Error("Admin classroom access could not be verified.")
+      if (roleError) {
+        console.error("Admin classroom role lookup failed:", roleError)
+        throw new Error("Could not check your classroom permissions. Refresh the page and try again.")
+      }
+      if (currentRole !== "admin") {
+        console.error("Signed-in administrator was not recognized by classroom role check:", {
+          userId: user.id,
+          email: user.email,
+          role: currentRole,
+        })
+        throw new Error("Your admin account is not recognized by classroom access. Sign out and back in, then try again.")
+      }
       const { data: name, error: nameError } = await supabase.rpc("classroom_user_name", { p_course_slug: courseSlug })
       if (nameError) throw new Error("Could not load the administrator profile.")
       if (!active) return
