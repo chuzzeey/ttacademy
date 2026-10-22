@@ -128,6 +128,180 @@ html {
   box-shadow: var(--card-shadow-hover);
 }
 
+.admin-theme {
+  min-height: 100vh;
+  transition: background-color 300ms ease, color 300ms ease;
+}
+
+.admin-theme-dark {
+  --background: oklch(0.16 0.025 155);
+  --foreground: oklch(0.94 0.012 145);
+  --card: oklch(0.2 0.025 155);
+  --card-foreground: oklch(0.94 0.012 145);
+  --popover: oklch(0.2 0.025 155);
+  --popover-foreground: oklch(0.94 0.012 145);
+  --primary: oklch(0.72 0.14 155);
+  --primary-foreground: oklch(0.16 0.025 155);
+  --secondary: oklch(0.25 0.025 155);
+  --secondary-foreground: oklch(0.94 0.012 145);
+  --muted: oklch(0.25 0.025 155);
+  --muted-foreground: oklch(0.7 0.02 150);
+  --accent: oklch(0.27 0.04 155);
+  --accent-foreground: oklch(0.94 0.012 145);
+  --border: oklch(0.32 0.025 155);
+  --input: oklch(0.32 0.025 155);
+  --ring: oklch(0.72 0.14 155);
+  --card-shadow: 0 1px 3px rgb(0 0 0 / 0.2), 0 1px 2px -1px rgb(0 0 0 / 0.16);
+  --card-shadow-hover: 0 8px 24px rgb(0 0 0 / 0.26);
+  --card-border-color: oklch(0.31 0.025 155);
+  --card-bg: oklch(0.2 0.025 155);
+  color-scheme: dark;
+  color: #e8f0e9;
+  background: #101a15;
+}
+
+.admin-theme-dark > div {
+  background-color: #101a15 !important;
+}
+
+.admin-theme-dark .bg-white,
+.admin-theme-dark [class~="bg-white/90"],
+.admin-theme-dark [class~="bg-white/95"] {
+  background-color: #1a2720 !important;
+}
+
+.admin-theme-dark [class~="bg-white/35"],
+.admin-theme-dark [class~="bg-white/45"],
+.admin-theme-dark [class~="bg-white/55"],
+.admin-theme-dark [class~="bg-white/65"] {
+  background-color: rgb(26 39 32 / 0.88) !important;
+}
+
+.admin-theme-dark .bg-slate-50,
+.admin-theme-dark .bg-slate-100,
+.admin-theme-dark [class~="bg-slate-50/80"] {
+  background-color: #202e26 !important;
+}
+
+.admin-theme-dark .bg-emerald-50 {
+  background-color: #193c2b !important;
+}
+
+.admin-theme-dark .bg-emerald-100 {
+  background-color: #214a35 !important;
+}
+
+.admin-theme-dark .text-slate-950,
+.admin-theme-dark .text-slate-900,
+.admin-theme-dark .text-slate-800,
+.admin-theme-dark .text-foreground {
+  color: #eef5ef !important;
+}
+
+.admin-theme-dark .text-slate-700,
+.admin-theme-dark .text-slate-600,
+.admin-theme-dark .text-slate-500,
+.admin-theme-dark .text-muted-foreground {
+  color: #a7b8ab !important;
+}
+
+.admin-theme-dark .text-slate-400 {
+  color: #87988b !important;
+}
+
+.admin-theme-dark .border-slate-100,
+.admin-theme-dark .border-slate-200,
+.admin-theme-dark .border-border,
+.admin-theme-dark [class*="border-slate-"],
+.admin-theme-dark [class*="border-white"],
+.admin-theme-dark [class~="border-border/60"],
+.admin-theme-dark [class~="border-border/70"],
+.admin-theme-dark [class~="border-border/80"] {
+  border-color: rgb(144 174 151 / 0.16) !important;
+}
+
+.admin-theme-dark .ring-white,
+.admin-theme-dark .ring-slate-100 {
+  --tw-ring-color: rgb(144 174 151 / 0.16) !important;
+}
+
+.admin-theme-dark .admin-notification-badge {
+  border-color: #1a2720 !important;
+}
+
+.admin-theme-dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
+.admin-theme-dark .divide-border\/60 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #314238 !important;
+}
+
+.admin-theme-dark .hover\:bg-slate-50:hover,
+.admin-theme-dark .hover\:bg-slate-100:hover,
+.admin-theme-dark .hover\:bg-muted:hover {
+  background-color: #26372d !important;
+}
+
+.admin-theme-dark .bg-\[\#f7f8f7\] {
+  background-color: #101a15 !important;
+}
+
+.admin-theme-dark .admin-theme-toggle,
+.admin-theme-dark .admin-notification-trigger {
+  border-color: rgb(144 174 151 / 0.16) !important;
+  background-color: #202e26 !important;
+  color: #b9c8bc !important;
+}
+
+.admin-theme-dark .admin-notification-panel {
+  border-color: rgb(144 174 151 / 0.16) !important;
+  background-color: #1a2720 !important;
+}
+
+.admin-theme-dark .admin-sidebar,
+.admin-theme-dark .admin-topbar,
+.admin-theme-dark .admin-mobile-drawer {
+  border-color: rgb(144 174 151 / 0.16) !important;
+}
+
+.admin-theme-dark .text-emerald-800 {
+  color: #a8e7b5 !important;
+}
+
+.admin-theme-dark .text-emerald-700 {
+  color: #8dd6a0 !important;
+}
+
+.admin-theme-dark .border-emerald-200 {
+  border-color: #326448 !important;
+}
+
+.admin-theme-dark .bg-emerald-50\/50,
+.admin-theme-dark .bg-emerald-50\/80 {
+  background-color: rgb(25 60 43 / 0.72) !important;
+}
+
+.admin-theme-dark input,
+.admin-theme-dark textarea,
+.admin-theme-dark select {
+  color: #eef5ef;
+}
+
+.admin-theme-dark input::placeholder,
+.admin-theme-dark textarea::placeholder {
+  color: #91a296;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-theme,
+  .admin-theme *,
+  .admin-theme *::before,
+  .admin-theme *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
 /* ============================================
    DASHBOARD CARD ACCENT VARIANTS
    ============================================ */

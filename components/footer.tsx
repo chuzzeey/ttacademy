@@ -1,5 +1,6 @@
 'use client'
 import React from 'react'
+import { BRAND_LOGO_URL } from '@/lib/brand'
 
 const Footer = () => {
     const footerLinks = {
@@ -41,7 +42,7 @@ const Footer = () => {
                             className="flex flex-col items-center md:items-start bg-transparent border-none cursor-pointer hover:opacity-80 transition-opacity"
                         >
                             <img 
-                                src="/rad.jpeg" 
+                                src={BRAND_LOGO_URL}
                                 alt="Tech Trailblazer Academy" 
                                 className="h-8 md:h-10 mb-3"
                             />

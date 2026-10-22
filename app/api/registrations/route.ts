@@ -1,5 +1,55 @@
 import { NextRequest, NextResponse } from "next/server";
+import { ADMIN_EMAIL } from "@/lib/supabase/admin-access";
+import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/server-admin";
+
+const studentDirectoryColumns = [
+  "id",
+  "name",
+  "email",
+  "phone",
+  "course",
+  "sex",
+  "country",
+  "state",
+  "employment_status",
+  "has_laptop",
+  "reason",
+  "payment_status",
+  "restricted",
+  "reg_date",
+  "reg_time",
+  "created_at",
+].join(",");
+
+async function authorizeAdmin() {
+  const authClient = await createClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await authClient.auth.getUser();
+
+  if (authError || !user) {
+    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+  }
+
+  if (user.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) return null;
+
+  const { data: profile, error } = await authClient
+    .from("admin_profiles")
+    .select("user_id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Student directory authorization failed:", error);
+    return NextResponse.json({ error: "Unable to verify admin access" }, { status: 500 });
+  }
+  if (!profile) {
+    return NextResponse.json({ error: "Admin access required" }, { status: 403 });
+  }
+  return null;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -90,7 +140,7 @@ export async function POST(request: NextRequest) {
         reg_date: regDate,
         reg_time: regTime,
       })
-      .select()
+      .select("id,name,email,course,created_at")
       .single()
 
     if (insertError) {
@@ -168,6 +218,9 @@ export async function POST(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
+    const authorizationError = await authorizeAdmin();
+    if (authorizationError) return authorizationError;
+
     const body = await request.json();
 
     const {
@@ -176,7 +229,7 @@ export async function PATCH(request: NextRequest) {
       restricted,
     } = body;
 
-    if (!studentId) {
+    if (typeof studentId !== "string" || !studentId.trim()) {
       return NextResponse.json(
         {
           error: "Missing studentId",
@@ -187,12 +240,9 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const supabase = await createAdminClient()
-    
-    // Build update object
-    const updateData: any = {}
-    
-    if (payment_status) {
+    const updateData: { payment_status?: string; restricted?: boolean } = {}
+
+    if (payment_status !== undefined) {
       const validStatuses = [
         "Not Paid",
         "Fully Paid",
@@ -214,17 +264,28 @@ export async function PATCH(request: NextRequest) {
     }
 
     if (restricted !== undefined) {
+      if (typeof restricted !== "boolean") {
+        return NextResponse.json({ error: "Invalid restriction value" }, { status: 400 });
+      }
       updateData.restricted = restricted
     }
 
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json({ error: "No valid student updates provided" }, { status: 400 });
+    }
+
+    const supabase = await createAdminClient()
     const { data: updatedStudent, error: updateError } = await supabase
       .from('students')
       .update(updateData)
-      .eq('id', studentId)
-      .select()
+      .eq('id', studentId.trim())
+      .select('id,payment_status,restricted')
       .single()
 
-    if (updateError) throw updateError
+    if (updateError) {
+      console.error("Student update query failed:", updateError);
+      return NextResponse.json({ error: "Unable to update student" }, { status: 500 });
+    }
 
     return NextResponse.json(
       {
@@ -237,13 +298,11 @@ export async function PATCH(request: NextRequest) {
     );
 
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-
-    console.error("Student update error:", message);
+    console.error("Student update error:", err);
 
     return NextResponse.json(
       {
-        error: message,
+        error: "Unable to update student",
       },
       {
         status: 500,
@@ -255,13 +314,19 @@ export async function PATCH(request: NextRequest) {
 
 export async function GET() {
   try {
+    const authorizationError = await authorizeAdmin();
+    if (authorizationError) return authorizationError;
+
     const supabase = await createAdminClient()
     const { data: students, error: fetchError } = await supabase
       .from('students')
-      .select('*')
+      .select(studentDirectoryColumns)
       .order('created_at', { ascending: false })
 
-    if (fetchError) throw fetchError
+    if (fetchError) {
+      console.error("Student directory query failed:", fetchError);
+      return NextResponse.json({ error: "Unable to load student directory" }, { status: 500 });
+    }
 
     return NextResponse.json(
       {
@@ -269,17 +334,16 @@ export async function GET() {
       },
       {
         status: 200,
+        headers: { "Cache-Control": "private, no-store" },
       }
     );
 
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-
-    console.error("Registration fetch error:", message);
+    console.error("Registration fetch error:", err);
 
     return NextResponse.json(
       {
-        error: message,
+        error: "Unable to load student directory",
       },
       {
         status: 500,

@@ -1,5 +1,14 @@
 @import "tailwindcss";
 
+#admin-login-form input:-webkit-autofill,
+#admin-login-form input:-webkit-autofill:hover,
+#admin-login-form input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #20231f;
+  -webkit-box-shadow: 0 0 0 1000px #fff inset;
+  box-shadow: 0 0 0 1000px #fff inset;
+  transition: background-color 9999s ease-out 0s;
+}
+
 /* ============================================
    GLOBAL COLOR SYSTEM
    ============================================ */

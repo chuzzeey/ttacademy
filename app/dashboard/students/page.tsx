@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react"
 import { PageHeader } from "../components/dashboard/page-header"
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
+import { Card, CardContent, CardHeader } from "../components/ui/card"
 import { Button } from "../components/ui/button"
 import { Input } from "../components/ui/input"
 import { Search, Eye, ChevronLeft, ChevronRight, User, X, Mail, BookOpen, Clock, Phone, MapPin, Copy, Check, Shield, ShieldOff, SlidersHorizontal, ChevronDown } from "lucide-react"
@@ -52,6 +52,8 @@ interface Student {
 export default function StudentsPage() {
   const [students, setStudents] = useState<Student[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const [reloadKey, setReloadKey] = useState(0)
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
   const [panelOpen, setPanelOpen] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
@@ -73,18 +75,25 @@ export default function StudentsPage() {
 
   useEffect(() => {
     const fetchStudents = async () => {
+      setLoading(true)
+      setLoadError(null)
       try {
         const res = await fetch("/api/registrations")
-        const json = await res.json()
-        if (json.data) setStudents(json.data)
+        const json: { data?: Student[]; error?: string } = await res.json()
+        if (!res.ok) throw new Error(json.error || "Failed to load students")
+        if (!Array.isArray(json.data)) {
+          throw new Error("The registrations response did not contain a student list")
+        }
+        setStudents(json.data)
       } catch (err) {
         console.error("Failed to fetch students:", err)
+        setLoadError(err instanceof Error ? err.message : "Unable to load students.")
       } finally {
         setLoading(false)
       }
     }
-    fetchStudents()
-  }, [])
+    void fetchStudents()
+  }, [reloadKey])
 
   useEffect(() => {
     setCurrentPage(1)
@@ -232,42 +241,44 @@ export default function StudentsPage() {
     <>
       <PageHeader
         title="Student Records"
-        description="View and manage student database with payment and registration activity."
+        description="Search, review, and manage registrations."
       />
 
-      {/* Stats Cards - Responsive grid */}
-      <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-5 sm:mb-7">
-        <Card className="dashboard-card stat-card">
-          <CardContent className="p-4 sm:p-5">
-            <p className="text-xl sm:text-2xl font-semibold">{totalStudents}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Total</p>
-          </CardContent>
-        </Card>
-        <Card className="dashboard-card stat-card">
-          <CardContent className="p-4 sm:p-5">
-            <p className="text-xl sm:text-2xl font-semibold">{students.filter(s => s.payment_status !== "Not Paid").length}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Enrolled</p>
-          </CardContent>
-        </Card>
-        <Card className="dashboard-card stat-card">
-          <CardContent className="p-4 sm:p-5">
-            <p className="text-xl sm:text-2xl font-semibold">{students.filter(s => s.payment_status === "Not Paid").length}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Pending</p>
-          </CardContent>
-        </Card>
+      <div className="mb-6 grid grid-cols-3 border-y border-border bg-card">
+        <div className="px-3 py-3 sm:px-5">
+          <p className="text-lg font-semibold tabular-nums">
+            {loading ? "—" : totalStudents}
+          </p>
+          <p className="text-xs text-muted-foreground">Students</p>
+        </div>
+        <div className="border-l border-border px-3 py-3 sm:px-5">
+          <p className="text-lg font-semibold tabular-nums">
+            {loading
+              ? "—"
+              : students.filter((student) => student.payment_status && student.payment_status !== "Not Paid").length}
+          </p>
+          <p className="text-xs text-muted-foreground">Payment recorded</p>
+        </div>
+        <div className="border-l border-border px-3 py-3 sm:px-5">
+          <p className="text-lg font-semibold tabular-nums">
+            {loading
+              ? "—"
+              : students.filter((student) => student.payment_status === "Not Paid").length}
+          </p>
+          <p className="text-xs text-muted-foreground">Awaiting payment</p>
+        </div>
       </div>
 
       {/* Student Records */}
       <Card className="dashboard-card">
         <CardHeader className="pb-3 sm:pb-4">
-          <CardTitle className="text-sm sm:text-base font-medium">Student Records</CardTitle>
-          
           {/* Search + Filter Toggle */}
           <div className="mt-4 flex items-center gap-2.5 sm:gap-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 placeholder="Search students..."
+                aria-label="Search students"
                 className="pl-9 pr-9 w-full h-10 sm:h-11 text-sm rounded-xl bg-muted/30 border-border/60 focus:bg-background focus:border-amber-400/50 transition-all"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -284,6 +295,8 @@ export default function StudentsPage() {
             <Button
               variant="outline"
               size="sm"
+              aria-label="Show filters"
+              aria-expanded={showFilters}
               className="h-10 sm:h-11 w-10 sm:w-11 p-0 flex-shrink-0 rounded-xl border-border/60"
               onClick={() => setShowFilters(!showFilters)}
             >
@@ -353,9 +366,30 @@ export default function StudentsPage() {
           )}
         </CardHeader>
         <CardContent>
+          {loadError && (
+            <div
+              role="alert"
+              className="mb-4 flex flex-col gap-3 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <span>Could not load students: {loadError}</span>
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-red-200 bg-white text-red-800 hover:bg-red-100"
+                onClick={() => setReloadKey((key) => key + 1)}
+                disabled={loading}
+              >
+                Try again
+              </Button>
+            </div>
+          )}
           {loading ? (
             <div className="flex items-center justify-center py-16">
               <div className="w-6 h-6 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />
+            </div>
+          ) : loadError && students.length === 0 ? (
+            <div className="py-12 text-center text-sm text-muted-foreground">
+              Student records are unavailable until the request succeeds.
             </div>
           ) : filteredStudents.length === 0 ? (
             <div className="py-16 text-center">

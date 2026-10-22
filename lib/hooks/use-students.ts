@@ -4,29 +4,34 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useStudentStore } from '@/lib/stores/student-store'
 import { createClient } from '@/lib/supabase/client'
 import { useEffect } from 'react'
+import type { Student } from '@/lib/stores/student-store'
 
 export function useStudents() {
   const queryClient = useQueryClient()
   const { setStudents, addStudent } = useStudentStore()
 
   // Fetch students with TanStack Query
-  const { data: students = [], isLoading, error, refetch } = useQuery({
+  const { data, isLoading, isFetching, error, refetch } = useQuery<Student[]>({
     queryKey: ['students'],
     queryFn: async () => {
       const res = await fetch('/api/registrations')
-      if (!res.ok) throw new Error('Failed to fetch students')
-      const json = await res.json()
-      return json.data || []
+      const json: { data?: Student[]; error?: string } = await res.json()
+      if (!res.ok) throw new Error(json.error || 'Failed to fetch students')
+      if (!Array.isArray(json.data)) {
+        throw new Error('The registrations response did not contain a student list')
+      }
+      return json.data
     },
     staleTime: 1000 * 60 * 5, // 5 minutes cache
   })
+  const students = data ?? []
 
   // Sync data to Zustand store when it changes
   useEffect(() => {
-    if (students.length > 0) {
-      setStudents(students)
+    if (data !== undefined) {
+      setStudents(data)
     }
-  }, [students, setStudents])
+  }, [data, setStudents])
 
   // Set up Supabase Realtime subscription
   const setupRealtimeSubscription = () => {
@@ -69,6 +74,7 @@ export function useStudents() {
   return {
     students,
     isLoading,
+    isFetching,
     error,
     refetch,
     setupRealtimeSubscription,

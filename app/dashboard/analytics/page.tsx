@@ -1,283 +1,275 @@
 "use client"
 
+import { useMemo } from "react"
+import { Download } from "lucide-react"
 import { PageHeader } from "../components/dashboard/page-header"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card"
 import { Button } from "../components/ui/button"
-import { 
-  Download, 
-  FileText, 
-  Calendar, 
-  TrendingUp, 
-  TrendingDown,
-  BarChart3,
-  PieChart,
-  ArrowUpRight,
-  ArrowDownRight,
-  Clock
-} from "lucide-react"
 import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart as RechartsPieChart,
-  Pie,
-  Cell,
-  Legend,
-} from "recharts"
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../components/ui/table"
+import { useStudents } from "@/lib/hooks/use-students"
+import type { Student } from "@/lib/stores/student-store"
 
-const revenueComparisonData = [
-  { month: "Jan", thisYear: 42000, lastYear: 35000 },
-  { month: "Feb", thisYear: 38000, lastYear: 32000 },
-  { month: "Mar", thisYear: 45000, lastYear: 38000 },
-  { month: "Apr", thisYear: 52000, lastYear: 42000 },
-  { month: "May", thisYear: 61000, lastYear: 48000 },
-  { month: "Jun", thisYear: 58000, lastYear: 52000 },
+const paymentStatuses = [
+  "Fully Paid",
+  "1st Installment",
+  "2nd Installment",
+  "Not Paid",
 ]
 
-const salesByCategory = [
-  { name: "Electronics", value: 42, color: "#B4D4A5" },
-  { name: "Footwear", value: 28, color: "#3D3D3D" },
-  { name: "Accessories", value: 18, color: "#6B7280" },
-  { name: "Apparel", value: 12, color: "#D1D5DB" },
-]
+function createCsv(students: Student[]) {
+  const rows = [
+    ["Name", "Email", "Course", "Payment status", "Country", "Registered"],
+    ...students.map((student) => [
+      student.name,
+      student.email,
+      student.course,
+      student.payment_status,
+      student.country,
+      student.created_at || "",
+    ]),
+  ]
+  return rows
+    .map((row) =>
+      row
+        .map((value) => `"${String(value ?? "").replaceAll('"', '""')}"`)
+        .join(","),
+    )
+    .join("\r\n")
+}
 
-const availableReports = [
-  { 
-    name: "Monthly Performance Report", 
-    description: "Complete breakdown of student performance and enrollment metrics",
-    date: "Generated Jan 15, 2026",
-    size: "2.4 MB"
-  },
-  { 
-    name: "Revenue Analytics Report", 
-    description: "Revenue analysis, trends, and forecasting data",
-    date: "Generated Jan 14, 2026",
-    size: "1.8 MB"
-  },
-  { 
-    name: "Student Progress Report", 
-    description: "Individual student progress and course completion status",
-    date: "Generated Jan 13, 2026",
-    size: "956 KB"
-  },
-  { 
-    name: "Financial Summary Q4", 
-    description: "Revenue, expenses, profit margins, and cash flow",
-    date: "Generated Jan 10, 2026",
-    size: "3.1 MB"
-  },
-]
+function exportStudents(students: Student[]) {
+  const blob = new Blob(["\uFEFF", createCsv(students)], {
+    type: "text/csv;charset=utf-8",
+  })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement("a")
+  link.href = url
+  link.download = "tech-trailblazer-academy-students.csv"
+  link.click()
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
 
-const performanceMetrics = [
-  { label: "Enrollment Rate", value: "3.24%", change: "+0.5%", isPositive: true },
-  { label: "Avg Session Duration", value: "$127.50", change: "+$12.30", isPositive: true },
-  { label: "Dropout Rate", value: "68.2%", change: "-2.1%", isPositive: true },
-  { label: "Return Rate", value: "4.8%", change: "+0.3%", isPositive: false },
-]
+function getMonthKey(date: Date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`
+}
 
 export default function AnalyticsPage() {
+  const { students, isLoading, isFetching, error, refetch } = useStudents()
+
+  const { monthlyRegistrations, courseCounts, paymentCounts } = useMemo(() => {
+    const now = new Date()
+    const months = Array.from({ length: 6 }, (_, index) => {
+      const date = new Date(now.getFullYear(), now.getMonth() - (5 - index), 1)
+      return {
+        key: getMonthKey(date),
+        month: new Intl.DateTimeFormat("en", {
+          month: "short",
+          year: "numeric",
+        }).format(date),
+        registrations: 0,
+      }
+    })
+    const monthByKey = new Map(months.map((month) => [month.key, month]))
+    const courses = new Map<string, number>()
+    const payments = new Map(paymentStatuses.map((status) => [status, 0]))
+
+    for (const student of students) {
+      const createdAt = student.created_at ? new Date(student.created_at) : null
+      if (createdAt && !Number.isNaN(createdAt.getTime())) {
+        const month = monthByKey.get(getMonthKey(createdAt))
+        if (month) month.registrations += 1
+      }
+
+      const course = student.course?.trim() || "Unspecified"
+      courses.set(course, (courses.get(course) || 0) + 1)
+
+      const status = student.payment_status || "Unknown"
+      payments.set(status, (payments.get(status) || 0) + 1)
+    }
+
+    return {
+      monthlyRegistrations: months,
+      courseCounts: [...courses.entries()].sort((a, b) => b[1] - a[1]),
+      paymentCounts: [...payments.entries()],
+    }
+  }, [students])
+
   return (
     <>
-      <PageHeader
-        title="Analytics"
-        description="Generate, view, and download detailed analytics reports."
-      >
-        <Button variant="outline" className="flex items-center gap-2 bg-transparent text-sm">
-          <Calendar className="w-4 h-4" />
-          Jan 2026
-        </Button>
-        <Button className="flex items-center gap-2 bg-foreground text-background hover:bg-foreground/90">
-          <FileText className="w-4 h-4" />
-          Generate Report
+      <PageHeader title="Analytics" description="Registration and payment summaries.">
+        <Button
+          variant="outline"
+          className="h-9 gap-2"
+          onClick={() => exportStudents(students)}
+          disabled={isLoading || students.length === 0}
+        >
+          <Download aria-hidden="true" className="h-4 w-4" />
+          Export CSV
         </Button>
       </PageHeader>
 
-      {/* Performance Metrics */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-5 sm:mb-7">
-        {performanceMetrics.map((metric) => (
-          <Card key={metric.label} className="dashboard-card stat-card">
-            <CardContent className="p-4 sm:p-5">
-              <p className="text-xs text-muted-foreground mb-1.5">{metric.label}</p>
-              <div className="flex items-end justify-between">
-                <p className="text-xl sm:text-2xl font-semibold">{metric.value}</p>
-                <span className={`text-xs font-medium flex items-center gap-0.5 ${
-                  metric.isPositive ? "text-green-500" : "text-red-500"
-                }`}>
-                  {metric.isPositive ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                  {metric.change}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {error && (
+        <div
+          role="alert"
+          className="mb-6 flex flex-col gap-3 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 sm:flex-row sm:items-center sm:justify-between"
+        >
+          <span>
+            Could not load registrations
+            {error instanceof Error ? `: ${error.message}` : "."}
+          </span>
+          <Button
+            variant="outline"
+            className="h-8 border-red-200 bg-white text-red-800 hover:bg-red-100"
+            onClick={() => void refetch()}
+            disabled={isFetching}
+          >
+            Try again
+          </Button>
+        </div>
+      )}
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6 mb-5 sm:mb-7">
-        {/* Revenue Comparison Chart */}
-        <Card className="lg:col-span-2 dashboard-card">
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-base font-medium flex items-center gap-2">
-                  <BarChart3 className="w-4 h-4" />
-                  Revenue Comparison
-                </CardTitle>
-                <CardDescription>This year vs last year</CardDescription>
-              </div>
-              <div className="flex items-center gap-4 text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-amber-500" />
-                  <span className="text-muted-foreground">2026</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-muted-foreground/30" />
-                  <span className="text-muted-foreground">2025</span>
-                </div>
-              </div>
+      {!isLoading && !error && students.length === 0 ? (
+        <div className="border border-border bg-card px-5 py-12 text-center">
+          <h2 className="text-base font-medium">No registration data</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Analytics will appear when students register.
+          </p>
+        </div>
+      ) : error && students.length === 0 ? null : (
+        <div className="grid gap-8 xl:grid-cols-2">
+          <section aria-labelledby="monthly-registrations-heading">
+            <h2
+              id="monthly-registrations-heading"
+              className="mb-3 text-base font-semibold tracking-tight"
+            >
+              Registrations by month
+            </h2>
+            <div className="overflow-hidden border border-border bg-card">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50 hover:bg-muted/50">
+                    <TableHead className="h-10 pl-4 text-xs text-muted-foreground">
+                      Month
+                    </TableHead>
+                    <TableHead className="h-10 pr-4 text-right text-xs text-muted-foreground">
+                      Registrations
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {isLoading
+                    ? Array.from({ length: 6 }, (_, index) => (
+                        <TableRow key={index}>
+                          <TableCell colSpan={2} className="h-11 px-4">
+                            <div className="h-3 w-1/2 animate-pulse bg-muted" />
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    : monthlyRegistrations.map((month) => (
+                        <TableRow key={month.key}>
+                          <TableCell className="pl-4">{month.month}</TableCell>
+                          <TableCell className="pr-4 text-right tabular-nums">
+                            {month.registrations}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                </TableBody>
+              </Table>
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[250px] sm:h-[280px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={revenueComparisonData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                  <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="var(--color-muted-foreground)" />
-                  <YAxis tick={{ fontSize: 12 }} stroke="var(--color-muted-foreground)" tickFormatter={(v) => `$${v/1000}k`} />
-                  <Tooltip 
-                    formatter={(value: number) => [`$${value.toLocaleString()}`, ""]}
-                    contentStyle={{ 
-                      backgroundColor: "var(--color-card)", 
-                      border: "1px solid var(--color-border)",
-                      borderRadius: "8px",
-                      fontSize: "12px",
-                      color: "var(--color-foreground)"
-                    }}
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="lastYear" 
-                    stroke="var(--color-muted-foreground)" 
-                    fill="var(--color-muted)" 
-                    strokeWidth={2}
-                    name="2025"
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="thisYear" 
-                    stroke="#f59e0b" 
-                    fill="#f59e0b" 
-                    fillOpacity={0.15}
-                    strokeWidth={2}
-                    name="2026"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+          </section>
 
-        {/* Sales by Category */}
-        <Card className="dashboard-card">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium flex items-center gap-2">
-              <PieChart className="w-4 h-4" />
-              Sales by Category
-            </CardTitle>
-            <CardDescription>Distribution of revenue</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[200px] sm:h-[220px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <RechartsPieChart>
-                  <Pie
-                    data={salesByCategory}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={50}
-                    outerRadius={70}
-                    paddingAngle={2}
-                    dataKey="value"
-                  >
-                    {salesByCategory.map((entry) => (
-                      <Cell key={entry.name} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    formatter={(value: number) => [`${value}%`, ""]}
-                    contentStyle={{ 
-                      backgroundColor: "var(--color-card)", 
-                      border: "1px solid var(--color-border)",
-                      borderRadius: "8px",
-                      fontSize: "12px",
-                      color: "var(--color-foreground)"
-                    }}
-                  />
-                </RechartsPieChart>
-              </ResponsiveContainer>
+          <section aria-labelledby="course-registrations-heading">
+            <h2
+              id="course-registrations-heading"
+              className="mb-3 text-base font-semibold tracking-tight"
+            >
+              Registrations by course
+            </h2>
+            <div className="overflow-hidden border border-border bg-card">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50 hover:bg-muted/50">
+                    <TableHead className="h-10 pl-4 text-xs text-muted-foreground">
+                      Course
+                    </TableHead>
+                    <TableHead className="h-10 pr-4 text-right text-xs text-muted-foreground">
+                      Students
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {isLoading ? (
+                    Array.from({ length: 4 }, (_, index) => (
+                      <TableRow key={index}>
+                        <TableCell colSpan={2} className="h-11 px-4">
+                          <div className="h-3 w-1/2 animate-pulse bg-muted" />
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : courseCounts.length > 0 ? (
+                    courseCounts.map(([course, count]) => (
+                      <TableRow key={course}>
+                        <TableCell className="pl-4">{course}</TableCell>
+                        <TableCell className="pr-4 text-right tabular-nums">
+                          {count}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell
+                        colSpan={2}
+                        className="h-20 px-4 text-center text-sm text-muted-foreground"
+                      >
+                        No course data available.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
             </div>
-            <div className="grid grid-cols-2 gap-2 mt-3">
-              {salesByCategory.map((cat) => (
-                <div key={cat.name} className="flex items-center gap-2">
-                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: cat.color }} />
-                  <span className="text-xs text-muted-foreground truncate">{cat.name}</span>
-                  <span className="text-xs font-medium ml-auto">{cat.value}%</span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          </section>
 
-      {/* Available Reports */}
-      <Card className="dashboard-card">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-base font-medium">Available Reports</CardTitle>
-              <CardDescription>Download or schedule automated reports</CardDescription>
+          <section aria-labelledby="payment-status-heading">
+            <h2
+              id="payment-status-heading"
+              className="mb-3 text-base font-semibold tracking-tight"
+            >
+              Payment status
+            </h2>
+            <div className="overflow-hidden border border-border bg-card">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50 hover:bg-muted/50">
+                    <TableHead className="h-10 pl-4 text-xs text-muted-foreground">
+                      Status
+                    </TableHead>
+                    <TableHead className="h-10 pr-4 text-right text-xs text-muted-foreground">
+                      Students
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paymentCounts.map(([status, count]) => (
+                    <TableRow key={status}>
+                      <TableCell className="pl-4">{status}</TableCell>
+                      <TableCell className="pr-4 text-right tabular-nums">
+                        {isLoading ? "—" : count}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
-            <Button variant="outline" size="sm" className="bg-transparent">
-              View All Reports
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {availableReports.map((report) => (
-              <div 
-                key={report.name} 
-                className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-border/60 hover:bg-muted/30 transition-colors gap-3"
-              >
-                <div className="flex items-start gap-3 min-w-0">
-                  <div className="p-2 bg-muted rounded-lg shrink-0">
-                    <FileText className="w-5 h-5 text-muted-foreground" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium">{report.name}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{report.description}</p>
-                    <div className="flex items-center gap-3 mt-1.5">
-                      <span className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        {report.date}
-                      </span>
-                      <span className="text-xs text-muted-foreground">{report.size}</span>
-                    </div>
-                  </div>
-                </div>
-                <Button variant="outline" size="sm" className="bg-transparent flex items-center gap-2 shrink-0">
-                  <Download className="w-4 h-4" />
-                  Download
-                </Button>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+          </section>
+        </div>
+      )}
     </>
   )
 }

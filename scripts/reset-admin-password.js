@@ -2,24 +2,32 @@
 // Run this with: node scripts/reset-admin-password.js
 
 async function resetAdminPassword() {
-  const email = 'amahchibu@gmail.com';
-  const newPassword = 'Brilly123';
+  const email = 'adminb@atomic.io';
+  const newPassword = process.env.ADMIN_PASSWORD;
+  const sessionCookie = process.env.ADMIN_SESSION_COOKIE;
+  const baseUrl = process.env.ADMIN_BASE_URL || 'http://localhost:3001';
+
+  if (!newPassword || !sessionCookie) {
+    console.error('Set ADMIN_PASSWORD and ADMIN_SESSION_COOKIE in your local environment.');
+    process.exit(1);
+  }
 
   console.log('Resetting admin password...');
   console.log('Email:', email);
-  console.log('New Password:', newPassword);
   console.log('');
 
   try {
-    const response = await fetch('http://localhost:3000/api/create-admin', {
+    const response = await fetch(`${baseUrl}/api/create-admin`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        Cookie: sessionCookie,
       },
       body: JSON.stringify({
         email: email,
         password: newPassword,
-        name: 'Admin User'
+        name: 'Admin User',
+        update: true,
       })
     });
 
@@ -27,51 +35,16 @@ async function resetAdminPassword() {
 
     if (response.ok) {
       console.log('✅ Admin password reset successfully!');
-      console.log('');
-      console.log('You can now login at: /admin-login');
-      console.log('Email:', email);
-      console.log('Password:', newPassword);
-    } else if (result.error && result.error.includes('already been registered')) {
-      console.log('⚠️  User already exists. Updating password...');
-      
-      // Try to update the user using the admin API directly
-      const updateResponse = await fetch('http://localhost:3000/api/create-admin', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: email,
-          password: newPassword,
-          name: 'Admin User',
-          update: true
-        })
-      });
-      
-      const updateResult = await updateResponse.json();
-      
-      if (updateResponse.ok) {
-        console.log('✅ Admin password updated successfully!');
-        console.log('');
-        console.log('You can now login at: /admin-login');
-        console.log('Email:', email);
-        console.log('Password:', newPassword);
-      } else {
-        console.error('❌ Error updating admin password:');
-        console.error(updateResult.error);
-        console.log('');
-        console.log('Note: The user exists but we need to update the password.');
-        console.log('Please use the Supabase dashboard to reset the password manually.');
-      }
     } else {
-      console.error('❌ Error:');
+      console.error('❌ Error resetting admin password:');
       console.error(result.error);
+      process.exit(1);
     }
   } catch (error) {
     console.error('❌ Failed to connect to server:');
     console.error(error.message);
     console.error('');
-    console.error('Make sure your Next.js server is running on http://localhost:3000');
+    console.error(`Make sure your Next.js server is running at ${baseUrl}`);
     process.exit(1);
   }
 }

@@ -2,20 +2,27 @@
 // Run this with: node scripts/create-admin.js
 
 async function createAdmin() {
-  const email = 'amahchibu@gmail.com';
-  const password = 'Brilly123';
+  const email = 'adminb@atomic.io';
+  const password = process.env.ADMIN_PASSWORD;
+  const sessionCookie = process.env.ADMIN_SESSION_COOKIE;
+  const baseUrl = process.env.ADMIN_BASE_URL || 'http://localhost:3001';
   const name = 'Admin User';
+
+  if (!password || !sessionCookie) {
+    console.error('Set ADMIN_PASSWORD and ADMIN_SESSION_COOKIE in your local environment.');
+    process.exit(1);
+  }
 
   console.log('Creating admin user...');
   console.log('Email:', email);
-  console.log('Password:', password);
   console.log('');
 
   try {
-    const response = await fetch('http://localhost:3000/api/create-admin', {
+    const response = await fetch(`${baseUrl}/api/create-admin`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        Cookie: sessionCookie,
       },
       body: JSON.stringify({
         email: email,
@@ -34,7 +41,6 @@ async function createAdmin() {
       console.log('');
       console.log('You can now login at: /admin-login');
       console.log('Email:', email);
-      console.log('Password:', password);
     } else {
       console.error('❌ Error creating admin user:');
       console.error(result.error);
@@ -44,7 +50,7 @@ async function createAdmin() {
     console.error('❌ Failed to connect to server:');
     console.error(error.message);
     console.error('');
-    console.error('Make sure your Next.js server is running on http://localhost:3000');
+    console.error(`Make sure your Next.js server is running at ${baseUrl}`);
     process.exit(1);
   }
 }

@@ -2,13 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
-
-const COURSES = [
-  "Cybersecurity", "Data Science", "AI Automation", "Computer Networking",
-  "Ethical Hacking", "Graphic Design", "UI/UX Design", "Full Stack Development",
-  "Frontend Development", "Backend Development", "Web Development",
-  "Digital Marketing", "Cloud Computing", "Data Analysis",
-]
+import { BRAND_LOGO_URL } from '@/lib/brand'
+import { COURSE_CATALOG } from '@/lib/course-catalog'
 
 const AFRICAN_COUNTRIES = [
   { code: "NG", name: "Nigeria", dial: "+234" },
@@ -139,7 +134,7 @@ function HeaderNav() {
             onClick={() => window.location.reload()}
             className="flex flex-col items-start gap-1 bg-transparent border-none cursor-pointer hover:opacity-80 transition-opacity"
           >
-            <Image src="/rad.jpeg" alt="Tech Trailblazer Academy" width={80} height={32} className="h-7 md:h-8 w-auto" priority loading="eager" />
+            <Image src={BRAND_LOGO_URL} alt="Tech Trailblazer Academy" width={80} height={32} className="h-7 md:h-8 w-auto" priority />
             <span className="text-[9px] md:text-[10px] font-bold text-gray-900 tracking-wide">
               Tech Trailblazer Academy
             </span>
@@ -549,7 +544,7 @@ export default function Contact() {
                     <select value={form.course} onChange={(e) => updateForm("course", e.target.value)}
                       className={`w-full px-5 py-4 rounded-xl bg-white border text-gray-600 text-sm focus:outline-none focus:border-red-400/50 transition-all duration-200 appearance-none cursor-pointer ${errors.course ? "border-red-500/50" : "border-gray-200"}`}>
                       <option value="" disabled>Select course</option>
-                      {COURSES.map(c => <option key={c} value={c.toLowerCase()}>{c}</option>)}
+                      {COURSE_CATALOG.map(({ title }) => <option key={title} value={title.toLowerCase()}>{title}</option>)}
                     </select>
                     <svg className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
                   </div>

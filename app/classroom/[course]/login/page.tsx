@@ -5,7 +5,6 @@ import { useParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { BookOpen, Lock, Mail, ArrowRight, Eye, EyeOff, AlertCircle, CheckCircle, GraduationCap, Shield, ShieldOff, Star, MessageCircle } from 'lucide-react'
 import { getCourseData } from '@/lib/mock-data'
-import { createClient } from '@/lib/supabase/client'
 
 export default function CourseLoginPage() {
   const params = useParams()
@@ -72,8 +71,6 @@ export default function CourseLoginPage() {
   const [pinCode, setPinCode] = useState('')
   const [pinError, setPinError] = useState('')
   const [isVerifyingPin, setIsVerifyingPin] = useState(false)
-  const supabase = createClient()
-
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -134,6 +131,7 @@ export default function CourseLoginPage() {
         body: JSON.stringify({
           pin: pinCode,
           email: email.trim().toLowerCase(),
+          courseSlug,
         }),
       })
 
@@ -164,43 +162,6 @@ export default function CourseLoginPage() {
           setPinError(`You are not authorized to access this course. You registered for: ${userCourseRaw}`)
           setIsVerifyingPin(false)
           return
-        }
-
-        // Create Supabase auth session so profile page can fetch data
-        try {
-          // Generate a random password for the session (since we don't use password login)
-          const sessionPassword = `ttacademy_session_${Date.now()}`
-          
-          // Create or sign in the user
-          const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-            email: email.trim().toLowerCase(),
-            password: '123456', // Use default password
-          })
-
-          if (authError) {
-            console.error('Auth error:', authError)
-            // Try to create the user if they don't exist
-            const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-              email: email.trim().toLowerCase(),
-              password: '123456',
-              options: {
-                data: {
-                  name: pinResult.data.name || '',
-                  course: userCourseRaw,
-                }
-              }
-            })
-
-            if (signUpError) {
-              console.error('Signup error:', signUpError)
-              setPinError('Failed to create session. Please try again.')
-              setIsVerifyingPin(false)
-              return
-            }
-          }
-        } catch (err) {
-          console.error('Session creation error:', err)
-          // Continue anyway - sessionStorage will be used as fallback
         }
 
         // Fetch complete student data

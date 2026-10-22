@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getStudentByEmail } from "@/lib/supabase/students";
+import { createAdminClient } from "@/lib/supabase/server-admin";
 
 export async function GET() {
   try {
@@ -15,16 +16,14 @@ export async function GET() {
       );
     }
 
-    const email = user.email?.toLowerCase();
-    if (!email) {
-      return NextResponse.json(
-        { error: "Authenticated user has no email" },
-        { status: 400 }
-      );
-    }
-
-    // Query Supabase for the student matching this email
-    const student = await getStudentByEmail(email);
+    const studentId = user.app_metadata?.identity_type === "classroom_student"
+      ? user.app_metadata.student_id
+      : null;
+    const student = typeof studentId === "string"
+      ? await getStudentById(studentId)
+      : user.email
+        ? await getStudentByEmail(user.email.toLowerCase())
+        : null;
 
     if (!student) {
       return NextResponse.json(
@@ -47,4 +46,16 @@ export async function GET() {
       { status: 500 }
     );
   }
+}
+
+async function getStudentById(studentId: string) {
+  const supabase = await createAdminClient();
+  const { data: student, error } = await supabase
+    .from("students")
+    .select("*")
+    .eq("id", studentId)
+    .single();
+
+  if (error) throw error;
+  return student;
 }

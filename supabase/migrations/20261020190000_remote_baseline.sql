@@ -1,0 +1,2 @@
+-- History marker for the existing remote schema.
+-- The schema predates local migrations and is not recreated by this file.

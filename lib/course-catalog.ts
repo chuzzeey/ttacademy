@@ -1,0 +1,16 @@
+export const COURSE_CATALOG = [
+  { slug: "cybersecurity", title: "Cybersecurity" },
+  { slug: "data-science", title: "Data Science" },
+  { slug: "ai-automation", title: "AI Automation" },
+  { slug: "computer-networking", title: "Computer Networking" },
+  { slug: "ethical-hacking", title: "Ethical Hacking" },
+  { slug: "graphic-design", title: "Graphic Design" },
+  { slug: "uiux-design", title: "UI/UX Design" },
+  { slug: "full-stack-development", title: "Full Stack Development" },
+  { slug: "frontend-development", title: "Frontend Development" },
+  { slug: "backend-development", title: "Backend Development" },
+  { slug: "web-development", title: "Web Development" },
+  { slug: "digital-marketing", title: "Digital Marketing" },
+  { slug: "cloud-computing", title: "Cloud Computing" },
+  { slug: "data-analysis", title: "Data Analysis" },
+] as const

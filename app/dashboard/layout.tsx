@@ -1,5 +1,6 @@
 import type React from "react"
 import { Header } from "./components/dashboard/header"
+import { AdminThemeProvider } from "./components/dashboard/admin-theme-provider"
 import "./styles/globals.css"
 
 export default function DashboardRootLayout({
@@ -8,15 +9,13 @@ export default function DashboardRootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <>
-      <div className="min-h-screen bg-background">
-        {/* Subtle grid background */}
-        <div className="fixed inset-0 bg-[linear-gradient(rgba(128,128,128,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(128,128,128,0.03)_1px,transparent_1px)] bg-[size_64px_64px] pointer-events-none z-0" />
+    <AdminThemeProvider>
+      <div className="min-h-screen bg-[#f7f8f7]">
         <Header />
-        <main className="relative z-10 w-full px-3 sm:px-5 md:px-6 lg:px-8 pb-12 pt-16 sm:pt-18 lg:pt-22 transition-all duration-200 max-w-7xl mx-auto">
+        <main className="mx-auto min-w-0 w-full max-w-[1600px] px-3 pb-10 pt-[5rem] sm:px-6 lg:ml-[17rem] lg:w-[calc(100%-17rem)] lg:px-8 lg:pt-24">
           {children}
         </main>
       </div>
-    </>
+    </AdminThemeProvider>
   )
 }

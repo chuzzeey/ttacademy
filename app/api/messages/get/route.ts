@@ -12,6 +12,9 @@ export async function GET(request: NextRequest) {
         { status: 400 }
       );
     }
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(course)) {
+      return NextResponse.json({ error: "Invalid course." }, { status: 400 })
+    }
 
     const messages = await getMessages(course);
 
@@ -25,13 +28,11 @@ export async function GET(request: NextRequest) {
     );
 
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-
-    console.error("Fetch messages error:", message);
+    console.error("Fetch messages error:", err);
 
     return NextResponse.json(
       {
-        error: message,
+        error: "Unable to load classroom messages.",
       },
       {
         status: 500,

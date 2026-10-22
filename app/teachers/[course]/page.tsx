@@ -2,17 +2,22 @@
 
 import { useParams, useRouter } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
-import { Shield, BarChart3, Cpu, Globe, ShieldAlert, Palette, Code, Monitor, Server, Globe2, TrendingUp, Cloud, Database, ArrowLeft, Send, Menu, X, GraduationCap, LogOut, Home, BookMarked, User, Settings, Paperclip, ImagePlus, Check, CheckCheck, Clock, Megaphone, UserCircle } from 'lucide-react'
+import { Shield, BarChart3, Cpu, Globe, ShieldAlert, Palette, Code, Monitor, Server, Globe2, TrendingUp, Cloud, Database, ArrowLeft, Send, Menu, X, GraduationCap, LogOut, Home, BookMarked, User, Settings, Paperclip, Check, CheckCheck, Clock, Megaphone, UserCircle, Moon, Sun } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 import { createClient } from '@/lib/supabase/client'
+import { ClassroomAttachment } from '@/components/classroom-attachment'
+import { useClassroomTheme } from '@/lib/hooks/use-classroom-theme'
 
 interface DbMessage {
   id: string
-  title: string
   content: string
   sender_name: string
-  course: string
+  sender_role: 'admin' | 'teacher' | 'student'
+  course_slug: string
   created_at: string
+  attachment_path: string | null
+  attachment_name: string | null
+  attachment_mime_type: string | null
 }
 
 const courseSlugMap: Record<string, string> = {
@@ -68,26 +73,34 @@ interface Message {
   status: 'sending' | 'sent' | 'delivered' | 'read'
   sender: 'me' | 'system' | 'student'
   senderName?: string
+  attachmentPath?: string
+  attachmentName?: string
+  attachmentMimeType?: string
 }
 
 export default function TeacherCoursePage() {
   const params = useParams()
   const router = useRouter()
   const course = courseData[params.course as string]
+  const courseSlug = params.course as string
+  const { dark, setDark } = useClassroomTheme(courseSlug)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [showLogoutDropdown, setShowLogoutDropdown] = useState(false)
   const [confirmingLogout, setConfirmingLogout] = useState(false)
 
   const [message, setMessage] = useState('')
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [error, setError] = useState('')
   const [isSending, setIsSending] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
+  const [onlineCount, setOnlineCount] = useState(1)
   const [isTyping, setIsTyping] = useState(false)
   const [showEmoji, setShowEmoji] = useState(false)
   const [loadingHistory, setLoadingHistory] = useState(true)
   const chatEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Auto-resize textarea
   const autoResizeTextarea = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -130,8 +143,11 @@ export default function TeacherCoursePage() {
             text: msg.content,
             timestamp: new Date(msg.created_at),
             status: 'read' as const,
-            sender: msg.sender_name === 'Mentor' ? ('me' as const) : ('student' as const),
-            senderName: msg.sender_name
+            sender: msg.sender_role === 'teacher' ? ('me' as const) : ('student' as const),
+            senderName: msg.sender_name,
+            attachmentPath: msg.attachment_path ?? undefined,
+            attachmentName: msg.attachment_name ?? undefined,
+            attachmentMimeType: msg.attachment_mime_type ?? undefined,
           }))
           
           setMessages(prev => {
@@ -152,15 +168,24 @@ export default function TeacherCoursePage() {
 
     // Setup Supabase Realtime subscription for live messages
     const supabase = createClient()
-    const channel = supabase
-      .channel(`teacher-messages:${courseSlug}`)
+    let active = true
+    let channel: ReturnType<typeof supabase.channel> | null = null
+    void (async () => {
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      if (userError || !user || !active) return
+      channel = supabase
+      .channel(`classroom:${courseSlug}`, { config: { presence: { key: user.id } } })
+      .on('presence', { event: 'sync' }, () => {
+        const presence = channel?.presenceState() ?? {}
+        setOnlineCount(Math.max(1, Object.values(presence).reduce((total, users) => total + users.length, 0)))
+      })
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
-          table: 'messages',
-          filter: `course=eq.${courseSlug}`,
+          table: 'classroom_messages',
+          filter: `course_slug=eq.${courseSlug}`,
         },
         (payload) => {
           const newMsg = payload.new as DbMessage
@@ -172,7 +197,7 @@ export default function TeacherCoursePage() {
             // If this INSERT is our own mentor message, it likely already exists
             // as an optimistic "temp-..." bubble from handleSendMessage.
             // Merge into that bubble instead of adding a second one.
-            if (newMsg.sender_name === 'Mentor') {
+            if (newMsg.sender_role === 'teacher') {
               const optimisticIndex = prev.findIndex(
                 m => m.sender === 'me' && m.text === newMsg.content && m.id.startsWith('temp-')
               )
@@ -182,6 +207,9 @@ export default function TeacherCoursePage() {
                   ...updated[optimisticIndex],
                   id: newMsg.id,
                   status: 'delivered',
+                  attachmentPath: newMsg.attachment_path ?? undefined,
+                  attachmentName: newMsg.attachment_name ?? undefined,
+                  attachmentMimeType: newMsg.attachment_mime_type ?? undefined,
                 }
                 return updated
               }
@@ -192,17 +220,26 @@ export default function TeacherCoursePage() {
               text: newMsg.content,
               timestamp: new Date(newMsg.created_at),
               status: 'read',
-              sender: newMsg.sender_name === 'Mentor' ? 'me' : 'student',
-              senderName: newMsg.sender_name
+              sender: newMsg.sender_role === 'teacher' ? 'me' : 'student',
+              senderName: newMsg.sender_name,
+              attachmentPath: newMsg.attachment_path ?? undefined,
+              attachmentName: newMsg.attachment_name ?? undefined,
+              attachmentMimeType: newMsg.attachment_mime_type ?? undefined,
             }
             return [...prev, msg]
           })
         }
       )
-      .subscribe()
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await channel?.track({ role: 'teacher', online_at: new Date().toISOString() })
+        }
+      })
+    })()
 
     return () => {
-      supabase.removeChannel(channel)
+      active = false
+      if (channel) void supabase.removeChannel(channel)
     }
   }, [params.course])
 
@@ -228,22 +265,25 @@ export default function TeacherCoursePage() {
   const Icon = course.icon
 
   const handleSendMessage = async () => {
-    if (!message.trim()) {
-      setError('Please write a message to send.')
+    if (!message.trim() && !selectedFile) {
+      setError('Write a message or choose a file to send.')
       return
     }
 
     const tempId = `temp-${Date.now()}`
+    const sentText = message.trim()
+    const file = selectedFile
     const newMsg: Message = {
       id: tempId,
-      text: message.trim(),
+      text: sentText,
       timestamp: new Date(),
       status: 'sending',
-      sender: 'me'
+      sender: 'me',
+      attachmentName: file?.name,
+      attachmentMimeType: file?.type,
     }
 
     setMessages(prev => [...prev, newMsg])
-    const sentText = message.trim()
     setMessage('')
     setIsSending(true)
 
@@ -252,44 +292,59 @@ export default function TeacherCoursePage() {
       textareaRef.current.style.height = 'auto'
     }
 
-    // Simulate send status changes
-    setTimeout(() => {
-      setMessages(prev =>
-        prev.map(m => m.id === tempId ? { ...m, status: 'sent' as const } : m)
-      )
-    }, 800)
-  
-    setTimeout(() => {
-      setMessages(prev =>
-        prev.map(m => m.id === tempId ? { ...m, status: 'delivered' as const } : m)
-      )
-    }, 1500)
-
-    setTimeout(() => {
-      setMessages(prev =>
-        prev.map(m => m.id === tempId ? { ...m, status: 'read' as const } : m)
-      )
-      setIsSending(false)
-    }, 2500)
-
+    let attachmentPath: string | undefined
     try {
+      if (file) {
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf', 'text/plain']
+        if (!allowedTypes.includes(file.type)) throw new Error('Choose a JPG, PNG, WebP, PDF, or text file.')
+        if (file.size > 10 * 1024 * 1024) throw new Error('Files must be 10 MB or smaller.')
+        const supabase = createClient()
+        const { data: { user }, error: userError } = await supabase.auth.getUser()
+        if (userError || !user) throw new Error('Your classroom session has expired.')
+        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '-').slice(-120) || 'attachment'
+        attachmentPath = `${String(params.course)}/${user.id}/${crypto.randomUUID()}-${safeName}`
+        const { error: uploadError } = await supabase.storage.from('classroom-files').upload(attachmentPath, file, {
+          contentType: file.type,
+          cacheControl: '3600',
+          upsert: false,
+        })
+        if (uploadError) throw uploadError
+      }
       const res = await fetch('/api/messages/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: 'Announcement',
           content: sentText,
           course: params.course,
-          sender_name: 'Mentor',
+          attachmentPath,
+          attachmentName: file?.name,
+          attachmentMimeType: file?.type,
         }),
       })
-
-      if (!res.ok) {
-        const data = await res.json()
-        setError(data.error || 'Failed to send message')
-      }
+      const result = await res.json()
+      if (!res.ok) throw new Error(result.error || 'Failed to send message.')
+      setSelectedFile(null)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      const savedMessage = result.data as DbMessage
+      setMessages((previous) => previous.map((item) => item.id === tempId ? {
+        ...item,
+        id: savedMessage.id,
+        timestamp: new Date(savedMessage.created_at),
+        status: 'sent',
+        senderName: savedMessage.sender_name,
+        attachmentPath: savedMessage.attachment_path ?? undefined,
+        attachmentName: savedMessage.attachment_name ?? undefined,
+        attachmentMimeType: savedMessage.attachment_mime_type ?? undefined,
+      } : item))
     } catch (err) {
-      setError('Failed to send message. Please try again.')
+      setMessages((previous) => previous.filter((item) => item.id !== tempId))
+      setError(err instanceof Error ? err.message : 'Failed to send message. Please try again.')
+      if (attachmentPath) {
+        const { error: cleanupError } = await createClient().storage.from('classroom-files').remove([attachmentPath])
+        if (cleanupError) console.error('Failed to remove unlinked classroom attachment:', cleanupError)
+      }
+    } finally {
+      setIsSending(false)
     }
   }
 
@@ -372,13 +427,13 @@ export default function TeacherCoursePage() {
 
   return (
     <main
-      className="min-h-screen font-sans"
+      className={`min-h-screen font-sans ${dark ? 'bg-[#0b141a] text-[#e9edef]' : 'bg-[#f0f2f5] text-[#111b21]'}`}
       style={{
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
       }}
     >
       {/* Top Navigation Bar */}
-      <header className="sticky top-0 z-50 bg-[#008069] shadow-sm">
+      <header className={`sticky top-0 z-50 shadow-sm ${dark ? 'bg-[#202c33]' : 'bg-[#008069]'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14 sm:h-16 lg:h-20">
             {/* Left side - Back button and Course name */}
@@ -391,12 +446,21 @@ export default function TeacherCoursePage() {
               </button>
               <div>
                 <p className="text-sm sm:text-base font-bold text-white">{course.title}</p>
-                <p className="text-[10px] sm:text-xs text-white/70 hidden sm:block">Mentor Portal</p>
+                <p className="text-[10px] sm:text-xs text-white/70 hidden sm:block">Class group · {onlineCount} online</p>
               </div>
             </div>
 
             {/* Right side - Hamburger menu */}
-            <div className="relative">
+            <div className="relative flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setDark((value) => !value)}
+                aria-label={dark ? "Switch this class to light mode" : "Switch this class to dark mode"}
+                aria-pressed={dark}
+                className="p-2 rounded-lg text-white/90 hover:bg-white/10 transition-colors"
+              >
+                {dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </button>
               <button
                 onClick={() => {
                   if (showLogoutDropdown) {
@@ -418,13 +482,13 @@ export default function TeacherCoursePage() {
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg overflow-hidden z-50"
+                    className={`absolute right-0 mt-2 w-64 rounded-xl shadow-lg overflow-hidden z-50 ${dark ? 'bg-[#202c33] text-[#e9edef]' : 'bg-white text-[#111b21]'}`}
                   >
                     {!confirmingLogout ? (
                       // Step 1: menu with Logout option
                       <button
                         onClick={() => setConfirmingLogout(true)}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                        className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-600 transition-colors ${dark ? 'hover:bg-[#2a3942]' : 'hover:bg-red-50'}`}
                       >
                         <LogOut className="w-4 h-4" />
                         <span>Logout</span>
@@ -432,7 +496,7 @@ export default function TeacherCoursePage() {
                     ) : (
                       // Step 2: confirmation
                       <div className="p-4">
-                        <p className="text-sm font-medium text-[#111B21] mb-3">
+                        <p className={`text-sm font-medium mb-3 ${dark ? 'text-[#e9edef]' : 'text-[#111B21]'}`}>
                           Are you sure you want to log out?
                         </p>
                         <div className="flex items-center gap-2">
@@ -444,7 +508,7 @@ export default function TeacherCoursePage() {
                           </button>
                           <button
                             onClick={closeMenu}
-                            className="flex-1 px-3 py-2 rounded-lg bg-gray-100 text-[#111B21] text-sm font-semibold hover:bg-gray-200 transition-colors"
+                            className={`flex-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${dark ? 'bg-[#2a3942] text-[#e9edef] hover:bg-[#354650]' : 'bg-gray-100 text-[#111B21] hover:bg-gray-200'}`}
                           >
                             Cancel
                           </button>
@@ -463,9 +527,9 @@ export default function TeacherCoursePage() {
       <div className="h-[calc(100vh-8rem)] sm:h-[calc(100vh-8rem)] flex flex-col">
         
         {/* Chat Header */}
-        <div className="bg-[#F0F2F5] border-b border-gray-200 px-4 py-2 flex items-center gap-3 shrink-0 z-10">
+        <div className={`border-b px-4 py-2 flex items-center gap-3 shrink-0 z-10 ${dark ? 'bg-[#202c33] border-[#2a3942]' : 'bg-[#F0F2F5] border-gray-200'}`}>
           <div className="min-w-0 flex-1">
-            <p className="font-semibold text-[15px] text-[#111B21] truncate leading-tight">
+            <p className={`font-semibold text-[15px] ${dark ? 'text-[#e9edef]' : 'text-[#111B21]'} truncate leading-tight`}>
               Live chat
             </p>
           </div>
@@ -473,16 +537,16 @@ export default function TeacherCoursePage() {
 
         {/* Chat Messages */}
         <div 
-          className="flex-1 overflow-y-auto px-3 sm:px-4 py-3 space-y-1"
+          className={`flex-1 overflow-y-auto px-3 sm:px-4 py-3 space-y-1 ${dark ? 'bg-[#0b141a]' : ''}`}
           style={{
             backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-            backgroundColor: '#ECE5DD',
+            backgroundColor: dark ? '#0b141a' : '#ECE5DD',
           }}
         >
           {/* Loading history */}
           {loadingHistory && (
             <div className="flex justify-center my-8">
-              <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg shadow">
+              <div className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow ${dark ? 'bg-[#202c33]' : 'bg-white'}`}>
                 <div className="w-4 h-4 border-2 border-[#008069] border-t-transparent rounded-full animate-spin" />
                 <span className="text-xs text-[#667781]">Loading chat history...</span>
               </div>
@@ -493,7 +557,7 @@ export default function TeacherCoursePage() {
             <div key={group.date}>
               {/* Date Separator */}
               <div className="flex justify-center my-3">
-                <span className="bg-[#E1F3FB] text-[11px] text-[#54656F] font-medium px-3 py-1 rounded shadow-[0_1px_1px_rgba(0,0,0,0.06)]">
+                <span className={`${dark ? 'bg-[#182229] text-[#c1cbd1]' : 'bg-[#E1F3FB] text-[#54656F]'} text-[11px] font-medium px-3 py-1 rounded shadow-[0_1px_1px_rgba(0,0,0,0.06)]`}>
                   {group.date}
                 </span>
               </div>
@@ -506,13 +570,14 @@ export default function TeacherCoursePage() {
                       <div 
                         className="relative max-w-[70%] sm:max-w-[60%] px-3 py-2 shadow-[0_1px_1px_rgba(0,0,0,0.06)] group-hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)] transition-shadow"
                         style={{ 
-                          backgroundColor: '#FFFFFF',
+                          backgroundColor: dark ? '#202c33' : '#FFFFFF',
                           borderRadius: '4px 8px 8px 8px',
                         }}
                       >
-                        <p className="text-[14px] text-[#111B21] leading-[19px] break-words whitespace-pre-wrap">{renderMessageText(msg.text)}</p>
+                        {msg.text && <p className={`text-[14px] ${dark ? 'text-[#e9edef]' : 'text-[#111B21]'} leading-[19px] break-words whitespace-pre-wrap`}>{renderMessageText(msg.text)}</p>}
+                        {msg.attachmentPath && msg.attachmentName && msg.attachmentMimeType && <ClassroomAttachment path={msg.attachmentPath} name={msg.attachmentName} mimeType={msg.attachmentMimeType} />}
                         <div className="flex items-center justify-end gap-1 mt-1">
-                          <span className="text-[11px] text-[#667781] leading-[13px]">
+                          <span className="text-[11px] text-[#8696a0] leading-[13px]">
                             {formatTime(msg.timestamp)}
                           </span>
                         </div>
@@ -527,18 +592,19 @@ export default function TeacherCoursePage() {
                           <div className="w-[20px] h-[20px] rounded-full bg-[#008069] flex items-center justify-center shrink-0">
                             <span className="text-white text-[8px] font-bold">{msg.senderName?.charAt(0) || 'S'}</span>
                           </div>
-                          <span className="text-[11px] font-semibold text-[#008069]">{msg.senderName || 'Student'}</span>
+                          <span className="text-[11px] font-semibold text-[#25a889]">{msg.senderName || 'Student'}</span>
                         </div>
                         <div 
                           className="relative px-3 py-2 shadow-[0_1px_1px_rgba(0,0,0,0.06)] group-hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)] transition-shadow"
                           style={{ 
-                            backgroundColor: '#FFFFFF',
+                            backgroundColor: dark ? '#202c33' : '#FFFFFF',
                             borderRadius: '4px 8px 8px 8px',
                           }}
                         >
-                          <p className="text-[14px] text-[#111B21] leading-[19px] break-words whitespace-pre-wrap">{renderMessageText(msg.text)}</p>
+                          {msg.text && <p className={`text-[14px] ${dark ? 'text-[#e9edef]' : 'text-[#111B21]'} leading-[19px] break-words whitespace-pre-wrap`}>{renderMessageText(msg.text)}</p>}
+                          {msg.attachmentPath && msg.attachmentName && msg.attachmentMimeType && <ClassroomAttachment path={msg.attachmentPath} name={msg.attachmentName} mimeType={msg.attachmentMimeType} />}
                           <div className="flex items-center justify-end gap-1 mt-1">
-                            <span className="text-[11px] text-[#667781] leading-[13px]">
+                            <span className="text-[11px] text-[#8696a0] leading-[13px]">
                               {formatTime(msg.timestamp)}
                             </span>
                           </div>
@@ -551,13 +617,14 @@ export default function TeacherCoursePage() {
                         <div 
                           className="relative px-3 py-2 shadow-[0_1px_1px_rgba(0,0,0,0.06)] group-hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)] transition-shadow"
                           style={{ 
-                            backgroundColor: '#D9FDD3',
+                            backgroundColor: dark ? '#005c4b' : '#D9FDD3',
                             borderRadius: '8px 4px 8px 8px',
                           }}
                         >
-                          <p className="text-[14px] text-[#111B21] leading-[19px] break-words whitespace-pre-wrap">{renderMessageText(msg.text)}</p>
+                          {msg.text && <p className={`text-[14px] ${dark ? 'text-[#e9edef]' : 'text-[#111B21]'} leading-[19px] break-words whitespace-pre-wrap`}>{renderMessageText(msg.text)}</p>}
+                          {msg.attachmentPath && msg.attachmentName && msg.attachmentMimeType && <ClassroomAttachment path={msg.attachmentPath} name={msg.attachmentName} mimeType={msg.attachmentMimeType} />}
                         <div className="flex items-center justify-end gap-0.5 mt-0.5">
-                          <span className="text-[11px] text-[#667781] leading-[13px]">
+                          <span className="text-[11px] text-[#aebac1] leading-[13px]">
                             {formatTime(msg.timestamp)}
                           </span>
                           <span className="flex items-center">
@@ -589,21 +656,21 @@ export default function TeacherCoursePage() {
         </div>
 
         {/* Message Input Area */}
-        <div className="bg-[#F0F2F5] px-3 py-2 sm:px-4 shrink-0 z-10">
+        <div className={`${dark ? 'bg-[#202c33]' : 'bg-[#F0F2F5]'} px-3 py-2 sm:px-4 shrink-0 z-10`}>
           <AnimatePresence>
             {showEmoji && (
               <motion.div
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: 'auto', opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
-                className="overflow-hidden border-b border-gray-200"
+                className={`overflow-hidden border-b ${dark ? 'border-[#2a3942]' : 'border-gray-200'}`}
               >
-                <div className="flex flex-wrap gap-1.5 p-2 bg-white">
+                <div className={`flex flex-wrap gap-1.5 p-2 ${dark ? 'bg-[#111b21]' : 'bg-white'}`}>
                   {emojis.map((emoji, i) => (
                     <button
                       key={i}
                       onClick={() => setMessage(prev => prev + emoji)}
-                      className="w-8 h-8 flex items-center justify-center text-lg hover:bg-gray-100 rounded transition-colors"
+                      className={`w-8 h-8 flex items-center justify-center text-lg rounded transition-colors ${dark ? 'hover:bg-[#2a3942]' : 'hover:bg-gray-100'}`}
                     >
                       {emoji}
                     </button>
@@ -613,21 +680,25 @@ export default function TeacherCoursePage() {
             )}
           </AnimatePresence>
 
+          {selectedFile && (
+            <div className={`mb-2 flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-xs ${dark ? 'bg-[#111b21] text-[#aebac1]' : 'bg-white text-[#667781]'}`}>
+              <span className="min-w-0 truncate">{selectedFile.name}</span>
+              <button type="button" onClick={() => { setSelectedFile(null); if (fileInputRef.current) fileInputRef.current.value = '' }} className="shrink-0 font-medium text-red-600">Remove</button>
+            </div>
+          )}
           <div className="flex items-end gap-1.5">
-            <button
-              onClick={() => alert('Feature unavailable for now')}
-              className="p-2 rounded-full hover:bg-gray-200 transition-colors shrink-0"
-            >
-              <ImagePlus className="w-6 h-6 text-[#8696A0]" />
-            </button>
-            <button
-              onClick={() => alert('Feature unavailable for now')}
-              className="p-2 rounded-full hover:bg-gray-200 transition-colors shrink-0"
-            >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,application/pdf,text/plain"
+              className="hidden"
+              onChange={(event) => { setSelectedFile(event.target.files?.[0] ?? null); setError('') }}
+            />
+            <button type="button" onClick={() => fileInputRef.current?.click()} aria-label="Attach a file" className={`p-2 rounded-full transition-colors shrink-0 ${dark ? 'hover:bg-[#2a3942]' : 'hover:bg-gray-200'}`}>
               <Paperclip className="w-6 h-6 text-[#8696A0]" />
             </button>
             
-            <div className="flex-1 bg-white rounded-lg px-4 py-2 flex items-center">
+            <div className={`flex-1 rounded-lg px-4 py-2 flex items-center ${dark ? 'bg-[#111b21]' : 'bg-white'}`}>
               <textarea
                 ref={textareaRef}
                 value={message}
@@ -639,12 +710,12 @@ export default function TeacherCoursePage() {
                 onKeyDown={handleKeyDown}
                 placeholder="Type a message"
                 rows={1}
-                className="w-full text-[15px] text-[#111B21] placeholder-[#8696A0] bg-transparent focus:outline-none resize-none overflow-hidden leading-[19px]"
+                className={`w-full text-[15px] ${dark ? 'text-[#e9edef]' : 'text-[#111B21]'} placeholder-[#8696A0] bg-transparent focus:outline-none resize-none overflow-hidden leading-[19px]`}
                 style={{ minHeight: '19px', maxHeight: '76px' }}
               />
             </div>
 
-            {message.trim() ? (
+            {message.trim() || selectedFile ? (
               <button 
                 onClick={handleSendMessage}
                 disabled={isSending}
@@ -657,7 +728,7 @@ export default function TeacherCoursePage() {
                 )}
               </button>
             ) : (
-              <button className="p-2 rounded-full hover:bg-gray-200 transition-colors shrink-0">
+              <button className={`p-2 rounded-full transition-colors shrink-0 ${dark ? 'hover:bg-[#2a3942]' : 'hover:bg-gray-200'}`}>
                 <Send className="w-6 h-6 text-[#8696A0]" />
               </button>
             )}

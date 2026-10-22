@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { SmoothScrollProvider } from "@/components/smooth-scroll";
 import { QueryProvider } from "@/lib/query-provider";
+import { BRAND_LOGO_URL } from "@/lib/brand";
 
 const notoSans = Noto_Sans({
   subsets: ["latin"],
@@ -19,11 +20,14 @@ export const metadata: Metadata = {
   publisher: "Tech Trailblazer Academy",
   icons: {
     icon: [
-      { url: "/favicon.ico", sizes: "32x32" },
-      { url: "/logo.png", sizes: "any", type: "image/png" }
+      {
+        url: "https://res.cloudinary.com/djdbcoyot/image/upload/v1792461501/f71wqoiubyqksegyfftn.jpg",
+        type: "image/jpeg",
+      },
     ],
-    shortcut: "/favicon.ico",
-    apple: "/logo.png",
+    shortcut:
+      "https://res.cloudinary.com/djdbcoyot/image/upload/v1792461501/f71wqoiubyqksegyfftn.jpg",
+    apple: BRAND_LOGO_URL,
   },
   formatDetection: {
     email: false,
@@ -41,9 +45,7 @@ export const metadata: Metadata = {
     siteName: "Tech Trailblazer Academy",
     images: [
       {
-        url: "/logo.png",
-        width: 1200,
-        height: 630,
+        url: BRAND_LOGO_URL,
         alt: "Tech Trailblazer Academy - We Tech Different",
       },
     ],
@@ -54,7 +56,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Tech Trailblazer Academy - We Tech Different",
     description: "Master cutting-edge tech skills through practical, hands-on online learning. Real projects, expert mentors.",
-    images: ["/logo.png"],
+    images: [BRAND_LOGO_URL],
   },
   robots: {
     index: true,
@@ -75,7 +77,7 @@ const structuredData = {
   "name": "Tech Trailblazer Academy",
   "description": "Master cutting-edge tech skills through practical, hands-on online learning. Real projects, expert mentors, career-focused training.",
   "url": "https://techtrailblazeracademy.com",
-  "logo": "https://techtrailblazeracademy.com/logo.png",
+  "logo": BRAND_LOGO_URL,
   "sameAs": [
     "https://twitter.com/techtrailblazer",
     "https://linkedin.com/company/techtrailblazer-academy"

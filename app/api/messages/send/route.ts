@@ -5,25 +5,21 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    const {
-      title,
-      content,
-      course,
-      sender_name,
-    } = body;
+    const { content, course, attachmentPath, attachmentName, attachmentMimeType } = body;
 
-    if (!title || !content || !course || !sender_name) {
+    if (typeof content !== "string" || typeof course !== "string") {
       return NextResponse.json(
-        { error: "Missing required fields" },
+        { error: "A classroom and message content are required." },
         { status: 400 }
       );
     }
 
     const message = await sendMessage({
-      title: title.trim(),
-      content: content.trim(),
+      content,
       course: course.trim().toLowerCase(),
-      sender_name: sender_name.trim(),
+      attachmentPath: typeof attachmentPath === "string" ? attachmentPath : undefined,
+      attachmentName: typeof attachmentName === "string" ? attachmentName : undefined,
+      attachmentMimeType: typeof attachmentMimeType === "string" ? attachmentMimeType : undefined,
     });
 
     return NextResponse.json(
@@ -37,13 +33,13 @@ export async function POST(request: NextRequest) {
     );
 
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-
-    console.error("Send message error:", message);
+    console.error("Send message error:", err);
 
     return NextResponse.json(
       {
-        error: message,
+        error: err instanceof Error && ["Authentication required.", "You do not have access to this classroom.", "Write a message or attach a file.", "Messages must be 5,000 characters or fewer.", "The attachment path is invalid for this classroom."].includes(err.message)
+          ? err.message
+          : "Unable to send the classroom message.",
       },
       {
         status: 500,

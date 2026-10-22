@@ -6,18 +6,23 @@ import Image from 'next/image'
 import {
   Search, MoreVertical, GraduationCap,
   Code, Palette, Globe, Database, PieChart, Brain, Shield, Lock,
-  ArrowLeft, Send, Check, CheckCheck, Clock, Smile, Megaphone, AlertTriangle
+  ArrowLeft, Send, Check, CheckCheck, Clock, Smile, Megaphone, AlertTriangle, Paperclip, Moon, Sun
 } from 'lucide-react'
 import { getCourseData } from '@/lib/mock-data'
 import { createClient } from '@/lib/supabase/client'
+import { ClassroomAttachment } from '@/components/classroom-attachment'
+import { useClassroomTheme } from '@/lib/hooks/use-classroom-theme'
 
 interface DbMessage {
   id: string
-  title: string
   content: string
   sender_name: string
-  course: string
+  sender_role: 'admin' | 'teacher' | 'student'
+  course_slug: string
   created_at: string
+  attachment_path: string | null
+  attachment_name: string | null
+  attachment_mime_type: string | null
 }
 
 interface Message {
@@ -27,6 +32,9 @@ interface Message {
   status: 'sending' | 'sent' | 'delivered' | 'read'
   sender: 'me' | 'system' | 'mentor'
   senderName?: string
+  attachmentPath?: string
+  attachmentName?: string
+  attachmentMimeType?: string
 }
 
 export default function DashboardPage() {
@@ -35,6 +43,7 @@ export default function DashboardPage() {
   const courseSlug = params?.course as string
   const courseData = getCourseData(courseSlug)
   const dashboard = courseData.dashboard
+  const { dark, setDark } = useClassroomTheme(courseSlug)
 
   const [showProfileDropdown, setShowProfileDropdown] = useState(false)
   const [showLogoutModal, setShowLogoutModal] = useState(false)
@@ -42,17 +51,20 @@ export default function DashboardPage() {
   const [loadingMessages, setLoadingMessages] = useState(true)
   const [showChatList, setShowChatList] = useState(false)
   const [message, setMessage] = useState('')
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [error, setError] = useState('')
   const [isSending, setIsSending] = useState(false)
   const [showEmoji, setShowEmoji] = useState(false)
   const chatEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const processedMessagesRef = useRef<Set<string>>(new Set())
   const initialLoadCompleteRef = useRef(false)
   const prevMessagesLengthRef = useRef(0)
   const [studentData, setStudentData] = useState<{ name: string; email: string; avatar: string } | null>(null)
   const isRestrictedRef = useRef(false)
   const [unreadCount, setUnreadCount] = useState(0)
+  const [onlineCount, setOnlineCount] = useState(1)
   const lastSeenMessageIdRef = useRef<string | null>(null)
 
   // Auto-resize textarea — max 4 lines (~76px)
@@ -228,8 +240,11 @@ export default function DashboardPage() {
             text: msg.content,
             timestamp: new Date(msg.created_at),
             status: 'read' as const,
-            sender: msg.sender_name === 'Mentor' ? ('mentor' as const) : ('me' as const),
+            sender: msg.sender_role === 'admin' || msg.sender_role === 'teacher' ? ('mentor' as const) : ('me' as const),
             senderName: msg.sender_name,
+            attachmentPath: msg.attachment_path ?? undefined,
+            attachmentName: msg.attachment_name ?? undefined,
+            attachmentMimeType: msg.attachment_mime_type ?? undefined,
           }))
           
           const seen = new Set<string>()
@@ -258,15 +273,24 @@ export default function DashboardPage() {
     fetchMessages()
 
     const supabase = createClient()
-    const channel = supabase
-      .channel(`student-messages:${courseSlug}`)
+    let active = true
+    let channel: ReturnType<typeof supabase.channel> | null = null
+    void (async () => {
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      if (userError || !user || !active) return
+      channel = supabase
+      .channel(`classroom:${courseSlug}`, { config: { presence: { key: user.id } } })
+      .on('presence', { event: 'sync' }, () => {
+        const presence = channel?.presenceState() ?? {}
+        setOnlineCount(Math.max(1, Object.values(presence).reduce((total, users) => total + users.length, 0)))
+      })
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
-          table: 'messages',
-          filter: `course=eq.${courseSlug}`,
+          table: 'classroom_messages',
+          filter: `course_slug=eq.${courseSlug}`,
         },
         (payload) => {
           if (!initialLoadCompleteRef.current) return
@@ -281,12 +305,15 @@ export default function DashboardPage() {
               text: newMsg.content,
               timestamp: new Date(newMsg.created_at),
               status: 'read',
-              sender: newMsg.sender_name === 'Mentor' ? 'mentor' : 'me',
+              sender: newMsg.sender_role === 'admin' || newMsg.sender_role === 'teacher' ? 'mentor' : 'me',
               senderName: newMsg.sender_name,
+              attachmentPath: newMsg.attachment_path ?? undefined,
+              attachmentName: newMsg.attachment_name ?? undefined,
+              attachmentMimeType: newMsg.attachment_mime_type ?? undefined,
             }
             
             const optimisticIndex = prev.findIndex(m => 
-              m.sender === (newMsg.sender_name === 'Mentor' ? 'mentor' : 'me') &&
+              m.sender === (newMsg.sender_role === 'admin' || newMsg.sender_role === 'teacher' ? 'mentor' : 'me') &&
               m.text === msg.text &&
               m.status === 'sending'
             )
@@ -301,10 +328,16 @@ export default function DashboardPage() {
           })
         }
       )
-      .subscribe()
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await channel?.track({ role: 'student', online_at: new Date().toISOString() })
+        }
+      })
+    })()
 
     return () => {
-      supabase.removeChannel(channel)
+      active = false
+      if (channel) void supabase.removeChannel(channel)
     }
   }, [courseSlug])
 
@@ -380,14 +413,14 @@ export default function DashboardPage() {
   }
 
   const handleSendMessage = async () => {
-    if (!message.trim()) {
-      setError('Please write a message to send.')
+    if (!message.trim() && !selectedFile) {
+      setError('Write a message or choose a file to send.')
       return
     }
 
     const tempId = `temp-${Date.now()}`
     const sentText = message.trim()
-    
+    const file = selectedFile
     processedMessagesRef.current.add(tempId)
     
     const newMsg: Message = {
@@ -395,7 +428,9 @@ export default function DashboardPage() {
       text: sentText,
       timestamp: new Date(),
       status: 'sending',
-      sender: 'me'
+      sender: 'me',
+      attachmentName: file?.name,
+      attachmentMimeType: file?.type,
     }
 
     setMessages(prev => [...prev, newMsg])
@@ -407,29 +442,61 @@ export default function DashboardPage() {
       textareaRef.current.style.height = 'auto'
     }
 
+    let attachmentPath: string | undefined
     try {
+      if (file) {
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf', 'text/plain']
+        if (!allowedTypes.includes(file.type)) throw new Error('Choose a JPG, PNG, WebP, PDF, or text file.')
+        if (file.size > 10 * 1024 * 1024) throw new Error('Files must be 10 MB or smaller.')
+        const supabase = createClient()
+        const { data: { user }, error: userError } = await supabase.auth.getUser()
+        if (userError || !user) throw new Error('Your classroom session has expired.')
+        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '-').slice(-120) || 'attachment'
+        attachmentPath = `${courseSlug}/${user.id}/${crypto.randomUUID()}-${safeName}`
+        const { error: uploadError } = await supabase.storage.from('classroom-files').upload(attachmentPath, file, {
+          contentType: file.type,
+          cacheControl: '3600',
+          upsert: false,
+        })
+        if (uploadError) throw uploadError
+      }
       const res = await fetch('/api/messages/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: 'Reply from Student',
           content: sentText,
           course: courseSlug,
-          sender_name: studentName,
+          attachmentPath,
+          attachmentName: file?.name,
+          attachmentMimeType: file?.type,
         }),
       })
-
-        if (!res.ok) {
-          const data = await res.json()
-          setError(data.error || 'Failed to send message')
-          processedMessagesRef.current.delete(tempId)
-          setIsSending(false)
-        }
-      } catch (err) {
-        setError('Failed to send message. Please try again.')
-        processedMessagesRef.current.delete(tempId)
-        setIsSending(false)
+      const result = await res.json()
+      if (!res.ok) throw new Error(result.error || 'Failed to send message.')
+      setSelectedFile(null)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      const savedMessage = result.data as DbMessage
+      setMessages((previous) => previous.map((item) => item.id === tempId ? {
+        ...item,
+        id: savedMessage.id,
+        timestamp: new Date(savedMessage.created_at),
+        status: 'sent',
+        senderName: savedMessage.sender_name,
+        attachmentPath: savedMessage.attachment_path ?? undefined,
+        attachmentName: savedMessage.attachment_name ?? undefined,
+        attachmentMimeType: savedMessage.attachment_mime_type ?? undefined,
+      } : item))
+    } catch (err) {
+      setMessages((previous) => previous.filter((item) => item.id !== tempId))
+      setError(err instanceof Error ? err.message : 'Failed to send message. Please try again.')
+      if (attachmentPath) {
+        const { error: cleanupError } = await createClient().storage.from('classroom-files').remove([attachmentPath])
+        if (cleanupError) console.error('Failed to remove unlinked classroom attachment:', cleanupError)
       }
+    } finally {
+      processedMessagesRef.current.delete(tempId)
+      setIsSending(false)
+    }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -457,7 +524,7 @@ export default function DashboardPage() {
   ]
 
   return (
-    <div className="h-screen flex font-sans antialiased overflow-hidden"
+    <div className={`h-screen flex font-sans antialiased overflow-hidden ${dark ? 'bg-[#111b21] text-[#e9edef]' : 'bg-white text-[#111b21]'}`}
       style={{
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
       }}
@@ -468,9 +535,9 @@ export default function DashboardPage() {
         <div className="flex flex-1 h-full">
           
           {/* ===== CHAT LIST ===== */}
-          <div className={`${showChatList ? 'flex' : 'hidden'} md:flex flex-col w-full md:w-[380px] lg:w-[400px] xl:w-[420px] border-r border-gray-200 bg-white shrink-0`}>
+          <div className={`${showChatList ? 'flex' : 'hidden'} md:flex flex-col w-full md:w-[380px] lg:w-[400px] xl:w-[420px] border-r ${dark ? 'border-[#2a3942] bg-[#111b21]' : 'border-gray-200 bg-white'} shrink-0`}>
             
-            <div className="bg-[#F0F2F5] px-4 py-3 flex items-center justify-between shrink-0">
+            <div className={`${dark ? 'bg-[#202c33]' : 'bg-[#F0F2F5]'} px-4 py-3 flex items-center justify-between shrink-0`}>
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-full overflow-hidden bg-gray-300 shrink-0">
                   <Image
@@ -481,15 +548,15 @@ export default function DashboardPage() {
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <p className="text-[16px] font-semibold text-[#111B21]">{studentName}</p>
+                <p className={`text-[16px] font-semibold ${dark ? 'text-[#e9edef]' : 'text-[#111B21]'}`}>{studentName}</p>
               </div>
             
             </div>
 
-            <div className="bg-white px-3 py-2 shrink-0">
-              <div className="bg-[#F0F2F5] rounded-lg flex items-center px-3 py-1.5 gap-3">
-                <Search className="w-4 h-4 text-[#667781]" />
-                <input type="text" placeholder="Search or start new chat" className="w-full bg-transparent text-sm text-[#111B21] placeholder-[#667781] focus:outline-none" />
+            <div className={`${dark ? 'bg-[#111b21]' : 'bg-white'} px-3 py-2 shrink-0`}>
+              <div className={`${dark ? 'bg-[#202c33]' : 'bg-[#F0F2F5]'} rounded-lg flex items-center px-3 py-1.5 gap-3`}>
+                <Search className={`w-4 h-4 ${dark ? 'text-[#8696a0]' : 'text-[#667781]'}`} />
+                <input type="text" placeholder="Search or start new chat" className={`w-full bg-transparent text-sm ${dark ? 'text-[#e9edef]' : 'text-[#111B21]'} placeholder-[#667781] focus:outline-none`} />
               </div>
             </div>
 
@@ -497,19 +564,19 @@ export default function DashboardPage() {
               {dummyChats.map((chat) => (
                 <div
                   key={chat.name}
-                  className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-[#F0F2F5] transition-colors border-b border-gray-100 ${chat.active ? 'bg-[#F0F2F5]' : ''}`}
+                  className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors border-b ${dark ? 'border-[#202c33] hover:bg-[#202c33]' : 'border-gray-100 hover:bg-[#F0F2F5]'} ${chat.active ? dark ? 'bg-[#202c33]' : 'bg-[#F0F2F5]' : ''}`}
                   onClick={() => { markMessagesAsRead(); setShowChatList(false) }}
                 >
                   <div className="w-[49px] h-[49px] rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-gray-200">
-                    <span className="text-[#008069] text-xl font-bold">{courseData.title.charAt(0)}</span>
+                    <span className="text-[#25a889] text-xl font-bold">{courseData.title.charAt(0)}</span>
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between">
-                      <p className="text-[16px] font-medium text-[#111B21] truncate">{chat.name}</p>
-                      <span className="text-[12px] text-[#667781] shrink-0 ml-2">{chat.time}</span>
+                      <p className={`text-[16px] font-medium ${dark ? 'text-[#e9edef]' : 'text-[#111B21]'} truncate`}>{chat.name}</p>
+                      <span className="text-[12px] text-[#8696A0] shrink-0 ml-2">{chat.time}</span>
                     </div>
                     <div className="flex items-center justify-between mt-0.5">
-                      <p className="text-[13px] text-[#667781] truncate">{chat.lastMsg}</p>
+                      <p className={`text-[13px] ${dark ? 'text-[#8696a0]' : 'text-[#667781]'} truncate`}>{chat.lastMsg}</p>
                       {chat.unread > 0 && (
                         <span className="bg-[#008069] text-white text-[11px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center shrink-0 ml-2">
                           {chat.unread}
@@ -526,45 +593,54 @@ export default function DashboardPage() {
           <div className="flex-1 flex flex-col min-w-0">
             
             {/* Chat Header */}
-            <div className="bg-[#F0F2F5] px-4 py-2.5 flex items-center gap-3 shrink-0 z-10">
+            <div className={`${dark ? 'bg-[#202c33]' : 'bg-[#F0F2F5]'} px-4 py-2.5 flex items-center gap-3 shrink-0 z-10`}>
               {!showChatList && (
                 <button
                   onClick={() => setShowChatList(true)}
-                  className="md:hidden shrink-0 text-gray-500 hover:text-gray-700 transition-colors rounded-lg p-1"
+                  className={`md:hidden shrink-0 ${dark ? 'text-[#aebac1] hover:text-white' : 'text-gray-500 hover:text-gray-700'} transition-colors rounded-lg p-1`}
                 >
                   <ArrowLeft className="w-5 h-5" />
                 </button>
               )}
-              <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center shrink-0">
+              <div className={`w-10 h-10 rounded-full ${dark ? 'bg-[#2a3942]' : 'bg-gray-200'} flex items-center justify-center shrink-0`}>
                 {getCourseIcon('w-5 h-5')}
               </div>
               <div className="min-w-0 flex-1">
-                <h1 className="text-[16px] font-semibold text-[#111B21] leading-tight truncate">
+                <h1 className={`text-[16px] font-semibold ${dark ? 'text-[#e9edef]' : 'text-[#111B21]'} leading-tight truncate`}>
                   {courseData.title} Classroom
                 </h1>
-                <p className="text-[13px] text-[#667781] leading-relaxed inline-flex items-center gap-1.5">
+                <p className={`text-[13px] ${dark ? 'text-[#aebac1]' : 'text-[#667781]'} leading-relaxed inline-flex items-center gap-1.5`}>
                   <span className="w-2 h-2 bg-green-500 rounded-full shrink-0"></span>
-                  Mentor is online
+                  Class group · {onlineCount} online
                 </p>
               </div>
               <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setDark((value) => !value)}
+                  aria-label={dark ? "Switch this class to light mode" : "Switch this class to dark mode"}
+                  aria-pressed={dark}
+                  className={`h-10 w-10 rounded-full flex items-center justify-center transition-colors ${dark ? 'text-[#aebac1] hover:bg-[#2a3942]' : 'text-[#54656f] hover:bg-gray-200'}`}
+                >
+                  {dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                </button>
                 <div className="relative">
                   <button
                     onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-                    className="w-10 h-10 rounded-full hover:bg-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-700 transition-all"
+                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${dark ? 'text-[#aebac1] hover:bg-[#2a3942]' : 'text-gray-500 hover:bg-gray-200 hover:text-gray-700'}`}
                   >
                     <MoreVertical className="w-5 h-5" />
                   </button>
                   {showProfileDropdown && (
                     <>
                       <div className="fixed inset-0 z-40 backdrop-blur-sm bg-black/10" onClick={() => setShowProfileDropdown(false)} />
-                      <div className="absolute right-0 top-11 w-56 bg-white border border-gray-200 rounded-xl shadow-2xl z-50 overflow-hidden">
+                      <div className={`absolute right-0 top-11 w-56 ${dark ? 'bg-[#202c33] border-[#2a3942]' : 'bg-white border-gray-200'} border rounded-xl shadow-2xl z-50 overflow-hidden`}>
                         <div className="py-1">
-                          <button onClick={() => router.push(`/classroom/${courseSlug}/dashboard/profile`)} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors">Profile Settings</button>
-                          <button onClick={handleHelpSupport} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors">Help & Support</button>
+                          <button onClick={() => router.push(`/classroom/${courseSlug}/dashboard/profile`)} className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors ${dark ? 'text-[#e9edef] hover:bg-[#2a3942]' : 'text-gray-700 hover:bg-gray-100'}`}>Profile Settings</button>
+                          <button onClick={handleHelpSupport} className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors ${dark ? 'text-[#e9edef] hover:bg-[#2a3942]' : 'text-gray-700 hover:bg-gray-100'}`}>Help & Support</button>
                         </div>
-                        <div className="border-t border-gray-200">
-                          <button onClick={() => { setShowLogoutModal(true); setShowProfileDropdown(false) }} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-500 hover:bg-gray-100 transition-colors">Logout</button>
+                        <div className={`border-t ${dark ? 'border-[#2a3942]' : 'border-gray-200'}`}>
+                          <button onClick={() => { setShowLogoutModal(true); setShowProfileDropdown(false) }} className={`w-full flex items-center gap-3 px-4 py-3 text-sm text-red-500 transition-colors ${dark ? 'hover:bg-[#2a3942]' : 'hover:bg-gray-100'}`}>Logout</button>
                         </div>
                       </div>
                     </>
@@ -578,7 +654,7 @@ export default function DashboardPage() {
               className="flex-1 overflow-y-auto px-3 sm:px-4 py-3"
               style={{
                 backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-                backgroundColor: '#ECE5DD',
+                backgroundColor: dark ? '#0b141a' : '#ECE5DD',
               }}
             >
               <div className="max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto">
@@ -586,7 +662,7 @@ export default function DashboardPage() {
                 {/* Loading */}
                 {loadingMessages && (
                   <div className="flex justify-center my-8">
-                    <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg shadow">
+                    <div className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow ${dark ? 'bg-[#202c33]' : 'bg-white'}`}>
                       <div className="w-4 h-4 border-2 border-[#008069] border-t-transparent rounded-full animate-spin" />
                       <span className="text-xs text-[#667781]">Loading messages...</span>
                     </div>
@@ -598,7 +674,7 @@ export default function DashboardPage() {
                   <div key={group.date}>
                     {/* Date Separator */}
                     <div className="flex justify-center my-4">
-                      <span className="bg-[#E1F3FB] text-[11px] text-[#54656F] font-medium px-3 py-1 rounded shadow-[0_1px_1px_rgba(0,0,0,0.06)]">
+                      <span className={`${dark ? 'bg-[#182229] text-[#c1cbd1]' : 'bg-[#E1F3FB] text-[#54656F]'} text-[11px] font-medium px-3 py-1 rounded shadow-[0_1px_1px_rgba(0,0,0,0.06)]`}>
                         {group.date}
                       </span>
                     </div>
@@ -609,11 +685,12 @@ export default function DashboardPage() {
                           <div className="flex justify-start mb-1 group">
                             <div 
                               className="relative max-w-[70%] sm:max-w-[60%] px-3 py-2 shadow-[0_1px_1px_rgba(0,0,0,0.06)]"
-                              style={{ backgroundColor: '#FFFFFF', borderRadius: '4px 8px 8px 8px' }}
+                              style={{ backgroundColor: dark ? '#202c33' : '#FFFFFF', borderRadius: '4px 8px 8px 8px' }}
                             >
-                              <p className="text-[14px] text-[#111B21] leading-[19px] break-words whitespace-pre-wrap">{renderMessageText(msg.text)}</p>
+                              {msg.text && <p className={`text-[14px] ${dark ? 'text-[#e9edef]' : 'text-[#111B21]'} leading-[19px] break-words whitespace-pre-wrap`}>{renderMessageText(msg.text)}</p>}
+                              {msg.attachmentPath && msg.attachmentName && msg.attachmentMimeType && <ClassroomAttachment path={msg.attachmentPath} name={msg.attachmentName} mimeType={msg.attachmentMimeType} />}
                               <div className="flex items-center justify-end gap-1 mt-1">
-                                <span className="text-[11px] text-[#667781]">{formatTime(msg.timestamp)}</span>
+                                <span className="text-[11px] text-[#8696a0]">{formatTime(msg.timestamp)}</span>
                               </div>
                             </div>
                           </div>
@@ -624,15 +701,16 @@ export default function DashboardPage() {
                                 <div className="w-[20px] h-[20px] rounded-full bg-[#008069] flex items-center justify-center shrink-0">
                                   <span className="text-white text-[8px] font-bold">M</span>
                                 </div>
-                                <span className="text-[11px] font-semibold text-[#008069]">Mentor</span>
+                                <span className="text-[11px] font-semibold text-[#25a889]">Mentor</span>
                               </div>
                               <div 
                                 className="relative px-3 py-2 shadow-[0_1px_1px_rgba(0,0,0,0.06)] group-hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)] transition-shadow"
-                                style={{ backgroundColor: '#FFFFFF', borderRadius: '4px 8px 8px 8px' }}
+                                style={{ backgroundColor: dark ? '#202c33' : '#FFFFFF', borderRadius: '4px 8px 8px 8px' }}
                               >
-                                <p className="text-[14px] text-[#111B21] leading-[19px] break-words whitespace-pre-wrap">{renderMessageText(msg.text)}</p>
+                                {msg.text && <p className={`text-[14px] ${dark ? 'text-[#e9edef]' : 'text-[#111B21]'} leading-[19px] break-words whitespace-pre-wrap`}>{renderMessageText(msg.text)}</p>}
+                                {msg.attachmentPath && msg.attachmentName && msg.attachmentMimeType && <ClassroomAttachment path={msg.attachmentPath} name={msg.attachmentName} mimeType={msg.attachmentMimeType} />}
                                 <div className="flex items-center justify-end gap-1 mt-1">
-                                  <span className="text-[11px] text-[#667781]">{formatTime(msg.timestamp)}</span>
+                                  <span className="text-[11px] text-[#8696a0]">{formatTime(msg.timestamp)}</span>
                                   <svg viewBox="0 0 16 11" className="w-[14px] h-[10px]">
                                     <path d="M2 5.5L4.5 8L9 3.5" stroke="#53BDEB" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
                                     <path d="M6 5.5L8.5 8L13 3.5" stroke="#53BDEB" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
@@ -645,13 +723,13 @@ export default function DashboardPage() {
                           <div className="flex justify-end mb-1 group relative">
                             <div 
                               className="relative max-w-[70%] sm:max-w-[60%] px-3 py-2 shadow-[0_1px_1px_rgba(0,0,0,0.06)] group-hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)] transition-shadow"
-                              style={{ backgroundColor: '#D9FDD3', borderRadius: '8px 4px 8px 8px' }}
+                              style={{ backgroundColor: dark ? '#005c4b' : '#D9FDD3', borderRadius: '8px 4px 8px 8px' }}
                             >
-                              <p className="text-[14px] text-[#111B21] leading-[19px] break-words whitespace-pre-wrap">{renderMessageText(msg.text)}</p>
+                              <p className={`text-[14px] ${dark ? 'text-[#e9edef]' : 'text-[#111B21]'} leading-[19px] break-words whitespace-pre-wrap`}>{renderMessageText(msg.text)}</p>
                               <div className="flex items-center justify-end gap-0.5 mt-0.5">
-                                <span className="text-[11px] text-[#667781]">{formatTime(msg.timestamp)}</span>
-                                {msg.status === 'sending' && <Clock className="w-3.5 h-3.5 text-[#667781]" />}
-                                {(msg.status === 'sent' || msg.status === 'delivered') && <Check className="w-3.5 h-3.5 text-[#667781]" />}
+                                <span className="text-[11px] text-[#aebac1]">{formatTime(msg.timestamp)}</span>
+                                {msg.status === 'sending' && <Clock className="w-3.5 h-3.5 text-[#8696a0]" />}
+                                {(msg.status === 'sent' || msg.status === 'delivered') && <Check className="w-3.5 h-3.5 text-[#8696a0]" />}
                                 {msg.status === 'read' && <CheckCheck className="w-3.5 h-3.5 text-[#53BDEB]" />}
                               </div>
                             </div>
@@ -664,9 +742,9 @@ export default function DashboardPage() {
 
                 {!loadingMessages && messages.length === 0 && (
                   <div className="flex justify-center my-8">
-                    <div className="bg-white rounded-lg px-4 py-3 text-center max-w-sm shadow">
-                      <p className="text-[12.5px] text-gray-500">No messages yet</p>
-                      <p className="text-[11px] text-[#667781] mt-1">Send a message to start the conversation!</p>
+                    <div className={`${dark ? 'bg-[#202c33]' : 'bg-white'} rounded-lg px-4 py-3 text-center max-w-sm shadow`}>
+                      <p className={`text-[12.5px] ${dark ? 'text-[#aebac1]' : 'text-gray-500'}`}>No messages yet</p>
+                      <p className="text-[11px] text-[#8696a0] mt-1">Send a message to start the conversation!</p>
                     </div>
                   </div>
                 )}
@@ -677,14 +755,14 @@ export default function DashboardPage() {
             </div>
 
             {/* Message Input Area */}
-            <div className="bg-[#F0F2F5] px-3 py-2 sm:px-4 shrink-0 z-10 mb-20">
+            <div className={`${dark ? 'bg-[#202c33]' : 'bg-[#F0F2F5]'} px-3 py-2 sm:px-4 shrink-0 z-10 mb-20`}>
               <div className={`overflow-hidden transition-all duration-200 ${showEmoji ? 'max-h-28 mb-2' : 'max-h-0'}`}>
-                <div className="flex flex-wrap gap-1.5 p-2 bg-white rounded-lg">
+                <div className={`flex flex-wrap gap-1.5 p-2 rounded-lg ${dark ? 'bg-[#111b21]' : 'bg-white'}`}>
                   {emojis.map((emoji, i) => (
                     <button
                       key={i}
                       onClick={() => setMessage(prev => prev + emoji)}
-                      className="w-8 h-8 flex items-center justify-center text-lg hover:bg-gray-100 rounded transition-colors"
+                      className={`w-8 h-8 flex items-center justify-center text-lg rounded transition-colors ${dark ? 'hover:bg-[#2a3942]' : 'hover:bg-gray-100'}`}
                     >
                       {emoji}
                     </button>
@@ -692,8 +770,24 @@ export default function DashboardPage() {
                 </div>
               </div>
 
+              {selectedFile && (
+                <div className={`mb-2 flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-xs ${dark ? 'bg-[#111b21] text-[#aebac1]' : 'bg-white text-[#667781]'}`}>
+                  <span className="min-w-0 truncate">{selectedFile.name}</span>
+                  <button type="button" onClick={() => { setSelectedFile(null); if (fileInputRef.current) fileInputRef.current.value = '' }} className="shrink-0 font-medium text-red-600">Remove</button>
+                </div>
+              )}
               <div className="flex items-end gap-1.5">
-                <div className="flex-1 bg-white rounded-lg px-4 py-2 flex items-center">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,application/pdf,text/plain"
+                  className="hidden"
+                  onChange={(event) => { setSelectedFile(event.target.files?.[0] ?? null); setError('') }}
+                />
+                <button type="button" onClick={() => fileInputRef.current?.click()} aria-label="Attach a file" className={`p-2 rounded-full ${dark ? 'hover:bg-[#2a3942] text-[#aebac1]' : 'hover:bg-gray-200 text-[#667781]'}`}>
+                  <Paperclip className="h-5 w-5" />
+                </button>
+                <div className={`flex-1 rounded-lg px-4 py-2 flex items-center ${dark ? 'bg-[#111b21]' : 'bg-white'}`}>
                   <textarea
                     ref={textareaRef}
                     value={message}
@@ -705,12 +799,12 @@ export default function DashboardPage() {
                     onKeyDown={handleKeyDown}
                     placeholder="Reply to your mentor..."
                     rows={1}
-                    className="w-full text-[16px] text-[#111B21] placeholder-[#8696A0] bg-transparent focus:outline-none resize-none overflow-hidden leading-[19px]"
+                    className={`w-full text-[16px] ${dark ? 'text-[#e9edef]' : 'text-[#111B21]'} placeholder-[#8696A0] bg-transparent focus:outline-none resize-none overflow-hidden leading-[19px]`}
                     style={{ minHeight: '19px', maxHeight: '76px' }}
                   />
                 </div>
 
-                {message.trim() ? (
+                {message.trim() || selectedFile ? (
                   <button 
                     onClick={handleSendMessage}
                     disabled={isSending}
@@ -739,20 +833,20 @@ export default function DashboardPage() {
         <>
           <div className="fixed inset-0 z-50 bg-black/60" onClick={() => setShowLogoutModal(false)} />
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="bg-white border border-gray-200 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl">
+            <div className={`${dark ? 'bg-[#202c33] border-[#2a3942] text-[#e9edef]' : 'bg-white border-gray-200'} border rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl`}>
               <div className="px-6 pt-7 pb-4 text-center">
                 <div className="w-14 h-14 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-4">
                   <svg className="w-7 h-7 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                   </svg>
                 </div>
-                <h3 className="text-[17px] font-bold text-gray-900 mb-1">Logout?</h3>
-                <p className="text-[13px] text-gray-500">Are you sure you want to log out of your account?</p>
+                <h3 className={`text-[17px] font-bold mb-1 ${dark ? 'text-[#e9edef]' : 'text-gray-900'}`}>Logout?</h3>
+                <p className={`text-[13px] ${dark ? 'text-[#aebac1]' : 'text-gray-500'}`}>Are you sure you want to log out of your account?</p>
               </div>
               <div className="px-6 pb-6 flex gap-2">
                 <button
                   onClick={() => setShowLogoutModal(false)}
-                  className="flex-1 py-3 rounded-xl border border-gray-200 text-[14px] transition-colors font-medium active:scale-[0.98] text-gray-900 hover:bg-gray-100"
+                  className={`flex-1 py-3 rounded-xl border text-[14px] transition-colors font-medium active:scale-[0.98] ${dark ? 'border-[#2a3942] text-[#e9edef] hover:bg-[#2a3942]' : 'border-gray-200 text-gray-900 hover:bg-gray-100'}`}
                 >
                   Cancel
                 </button>
