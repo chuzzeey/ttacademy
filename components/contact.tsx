@@ -99,7 +99,7 @@ const FALLBACK_STATES: Record<string, { code: string; name: string }[]> = {
   ]
 }
 
-function HeaderNav() {
+export function HeaderNav() {
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
@@ -108,58 +108,33 @@ function HeaderNav() {
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
-
-  const scrollToContact = () => {
-    const contactSection = document.getElementById('contact')
-    if (contactSection) {
-      contactSection.scrollIntoView({ behavior: 'smooth' })
-    }
-  }
-
-  const scrollToFAQ = () => {
-    const faqSection = document.getElementById('faq-section')
-    if (faqSection) {
-      faqSection.scrollIntoView({ behavior: 'smooth' })
-    }
-  }
-
   return (
-    <nav className={`sticky top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'glass shadow-sm' : 'bg-transparent'}`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16 md:h-20">
-          <button
-            onClick={() => window.location.reload()}
-            className="flex flex-col items-start gap-1 bg-transparent border-none cursor-pointer hover:opacity-80 transition-opacity"
-          >
-            <Image src={BRAND_LOGO_URL} alt="Tech Trailblazer Academy" width={80} height={32} className="h-7 md:h-8 w-auto" priority />
-            <span className="text-[9px] md:text-[10px] font-bold text-gray-900 tracking-wide">
-              Tech Trailblazer Academy
-            </span>
-          </button>
+    <nav
+      aria-label="Main navigation"
+      className={`sticky top-0 z-50 border-b border-slate-200/80 transition-colors duration-200 ${
+        scrolled ? 'bg-white/95 shadow-sm' : 'bg-white'
+      }`}
+    >
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 sm:px-8 lg:h-20 lg:px-10">
+        <a href="#home" aria-label="Tech Trailblazer Academy home" className="flex items-center gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700">
+          <Image src={BRAND_LOGO_URL} alt="" width={80} height={32} style={{ width: 'auto', height: 32 }} priority />
+          <span className="hidden text-xs font-semibold tracking-tight text-slate-900 sm:block">
+            Tech Trailblazer Academy
+          </span>
+        </a>
 
-          <div className="hidden lg:flex items-center gap-2 bg-white/60 backdrop-blur-md rounded-full p-1 border border-gray-100/50 shadow-sm">
-            {['Home', 'Register', 'FAQ'].map((item) => {
-              const handleClick = () => {
-                switch(item) {
-                  case 'Home': scrollToTop(); break
-                  case 'Register': scrollToContact(); break
-                  case 'FAQ': scrollToFAQ(); break
-                }
-              }
-              return (
-                <button
-                  key={item}
-                  onClick={handleClick}
-                  className="text-sm font-medium text-gray-900 hover:text-white px-5 py-2 rounded-full hover:bg-gradient-to-r hover:from-red-500 hover:to-red-600/80 transition-all duration-200"
-                >
-                  {item}
-                </button>
-              )
-            })}
+        <div className="flex items-center gap-4 sm:gap-6">
+          <div className="hidden items-center gap-5 md:flex">
+            <a href="#home" className="text-sm font-medium text-slate-600 transition hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700">Home</a>
+            <a href="#benefits-section" className="text-sm font-medium text-slate-600 transition hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700">Programs</a>
+            <a href="#faq-section" className="text-sm font-medium text-slate-600 transition hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700">FAQ</a>
           </div>
+          <a
+            href="#contact"
+            className="inline-flex min-h-10 items-center justify-center bg-emerald-800 px-4 text-xs font-semibold text-white transition hover:bg-emerald-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2 sm:px-5 sm:text-sm"
+          >
+            Apply now
+          </a>
         </div>
       </div>
     </nav>
@@ -320,11 +295,11 @@ export default function Contact() {
     return (
       <section ref={successRef} id="contact" className="w-full px-4 md:px-8 lg:px-16 py-16 md:py-24 bg-white relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-br from-[#ef4444]/5 to-transparent rounded-full blur-3xl" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-br from-emerald-500/5 to-transparent rounded-full blur-3xl" />
         </div>
         <div className="mx-auto max-w-md relative z-10 text-center">
-          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-red-50 border border-red-200 flex items-center justify-center">
-            <svg className="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13l4 4L19 7" /></svg>
+          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center">
+            <svg className="w-10 h-10 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13l4 4L19 7" /></svg>
           </div>
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">Application Submitted!</h2>
           <p className="text-gray-500 text-sm mb-2">Thank you, <span className="text-gray-900 font-medium">{form.name.split(" ")[0]}</span>!</p>
@@ -337,7 +312,7 @@ export default function Contact() {
               <p className="text-gray-600"><span className="text-gray-400">Course:</span> {form.course || "Not selected"}</p>
             </div>
           </div>
-          <button onClick={() => { setSubmitted(false); setForm({ name: "", email: "", mobile: "", dialCode: "+234", sex: "", country: "", state: "", course: "", employment: "", laptop: "", reason: "" }) }} className="px-6 py-2.5 rounded-lg bg-gray-100 border border-gray-200 text-gray-600 text-sm hover:bg-gray-200 transition">Register Another Student</button>
+          <button onClick={() => { setSubmitted(false); setForm({ name: "", email: "", mobile: "", dialCode: "+234", sex: "", country: "", state: "", course: "", employment: "", laptop: "", reason: "" }) }} className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2">Register Another Student</button>
         </div>
       </section>
     )
@@ -347,9 +322,9 @@ export default function Contact() {
   if (showEmailExistsPopup) {
     return (
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 relative">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-50 border border-red-200 flex items-center justify-center">
-            <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="relative w-full max-w-md rounded-3xl border border-slate-200 bg-white p-8 shadow-2xl">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center">
+            <svg className="w-8 h-8 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
           </div>
@@ -359,7 +334,7 @@ export default function Contact() {
           </p>
           <button 
             onClick={() => setShowEmailExistsPopup(false)}
-            className="w-full py-3 px-4 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold rounded-xl transition-all shadow-lg"
+            className="w-full rounded-xl bg-emerald-800 px-4 py-3 font-semibold text-white shadow-sm transition-all hover:bg-emerald-900 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2"
           >
             I Understand
           </button>
@@ -370,59 +345,36 @@ export default function Contact() {
 
   return (
     <>
-      <HeaderNav />
-      <section id="contact" className="w-full px-4 md:px-8 lg:px-16 py-16 md:py-24 bg-white relative overflow-hidden">
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-[#ef4444]/8 to-transparent rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-[#991b1b]/6 to-transparent rounded-full blur-3xl" />
-      </div>
-
-      <div className="mx-auto max-w-4xl relative z-10">
-        <div className="text-center mb-10 md:mb-14">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white border border-red-100 rounded-full shadow-sm mb-5">
-            <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-            <span className="text-xs font-semibold text-red-600 tracking-wide uppercase">Registration</span>
-          </div>
-
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-gray-900 mb-4 tracking-tight leading-[1.05]">
-            READY TO START YOUR<br />
-            <span className="relative inline-block">
-              <span className="bg-gradient-to-r from-red-600 via-rose-500 to-red-700 bg-clip-text text-transparent">
-                JOURNEY?
-              </span>
-              <svg className="absolute -bottom-2 left-0 w-full h-3" viewBox="0 0 100 10" preserveAspectRatio="none">
-                <path d="M0 8 Q25 2 50 8 T100 6" stroke="url(#swooshGradientReg)" strokeWidth="2.5" fill="none" strokeLinecap="round" />
-                <defs>
-                  <linearGradient id="swooshGradientReg" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#ef4444" stopOpacity="0.1" />
-                    <stop offset="50%" stopColor="#dc2626" stopOpacity="0.5" />
-                    <stop offset="100%" stopColor="#ef4444" stopOpacity="0.1" />
-                  </linearGradient>
-                </defs>
-              </svg>
-            </span>
+      <section id="contact" aria-labelledby="registration-title" className="scroll-mt-16 bg-[#f7f8f7] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+      <div className="mx-auto grid max-w-7xl items-start gap-10 lg:grid-cols-[0.72fr_1.28fr] lg:gap-14">
+        <aside className="lg:sticky lg:top-28">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.17em] text-emerald-800">Registration</p>
+          <h2 id="registration-title" className="mt-3 max-w-lg text-3xl font-semibold leading-tight tracking-[-0.04em] text-slate-950 sm:text-4xl">
+            Ready to start your journey?
           </h2>
-
-          <p className="text-base md:text-xl text-gray-500 max-w-2xl mx-auto leading-relaxed font-medium">
-            Fill out the form below and we'll get you enrolled in no time.
+          <p className="mt-4 max-w-md text-sm leading-7 text-slate-600 sm:text-base">
+            Fill out the form below and we&apos;ll get you enrolled in no time.
           </p>
-
-          <div className="flex items-center justify-center gap-4 mt-6">
-            <div className="h-px w-16 bg-gradient-to-r from-transparent to-red-300" />
-            <div className="w-2 h-2 bg-red-400 rounded-full rotate-45" />
-            <div className="h-px w-16 bg-gradient-to-l from-transparent to-red-300" />
+          <div className="mt-8 border-l-2 border-emerald-700 pl-4">
+            <p className="text-sm font-semibold text-slate-900">What happens next</p>
+            <p className="mt-1 text-sm leading-6 text-slate-500">
+              After you submit, we&apos;ll contact you using the email and WhatsApp details you provide.
+            </p>
           </div>
-        </div>
+          <p className="mt-6 text-xs leading-5 text-slate-500">
+            Fields marked with <span className="font-semibold text-emerald-800">*</span> are required.
+          </p>
+        </aside>
 
-        <div ref={formRef} className="max-w-2xl mx-auto">
-          <div className="p-6 sm:p-8 rounded-2xl bg-white border border-gray-200 shadow-sm space-y-6">
+        <div ref={formRef} className="registration-form min-w-0">
+          <div className="space-y-7 rounded-3xl border border-slate-200/80 bg-white p-5 shadow-[0_2px_18px_rgba(15,23,42,0.035)] sm:p-8">
             {/* Personal Information */}
-            <div className="pb-6 border-b border-gray-200">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Personal Information</h3>
+            <div className="border-b border-slate-200 pb-7">
+              <h3 className="mb-4 text-base font-semibold tracking-tight text-slate-950">Personal Information</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Full Name *</label>
-                  <input type="text" placeholder="Enter your full name" value={form.name}
+                  <label htmlFor="application-name" className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600">Full name *</label>
+                  <input id="application-name" type="text" required aria-invalid={Boolean(errors.name)} aria-describedby={errors.name ? "err-name" : undefined} placeholder="Enter your full name" value={form.name}
                     onChange={(e) => updateForm("name", e.target.value.replace(/[0-9]/g, ""))}
                     className={`w-full px-5 py-4 rounded-xl bg-gray-50/50 border text-gray-900 placeholder:text-gray-400/40 text-sm focus:outline-none focus:border-red-400/50 focus:bg-gray-50/70 transition-all duration-200 ${errors.name ? "border-red-500/50" : "border-gray-200"}`} />
                   {errors.name && <p id="err-name" className="text-red-500 text-xs mt-1">{errors.name}</p>}
@@ -431,13 +383,13 @@ export default function Contact() {
             </div>
 
             {/* Contact Details */}
-            <div className="pb-6 border-b border-gray-200">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Contact Details</h3>
+            <div className="border-b border-slate-200 pb-7">
+              <h3 className="mb-4 text-base font-semibold tracking-tight text-slate-950">Contact Details</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Email Address *</label>
+                  <label htmlFor="application-email" className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600">Email address *</label>
                   <div className="relative">
-                    <input type="email" placeholder="Enter your email address" value={form.email} autoComplete="off"
+                    <input id="application-email" type="email" required aria-invalid={Boolean(errors.email || emailStatus.status === "duplicate")} aria-describedby={errors.email ? "err-email" : emailStatus.status === "duplicate" ? "email-status-message" : undefined} placeholder="Enter your email address" value={form.email} autoComplete="off"
                       onChange={(e) => updateForm("email", e.target.value)}
                       onFocus={() => setEmailFocused(true)}
                       onBlur={(e) => { setEmailFocused(false); checkEmailDuplicate(e.target.value) }}
@@ -445,20 +397,20 @@ export default function Contact() {
                       className={`w-full px-5 py-4 rounded-xl bg-gray-50/50 border text-gray-900 placeholder:text-gray-400/40 text-sm focus:outline-none focus:border-red-400/50 focus:bg-gray-50/70 transition-all duration-200 ${
                         errors.email ? "border-red-500/50" : emailStatus.status === "duplicate" ? "border-red-500/50" : emailStatus.status === "available" ? "border-green-500/50" : "border-gray-200"
                       } ${emailChecking ? "opacity-70" : ""}`} />
-                    {emailStatus.status === "checking" && <div className="absolute right-4 top-1/2 -translate-y-1/2"><div className="w-4 h-4 border-2 border-red-500/30 border-t-red-500 rounded-full animate-spin" /></div>}
+                    {emailStatus.status === "checking" && <div className="absolute right-4 top-1/2 -translate-y-1/2"><div className="w-4 h-4 border-2 border-emerald-700/30 border-t-emerald-700 rounded-full animate-spin" /></div>}
                     {emailStatus.status === "available" && <div className="absolute right-4 top-1/2 -translate-y-1/2 text-green-500 text-sm font-medium">✓</div>}
                     {emailStatus.status === "duplicate" && <div className="absolute right-4 top-1/2 -translate-y-1/2 text-red-500 text-sm font-medium">✗</div>}
                   </div>
                   {errors.email && <p id="err-email" className="text-red-500 text-xs mt-1">{errors.email}</p>}
-                  {emailStatus.status === "duplicate" && !errors.email && <p className="text-red-500/80 text-[11px] mt-1">{emailStatus.message}</p>}
-                  {emailStatus.status === "available" && <p className="text-red-500/70 text-[10px] mt-1">Note: If this email is wrong, you will not receive updates about your application, classes, or program activities.</p>}
+                  {emailStatus.status === "duplicate" && !errors.email && <p id="email-status-message" role="status" className="mt-1 text-[11px] text-red-700">{emailStatus.message}</p>}
+                  {emailStatus.status === "available" && <p className="text-gray-500 text-[10px] mt-1">Note: If this email is wrong, you will not receive updates about your application, classes, or program activities.</p>}
                   {emailFocused && emailStatus.status !== "available" && <p className="text-gray-400 text-[11px] mt-1">Please enter a valid email address that you actively use. Important updates will be sent to this email.</p>}
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">WhatsApp Number *</label>
+                  <label htmlFor="application-phone" className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600">WhatsApp number *</label>
                   <div className="flex flex-row gap-2">
                     <div className="relative shrink-0" style={{ width: "90px" }}>
-                      <select value={form.dialCode} onChange={(e) => updateForm("dialCode", e.target.value)}
+                      <select aria-label="Country calling code" value={form.dialCode} onChange={(e) => updateForm("dialCode", e.target.value)}
                         className="w-full px-2 py-4 pr-5 rounded-xl bg-white border border-gray-200 text-gray-600 text-xs focus:outline-none focus:border-red-400/50 transition-all duration-200 appearance-none cursor-pointer">
                         {AFRICAN_COUNTRIES.map(c => (
                           <option key={c.dial} value={c.dial}>{c.dial}</option>
@@ -466,26 +418,26 @@ export default function Contact() {
                       </select>
                       <svg className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
                     </div>
-                    <input type="tel" placeholder="Enter your active WhatsApp number" value={form.mobile} autoComplete="off"
+                    <input id="application-phone" type="tel" required aria-invalid={Boolean(errors.mobile)} aria-describedby={errors.mobile ? "err-mobile" : undefined} placeholder="Enter your active WhatsApp number" value={form.mobile} autoComplete="off"
                       onChange={(e) => updateForm("mobile", e.target.value.replace(/[^0-9]/g, "").slice(0, 14))}
                       onFocus={() => setWhatsappFocused(true)} onBlur={() => setWhatsappFocused(false)}
                       inputMode="numeric" className={`flex-1 min-w-0 px-4 py-4 rounded-xl bg-gray-50/50 border text-gray-900 placeholder:text-gray-400/40 text-sm focus:outline-none focus:border-red-400/50 focus:bg-gray-50/70 transition-all duration-200 ${errors.mobile ? "border-red-500/50" : "border-gray-200"}`} />
                   </div>
                   {errors.mobile && <p id="err-mobile" className="text-red-500 text-xs mt-1">{errors.mobile}</p>}
-                  {form.mobile.trim().length >= 7 && !errors.mobile && <p className="text-red-500/70 text-[10px] mt-1">Note: If this WhatsApp number is wrong, you will not receive updates about your application.</p>}
+                  {form.mobile.trim().length >= 7 && !errors.mobile && <p className="text-gray-500 text-[10px] mt-1">Note: If this WhatsApp number is wrong, you will not receive updates about your application.</p>}
                   {whatsappFocused && !(form.mobile.trim().length >= 7 && !errors.mobile) && <p className="text-gray-400 text-[11px] mt-1">Please provide a valid WhatsApp number that you actively use.</p>}
                 </div>
               </div>
             </div>
 
             {/* Demographics */}
-            <div className="pb-6 border-b border-gray-200">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Demographics</h3>
+            <div className="border-b border-slate-200 pb-7">
+              <h3 className="mb-4 text-base font-semibold tracking-tight text-slate-950">Demographics</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Sex *</label>
+                  <label htmlFor="application-sex" className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600">Sex *</label>
                   <div className="relative">
-                    <select value={form.sex} onChange={(e) => updateForm("sex", e.target.value)}
+                    <select id="application-sex" required aria-invalid={Boolean(errors.sex)} aria-describedby={errors.sex ? "err-sex" : undefined} value={form.sex} onChange={(e) => updateForm("sex", e.target.value)}
                       className={`w-full px-5 py-4 rounded-xl bg-white border text-gray-600 text-sm focus:outline-none focus:border-red-400/50 transition-all duration-200 appearance-none cursor-pointer ${errors.sex ? "border-red-500/50" : "border-gray-200"}`}>
                       <option value="" disabled>Select your sex</option><option value="male">Male</option><option value="female">Female</option>
                     </select>
@@ -494,9 +446,9 @@ export default function Contact() {
                   {errors.sex && <p id="err-sex" className="text-red-500 text-xs mt-1">{errors.sex}</p>}
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Country *</label>
+                  <label htmlFor="application-country" className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600">Country *</label>
                   <div className="relative">
-                    <select value={form.country} onChange={(e) => {
+                    <select id="application-country" required aria-invalid={Boolean(errors.country)} aria-describedby={errors.country ? "err-country" : undefined} value={form.country} onChange={(e) => {
                       updateForm("country", e.target.value)
                       updateForm("state", "")
                       const country = AFRICAN_COUNTRIES.find(c => c.code === e.target.value)
@@ -512,15 +464,15 @@ export default function Contact() {
                 </div>
                 {loadingStates && (
                   <div>
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">State/Province</label>
-                    <select disabled className="w-full px-5 py-4 rounded-xl bg-gray-50/50 border border-gray-200 text-gray-400/40 text-sm cursor-not-allowed"><option>Loading states...</option></select>
+                    <label htmlFor="application-state-loading" className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600">State/Province</label>
+                    <select id="application-state-loading" disabled className="w-full px-5 py-4 rounded-xl bg-gray-50/50 border border-gray-200 text-gray-400/40 text-sm cursor-not-allowed"><option>Loading states...</option></select>
                   </div>
                 )}
                 {!loadingStates && states.length > 0 && (
                   <div>
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">State/Province</label>
+                    <label htmlFor="application-state" className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600">State/Province</label>
                     <div className="relative">
-                      <select value={form.state} onChange={(e) => updateForm("state", e.target.value)}
+                      <select id="application-state" required={form.country !== "OTHER"} aria-invalid={Boolean(errors.state)} aria-describedby={errors.state ? "err-state" : undefined} value={form.state} onChange={(e) => updateForm("state", e.target.value)}
                         className="w-full px-5 py-4 rounded-xl bg-white border border-gray-200 text-gray-600 text-sm focus:outline-none focus:border-red-400/50 transition-all duration-200 appearance-none cursor-pointer">
                         <option value="" disabled>Select state</option>
                         {states.map(s => <option key={s.code} value={s.code}>{s.name}</option>)}
@@ -535,13 +487,13 @@ export default function Contact() {
             </div>
 
             {/* Course Selection */}
-            <div className="pb-6 border-b border-gray-200">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Course Selection</h3>
+            <div className="border-b border-slate-200 pb-7">
+              <h3 className="mb-4 text-base font-semibold tracking-tight text-slate-950">Course Selection</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Course Applying For *</label>
+                  <label htmlFor="application-course" className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600">Course applying for *</label>
                   <div className="relative">
-                    <select value={form.course} onChange={(e) => updateForm("course", e.target.value)}
+                    <select id="application-course" required aria-invalid={Boolean(errors.course)} aria-describedby={errors.course ? "err-course" : undefined} value={form.course} onChange={(e) => updateForm("course", e.target.value)}
                       className={`w-full px-5 py-4 rounded-xl bg-white border text-gray-600 text-sm focus:outline-none focus:border-red-400/50 transition-all duration-200 appearance-none cursor-pointer ${errors.course ? "border-red-500/50" : "border-gray-200"}`}>
                       <option value="" disabled>Select course</option>
                       {COURSE_CATALOG.map(({ title }) => <option key={title} value={title.toLowerCase()}>{title}</option>)}
@@ -551,9 +503,9 @@ export default function Contact() {
                   {errors.course && <p id="err-course" className="text-red-500 text-xs mt-1">{errors.course}</p>}
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Employment Status *</label>
+                  <label htmlFor="application-employment" className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600">Employment status *</label>
                   <div className="relative">
-                    <select value={form.employment} onChange={(e) => updateForm("employment", e.target.value)}
+                    <select id="application-employment" required aria-invalid={Boolean(errors.employment)} aria-describedby={errors.employment ? "err-employment" : undefined} value={form.employment} onChange={(e) => updateForm("employment", e.target.value)}
                       className={`w-full px-5 py-4 rounded-xl bg-white border text-gray-600 text-sm focus:outline-none focus:border-red-400/50 transition-all duration-200 appearance-none cursor-pointer ${errors.employment ? "border-red-500/50" : "border-gray-200"}`}>
                       <option value="" disabled>Select status</option><option value="employed">Employed</option><option value="unemployed">Unemployed</option>
                       <option value="student">Student</option><option value="freelancer">Freelancer</option>
@@ -563,9 +515,9 @@ export default function Contact() {
                   {errors.employment && <p id="err-employment" className="text-red-500 text-xs mt-1">{errors.employment}</p>}
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Do You Have a Laptop? *</label>
+                  <label htmlFor="application-laptop" className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600">Do you have a laptop? *</label>
                   <div className="relative">
-                    <select value={form.laptop} onChange={(e) => updateForm("laptop", e.target.value)}
+                    <select id="application-laptop" required aria-invalid={Boolean(errors.laptop)} aria-describedby={errors.laptop ? "err-laptop" : undefined} value={form.laptop} onChange={(e) => updateForm("laptop", e.target.value)}
                       className={`w-full px-5 py-4 rounded-xl bg-white border text-gray-600 text-sm focus:outline-none focus:border-red-400/50 transition-all duration-200 appearance-none cursor-pointer ${errors.laptop ? "border-red-500/50" : "border-gray-200"}`}>
                       <option value="" disabled>Select option</option><option value="yes">Yes</option><option value="no">No</option>
                     </select>
@@ -577,11 +529,11 @@ export default function Contact() {
             </div>
 
             {/* Motivation */}
-            <div className="pb-6 border-b border-gray-200">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Motivation</h3>
+            <div className="border-b border-slate-200 pb-7">
+              <h3 className="mb-4 text-base font-semibold tracking-tight text-slate-950">Motivation</h3>
               <div>
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Why Do You Want To Learn This Skill? *</label>
-                <textarea placeholder="Tell us briefly why you want to learn this course..." rows={4} value={form.reason}
+                <label htmlFor="application-reason" className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600">Why do you want to learn this skill? *</label>
+                <textarea id="application-reason" required aria-invalid={Boolean(errors.reason)} aria-describedby={errors.reason ? "err-reason" : undefined} placeholder="Tell us briefly why you want to learn this course..." rows={4} value={form.reason}
                   onChange={(e) => updateForm("reason", e.target.value)}
                   className={`w-full px-5 py-4 rounded-xl bg-gray-50/50 border text-gray-900 placeholder:text-gray-400/40 text-sm focus:outline-none focus:border-red-400/50 focus:bg-gray-50/70 transition-all duration-200 resize-none ${errors.reason ? "border-red-500/50" : "border-gray-200"}`} />
                 {errors.reason && <p id="err-reason" className="text-red-500 text-xs mt-1">{errors.reason}</p>}
@@ -590,9 +542,9 @@ export default function Contact() {
 
             {/* Submit */}
             <div className="text-center">
-              <p className="text-red-500/70 text-[10px] mb-4">Please review your details carefully before submitting.</p>
-              <button onClick={handleSubmit} disabled={submitting}
-                className="w-full md:w-auto px-10 py-4 rounded-xl bg-gradient-to-r from-red-600 to-red-700 text-white text-base font-semibold hover:from-red-700 hover:to-red-800 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl hover:shadow-red-600/25">
+              <p className="text-gray-500 text-[10px] mb-4">Please review your details carefully before submitting.</p>
+              <button type="button" onClick={handleSubmit} disabled={submitting}
+                className="w-full rounded-xl bg-emerald-800 px-8 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-900 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2 md:w-auto">
                 {submitting ? <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block mr-2 align-middle" /> Submitting...</> : "Submit Application"}
               </button>
             </div>

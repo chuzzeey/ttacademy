@@ -1,141 +1,94 @@
 'use client'
-import React, { useState, useRef, useEffect } from 'react'
+
+import { useState } from 'react'
+
+const faqs = [
+    {
+        question: 'Are your courses self paced or live?',
+        answer: 'Live',
+    },
+    {
+        question: 'Can I access the courses on my mobile device?',
+        answer: 'Yes',
+    },
+    {
+        question: 'Do you provide certification upon course completion?',
+        answer: 'Yes',
+    },
+    {
+        question: 'Are there refund requests?',
+        answer: 'No',
+    },
+    {
+        question: 'What types of courses do you offer?',
+        answer: 'A real time job opportunity tech skills',
+    },
+    {
+        question: 'Can I pay by installment?',
+        answer: 'No',
+    },
+]
 
 const FAQ = () => {
     const [openIndex, setOpenIndex] = useState<number | null>(null)
-    const [isVisible, setIsVisible] = useState(false)
-    const sectionRef = useRef<HTMLDivElement>(null)
-
-    const faqs = [
-        {
-            question: "Are your courses self paced or live?",
-            answer: "Live"
-        },
-        {
-            question: "Can I access the courses on my mobile device?",
-            answer: "Yes"
-        },
-        {
-            question: "Do you provide certification upon course completion?",
-            answer: "Yes"
-        },
-        {
-            question: "Are there refund requests?",
-            answer: "No"
-        },
-        {
-            question: "What types of courses do you offer?",
-            answer: "A real time job opportunity tech skills"
-        },
-        {
-            question: "Can I pay by installment?",
-            answer: "No"
-        }
-    ]
-
-    const toggleFAQ = (index: number) => {
-        setOpenIndex(openIndex === index ? null : index)
-    }
-
-    useEffect(() => {
-        const section = sectionRef.current
-        if (!section) return
-
-        const observer = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        setIsVisible(true)
-                    }
-                })
-            },
-            { threshold: 0.1 }
-        )
-
-        observer.observe(section)
-        return () => observer.disconnect()
-    }, [])
 
     return (
-        <div ref={sectionRef} id="faq-section" className="w-full px-4 md:px-8 lg:px-16 py-16 md:py-24 bg-white relative overflow-hidden">
-            {/* Decorative */}
-            <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute top-0 left-0 w-64 h-64 bg-gradient-to-tr from-[#ef4444]/5 to-transparent rounded-full blur-3xl" />
-                <div className="absolute bottom-0 right-0 w-64 h-64 bg-gradient-to-bl from-[#991b1b]/5 to-transparent rounded-full blur-3xl" />
-            </div>
-            
-            <div className="mx-auto max-w-3xl relative z-10">
-                <div className={`text-center mb-10 md:mb-14 ${isVisible ? 'animate-[fadeIn_0.8s_ease-out_forwards]' : 'opacity-0'}`}>
-                    {/* Pill badge */}
-                    <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white border border-red-100 rounded-full shadow-sm mb-5">
-                        <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                        <span className="text-xs font-semibold text-red-600 tracking-wide uppercase">Support</span>
-                    </div>
-                    
-                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-gray-900 mb-4 tracking-tight leading-[1.05]">
-                        FREQUENTLY ASKED<br />
-                        <span className="relative inline-block">
-                            <span className="bg-gradient-to-r from-red-600 via-rose-500 to-red-700 bg-clip-text text-transparent">
-                                QUESTIONS
-                            </span>
-                            <svg className="absolute -bottom-2 left-0 w-full h-3" viewBox="0 0 100 10" preserveAspectRatio="none">
-                                <path d="M0 8 Q25 2 50 8 T100 6" stroke="url(#swooshGradientFAQ)" strokeWidth="2.5" fill="none" strokeLinecap="round" />
-                                <defs>
-                                    <linearGradient id="swooshGradientFAQ" x1="0%" y1="0%" x2="100%" y2="0%">
-                                        <stop offset="0%" stopColor="#ef4444" stopOpacity="0.1" />
-                                        <stop offset="50%" stopColor="#dc2626" stopOpacity="0.5" />
-                                        <stop offset="100%" stopColor="#ef4444" stopOpacity="0.1" />
-                                    </linearGradient>
-                                </defs>
-                            </svg>
-                        </span>
+        <section id="faq-section" aria-labelledby="faq-title" className="bg-white px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+            <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.7fr_1.3fr] lg:gap-16">
+                <div className="max-w-md">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.17em] text-emerald-800">Support</p>
+                    <h2 id="faq-title" className="mt-3 text-3xl font-semibold leading-tight tracking-[-0.04em] text-slate-950 sm:text-4xl">
+                        Frequently asked questions
                     </h2>
-                    
-                    <p className="text-base md:text-xl text-gray-500 max-w-2xl mx-auto leading-relaxed font-medium">
-                        Everything you need to know
+                    <p className="mt-4 text-sm leading-7 text-slate-500">
+                        A few useful details about learning with Tech Trailblazer Academy.
                     </p>
-                    
-                    {/* Divider */}
-                    <div className="flex items-center justify-center gap-4 mt-6">
-                        <div className="h-px w-16 bg-gradient-to-r from-transparent to-red-300" />
-                        <div className="w-2 h-2 bg-red-400 rounded-full rotate-45" />
-                        <div className="h-px w-16 bg-gradient-to-l from-transparent to-red-300" />
-                    </div>
+                    <a href="#contact" className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 underline decoration-emerald-300 underline-offset-4 transition hover:text-emerald-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700">
+                        Continue to application
+                        <span aria-hidden="true">→</span>
+                    </a>
                 </div>
 
-                <div className="space-y-3 md:space-y-4">
-                    {faqs.map((faq, index) => (
-                        <div
-                            key={index}
-                            className={`bg-white rounded-2xl overflow-hidden transition-all duration-300 card-premium ${isVisible ? 'animate-[slideInLeft_0.5s_ease-out_forwards]' : 'opacity-0'}`}
-                            style={{ animationDelay: `${index * 0.1}s` }}
-                        >
-                            <button
-                                className="w-full text-left p-4 md:p-6 flex justify-between items-center gap-4 bg-transparent border-none cursor-pointer"
-                                onClick={() => toggleFAQ(index)}
-                            >
-                                <span className="text-sm sm:text-base md:text-lg font-semibold text-gray-900 flex-1">
-                                    {faq.question}
-                                </span>
-                                <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-[#dc2626] to-[#991b1b] flex items-center justify-center flex-shrink-0 transition-transform duration-300 ${openIndex === index ? 'rotate-45' : ''}`}>
-                                    <svg className="w-4 h-4 md:w-5 md:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                                    </svg>
-                                </div>
-                            </button>
-                            <div className={`overflow-hidden transition-all duration-400 ease-in-out ${openIndex === index ? 'max-h-48' : 'max-h-0'}`}>
-                                <div className="px-4 md:px-6 pb-4 md:pb-6">
-                                    <div className="w-full h-px bg-gradient-to-r from-[#ef4444]/30 to-transparent mb-4" />
-                                    <p className="text-gray-500 text-sm sm:text-base">
-                                        {faq.answer}
-                                    </p>
+                <div className="divide-y divide-slate-200 border-y border-slate-200">
+                    {faqs.map((faq, index) => {
+                        const isOpen = openIndex === index
+                        const triggerId = `faq-trigger-${index}`
+                        const answerId = `faq-answer-${index}`
+
+                        return (
+                            <div key={faq.question}>
+                                <h3>
+                                    <button
+                                        id={triggerId}
+                                        type="button"
+                                        aria-expanded={isOpen}
+                                        aria-controls={answerId}
+                                        className="flex min-h-14 w-full items-center justify-between gap-4 py-4 text-left text-sm font-medium text-slate-900 transition hover:text-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-inset sm:text-base"
+                                        onClick={() => setOpenIndex(isOpen ? null : index)}
+                                    >
+                                        {faq.question}
+                                        <span className={`flex h-8 w-8 shrink-0 items-center justify-center border border-slate-200 text-emerald-800 transition ${isOpen ? 'rotate-45 border-emerald-200 bg-emerald-50' : ''}`} aria-hidden="true">
+                                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                                                <path strokeLinecap="round" d="M12 5v14M5 12h14" />
+                                            </svg>
+                                        </span>
+                                    </button>
+                                </h3>
+                                <div
+                                    id={answerId}
+                                    role="region"
+                                    aria-labelledby={triggerId}
+                                    hidden={!isOpen}
+                                    className="pb-4 pr-10 text-sm leading-6 text-slate-500"
+                                >
+                                    {faq.answer}
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        )
+                    })}
                 </div>
             </div>
-        </div>
+        </section>
     )
 }
 

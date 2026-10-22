@@ -181,6 +181,254 @@
   }
 }
 
+.registration-form :is(input, select, textarea) {
+  appearance: none;
+  background-color: transparent;
+  border: 0 !important;
+  border-bottom: 1px solid #cbd5e1 !important;
+  border-radius: 0;
+  box-shadow: none;
+  padding-left: 0;
+  padding-right: 0;
+  color: #0f172a;
+  transition: border-color 180ms ease, border-width 180ms ease;
+}
+
+.registration-form :is(input, select, textarea)[class~="border-red-500/50"] {
+  border-bottom-color: #ef4444 !important;
+}
+
+.registration-form :is(input, select, textarea)[class~="border-green-500/50"] {
+  border-bottom-color: #16a34a !important;
+}
+
+.registration-form input[type="email"] {
+  padding-right: 2rem;
+}
+
+.registration-form select {
+  padding-right: 2rem;
+}
+
+.registration-form textarea {
+  min-height: 7rem;
+  padding-top: 0.75rem;
+}
+
+.registration-form :is(input, select, textarea):focus {
+  border-bottom: 2px solid #047857 !important;
+  outline: none;
+}
+
+.registration-form :is(input, select, textarea)[class~="border-red-500/50"]:focus {
+  border-bottom-color: #ef4444 !important;
+}
+
+.registration-form :is(input, select, textarea):disabled {
+  border-bottom-color: #e2e8f0 !important;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.registration-form :is(input, textarea)::placeholder {
+  color: #94a3b8;
+  opacity: 1;
+}
+
+.landing-grid-pattern {
+  background-image:
+    linear-gradient(to right, rgb(148 163 184 / 0.14) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(148 163 184 / 0.14) 1px, transparent 1px);
+  background-position: center;
+  background-size: 32px 32px;
+  mask-image: linear-gradient(to left, black, transparent);
+}
+
+.hero-green-wash {
+  background: radial-gradient(circle, rgb(16 163 106 / 0.2) 0%, rgb(16 163 106 / 0.1) 30%, transparent 72%);
+  filter: blur(16px);
+}
+
+.hero-headline-accent {
+  background-image: linear-gradient(105deg, #08734f 8%, #149866 55%, #53b883 100%);
+  background-clip: text;
+  color: transparent;
+}
+
+.hero-orbit-stage {
+  position: relative;
+  width: min(100%, 430px);
+  aspect-ratio: 1;
+  margin-inline: auto;
+  perspective: 900px;
+}
+
+.hero-orbit-glow {
+  position: absolute;
+  inset: 2%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(16 163 106 / 0.2), rgb(16 163 106 / 0.08) 44%, transparent 72%);
+  filter: blur(22px);
+}
+
+.hero-orbit {
+  position: absolute;
+  inset: 7%;
+  transform-style: preserve-3d;
+  animation: hero-orbit-float 8s ease-in-out infinite;
+}
+
+.hero-orbit-sphere {
+  position: absolute;
+  inset: 17%;
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 0.75);
+  border-radius: 50%;
+  background:
+    radial-gradient(ellipse at 34% 28%, rgb(255 255 255 / 0.78), transparent 16%),
+    radial-gradient(ellipse at 37% 33%, #d9f4e3 0%, #8bd6a6 22%, #36ac75 43%, #11794f 65%, #064a37 100%);
+  box-shadow:
+    inset -18px -16px 36px rgb(2 52 37 / 0.38),
+    inset 8px 8px 24px rgb(255 255 255 / 0.48),
+    0 25px 55px -25px rgb(6 95 70 / 0.48);
+}
+
+.hero-orbit-sphere::before,
+.hero-orbit-sphere::after {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  content: "";
+  pointer-events: none;
+}
+
+.hero-orbit-sphere::before {
+  background:
+    repeating-linear-gradient(0deg, transparent 0 23px, rgb(239 255 245 / 0.12) 24px 25px, transparent 26px 46px),
+    repeating-linear-gradient(90deg, transparent 0 23px, rgb(239 255 245 / 0.1) 24px 25px, transparent 26px 46px);
+  mask-image: radial-gradient(ellipse, #000 38%, transparent 74%);
+}
+
+.hero-orbit-sphere::after {
+  background: linear-gradient(120deg, transparent 30%, rgb(255 255 255 / 0.12) 47%, transparent 62%);
+}
+
+.hero-orbit-sphere-shine {
+  position: absolute;
+  top: 11%;
+  left: 19%;
+  width: 34%;
+  height: 20%;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.45);
+  filter: blur(18px);
+  transform: rotate(-32deg);
+}
+
+.hero-orbit-sphere-continent {
+  position: absolute;
+  border: 1px solid rgb(226 255 234 / 0.16);
+  border-radius: 48% 52% 64% 36% / 44% 36% 64% 56%;
+  background: rgb(216 250 224 / 0.13);
+  filter: blur(0.5px);
+}
+
+.hero-orbit-continent-one {
+  top: 29%;
+  left: 20%;
+  width: 28%;
+  height: 19%;
+  transform: rotate(-24deg);
+}
+
+.hero-orbit-continent-two {
+  top: 52%;
+  right: 21%;
+  width: 21%;
+  height: 27%;
+  transform: rotate(28deg);
+}
+
+.hero-orbit-ring {
+  position: absolute;
+  inset: 12%;
+  border: 1px solid rgb(16 122 79 / 0.3);
+  border-radius: 50%;
+  transform-style: preserve-3d;
+}
+
+.hero-orbit-ring-outer {
+  animation: hero-orbit-spin 18s linear infinite;
+  box-shadow: 0 0 22px rgb(16 163 106 / 0.1);
+}
+
+.hero-orbit-ring-inner {
+  inset: 4%;
+  border-color: rgb(16 122 79 / 0.16);
+  transform: rotateX(72deg) rotateZ(-25deg);
+  animation: hero-orbit-tilt 24s linear infinite;
+}
+
+.hero-orbit-point {
+  position: absolute;
+  z-index: 2;
+  width: 9px;
+  height: 9px;
+  border: 2px solid white;
+  border-radius: 50%;
+  background: #0c8d5c;
+  box-shadow: 0 2px 10px rgb(6 95 70 / 0.24);
+}
+
+.hero-orbit-point-one {
+  top: 20%;
+  right: 19%;
+}
+
+.hero-orbit-point-two {
+  bottom: 22%;
+  left: 13%;
+  width: 7px;
+  height: 7px;
+  background: #72c695;
+}
+
+@keyframes hero-orbit-spin {
+  from { transform: rotateX(68deg) rotateZ(0deg); }
+  to { transform: rotateX(68deg) rotateZ(360deg); }
+}
+
+@keyframes hero-orbit-tilt {
+  from { transform: rotateX(72deg) rotateZ(-25deg); }
+  to { transform: rotateX(72deg) rotateZ(335deg); }
+}
+
+@keyframes hero-orbit-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .landing-page *,
+  .landing-page *::before,
+  .landing-page *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .hero-orbit,
+  .hero-orbit-ring-outer,
+  .hero-orbit-ring-inner {
+    animation: none;
+  }
+}
+
 /* ============================================
    UTILITY CLASSES
    ============================================ */

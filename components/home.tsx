@@ -1,99 +1,94 @@
 'use client'
-import React, { useState, useEffect } from 'react'
-import Image from 'next/image'
-import Stat from './stat'
 
-const Home = () => {
-    const [currentHeroIndex, setCurrentHeroIndex] = useState(0)
+import { COURSE_CATALOG } from '@/lib/course-catalog'
 
-    const scrollToFeaturedCourses = () => {
-        const featuredCourses = document.getElementById('featured-courses')
-        if (featuredCourses) {
-            featuredCourses.scrollIntoView({ behavior: 'smooth' })
-        }
-    }
+const Home = () => (
+    <section
+        id="home"
+        aria-labelledby="hero-title"
+        className="relative isolate overflow-hidden bg-[#f8faf8]"
+    >
+        <div aria-hidden="true" className="absolute inset-y-0 right-0 hidden w-[48%] bg-gradient-to-br from-emerald-50 via-[#f0f5f1] to-white lg:block" />
+        <div aria-hidden="true" className="absolute inset-y-0 right-0 hidden w-[48%] opacity-30 lg:block landing-grid-pattern" />
+        <div aria-hidden="true" className="hero-green-wash pointer-events-none absolute -right-40 top-10 h-96 w-96 rounded-full lg:right-[4%] lg:top-1/2 lg:-translate-y-1/2" />
 
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setCurrentHeroIndex((prev) => (prev + 1) % 3)
-        }, 5000)
-        return () => clearInterval(interval)
-    }, [])
-
-    return (
-        <>
-            {/* Hero Section */}
-            <section className="relative min-h-screen flex items-center overflow-hidden bg-gradient-to-br from-white via-red-50/30 to-white">
-                {/* Decorative Elements */}
-                <div className="absolute top-20 right-0 w-96 h-96 bg-gradient-to-bl from-[#ef4444]/10 to-transparent rounded-full blur-3xl" />
-                <div className="absolute bottom-40 left-20 w-64 h-64 bg-gradient-to-tr from-[#991b1b]/8 to-transparent rounded-full blur-3xl" />
-
-                {/* Accent Line */}
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-transparent via-[#ef4444]/40 to-transparent hidden lg:block" />
-
-                {/* Fade transition to next section */}
-                <div className="absolute bottom-0 left-0 right-0 h-32 md:h-48 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none z-10" />
-
-                {/* Stats - Desktop Only */}
-                <div className="hidden lg:block absolute bottom-8 left-0 right-0 z-10 px-8">
-                    <Stat />
+        <div className="relative mx-auto grid max-w-7xl items-center gap-8 px-5 py-16 sm:px-8 sm:py-20 lg:min-h-[calc(100svh-5rem)] lg:grid-cols-[1.06fr_0.94fr] lg:gap-12 lg:px-10 lg:py-16">
+            <div className="relative z-10 max-w-2xl">
+                <div className="mb-7 inline-flex items-center gap-2.5 rounded-full border border-emerald-800/10 bg-white/80 px-3.5 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-900 shadow-sm sm:text-xs">
+                    <span className="h-2 w-2 rounded-full bg-emerald-600" aria-hidden="true" />
+                    Education that works
                 </div>
 
-                <div className="max-w-9xl mx-auto px-4 sm:px-6 md:px-8 lg:pl-20 w-full pt-20">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
-                        {/* Hero Content */}
-                        <div className="text-center md:text-left lg:text-left space-y-5 md:space-y-6 relative z-10 px-4 sm:px-6 md:px-8 lg:px-0">
-                            <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm border border-[#ef4444]/20 rounded-full px-4 py-1.5">
-                                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                                <span className="text-xs font-semibold text-red-500 tracking-wide">Education That Works</span>
-                            </div>
-                            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold text-gray-900 leading-[1.02] tracking-tight">
-                                <span className="inline-block">LEARN.</span>{' '}
-                                <span className="inline-block">GROW.</span><br/>
-                                <span className="inline-block bg-gradient-to-r from-red-500 to-red-600/80 bg-clip-text text-transparent">SUCCEED.</span>
-                            </h1>
-                            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-500 max-w-xl mx-auto md:mx-auto lg:mx-0 leading-relaxed">
-                                Learn from industry experts and gain the skills to advance your career.
-                            </p>
-                            <button
-                                onClick={scrollToFeaturedCourses}
-                                className="bg-gradient-to-r from-red-500 to-red-600/80 text-white hover:from-red-700 hover:to-red-800 px-8 lg:px-10 py-3.5 lg:py-4 text-base sm:text-lg lg:text-xl font-semibold rounded-full transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:shadow-red-500/25 transform hover:-translate-y-0.5 mx-auto lg:mx-0"
-                            >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                </svg>
-                                Explore courses
-                            </button>
-                        </div>
+                <h1
+                    id="hero-title"
+                    className="text-[clamp(3.25rem,6.2vw,5.75rem)] font-semibold leading-[0.94] tracking-[-0.065em] text-slate-950"
+                >
+                    <span className="block">LEARN.</span>
+                    <span className="block">GROW.</span>
+                    <span className="hero-headline-accent mt-1 block text-emerald-800">SUCCEED.</span>
+                </h1>
 
-                        {/* Hero Image - Blended with Background */}
-                        <div className="relative flex justify-center">
-                            <div className="relative w-[320px] h-[320px] sm:w-[380px] sm:h-[380px] md:w-[480px] md:h-[480px] lg:w-[650px] lg:h-[650px]">
-                                {[
-                                    'https://res.cloudinary.com/dwry4zb9z/image/upload/q_auto/f_auto/v1779339410/ceoo-Photoroom_fr28w6.png',
-                                    'https://res.cloudinary.com/dwry4zb9z/image/upload/q_auto/f_auto/v1779339410/so3-Photoroom_chmd5i.png',
-                                    'https://res.cloudinary.com/dwry4zb9z/image/upload/q_auto/f_auto/v1779339410/so2-Photoroom_i3ih86.png'
-                                ].map((src, index) => (
-                                    <Image
-                                        key={src}
-                                        src={src}
-                                        alt={`Professional ${index + 1}`}
-                                        width={700}
-                                        height={800}
-                                        sizes="(max-width: 768px) 320px, (max-width: 1024px) 480px, 650px"
-                                        quality={90}
-                                        className={`object-cover absolute inset-0 transition-all duration-1000 ease-in-out ${currentHeroIndex === index ? 'opacity-100 scale-100' : 'opacity-0 scale-105'}`}
-                                        priority={index === 0}
-                                        loading={index === 0 ? "eager" : "lazy"}
-                                    />
-                                ))}
-                            </div>
+                <p className="mt-7 max-w-lg text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">
+                    Learn from industry experts and gain the skills to advance your career.
+                </p>
+
+                <div className="mt-9 flex flex-col gap-3 min-[430px]:flex-row">
+                    <a
+                        href="#contact"
+                        className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-emerald-800 px-6 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-emerald-900 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2 motion-reduce:transform-none"
+                    >
+                        Start your application
+                        <svg aria-hidden="true" className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M5 12h14m-6-6 6 6-6 6" />
+                        </svg>
+                    </a>
+                    <a
+                        href="#application-process"
+                        className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-200 bg-white/90 px-6 text-sm font-semibold text-slate-800 shadow-sm transition hover:border-slate-300 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2"
+                    >
+                        See how it works
+                    </a>
+                </div>
+
+                <p className="mt-5 text-xs text-slate-500">
+                    Choose a course that fits your goals. We&apos;ll guide you through the next steps.
+                </p>
+            </div>
+
+            <aside aria-label="A glimpse of the Tech Trailblazer learning experience" className="pointer-events-none absolute right-0 top-36 z-0 w-[310px] translate-x-[54%] opacity-45 sm:top-28 sm:w-[360px] sm:opacity-60 md:w-[420px] md:opacity-75 lg:pointer-events-auto lg:static lg:z-10 lg:ml-auto lg:w-full lg:max-w-xl lg:translate-x-0 lg:opacity-100">
+                <div className="hero-orbit-stage" aria-hidden="true">
+                    <div className="hero-orbit-glow" />
+                    <div className="hero-orbit">
+                        <div className="hero-orbit-ring hero-orbit-ring-outer" />
+                        <div className="hero-orbit-ring hero-orbit-ring-inner" />
+                        <div className="hero-orbit-sphere">
+                            <div className="hero-orbit-sphere-shine" />
+                            <div className="hero-orbit-sphere-continent hero-orbit-continent-one" />
+                            <div className="hero-orbit-sphere-continent hero-orbit-continent-two" />
                         </div>
                     </div>
+                    <span className="hero-orbit-point hero-orbit-point-one" />
+                    <span className="hero-orbit-point hero-orbit-point-two" />
                 </div>
-            </section>
-        </>
-    )
-}
+
+                <div className="hero-orbit-caption mx-auto mt-2 hidden max-w-sm rounded-2xl border border-white/80 bg-white/90 p-4 shadow-[0_12px_32px_-20px_rgba(15,23,42,0.24)] backdrop-blur-sm lg:block">
+                    <div className="flex items-center justify-between gap-4">
+                        <div className="min-w-0">
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-emerald-800">Your next chapter</p>
+                            <p className="mt-1 truncate text-sm font-semibold tracking-tight text-slate-900">Skills to move you forward</p>
+                        </div>
+                        <span className="shrink-0 text-xl font-semibold tracking-tight text-emerald-800">{COURSE_CATALOG.length}<span className="ml-1 text-xs font-medium text-slate-500">paths</span></span>
+                    </div>
+                    <div className="mt-3 flex gap-1.5" aria-hidden="true">
+                        <span className="h-1 flex-1 rounded-full bg-emerald-700" />
+                        <span className="h-1 flex-1 rounded-full bg-emerald-600/50" />
+                        <span className="h-1 flex-1 rounded-full bg-emerald-500/25" />
+                        <span className="h-1 flex-1 rounded-full bg-slate-200" />
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </section>
+)
 
 export default Home

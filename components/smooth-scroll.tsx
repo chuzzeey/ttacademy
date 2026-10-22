@@ -21,22 +21,39 @@ export function SmoothScrollProvider({ children }: { children: ReactNode }) {
   const lenisRef = useRef<Lenis | null>(null)
 
   useEffect(() => {
-    const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      orientation: 'vertical',
-      gestureOrientation: 'vertical',
-      smoothWheel: true,
-      wheelMultiplier: 1,
-      touchMultiplier: 1.5,
-      infinite: false,
-      autoRaf: true,
-    })
+    const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)')
+    let lenis: Lenis | null = null
 
-    lenisRef.current = lenis
+    const updateScrollBehavior = () => {
+      if (motionPreference.matches) {
+        lenis?.destroy()
+        lenis = null
+        lenisRef.current = null
+        return
+      }
+
+      if (lenis) return
+      lenis = new Lenis({
+        duration: 1.2,
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        orientation: 'vertical',
+        gestureOrientation: 'vertical',
+        smoothWheel: true,
+        wheelMultiplier: 1,
+        touchMultiplier: 1.5,
+        infinite: false,
+        autoRaf: true,
+      })
+      lenisRef.current = lenis
+    }
+
+    updateScrollBehavior()
+    motionPreference.addEventListener('change', updateScrollBehavior)
 
     return () => {
-      lenis.destroy()
+      motionPreference.removeEventListener('change', updateScrollBehavior)
+      lenis?.destroy()
+      lenisRef.current = null
     }
   }, [])
 

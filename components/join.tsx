@@ -1,118 +1,41 @@
-'use client'
-import React, { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
 import TelegramButton from './tele'
 
-const Join = () => {
-    const [isVisible, setIsVisible] = useState(false)
-    const sectionRef = useRef<HTMLDivElement>(null)
+const learners = ['/stud1.jpeg', '/stud2.jpeg', '/stud3.jpeg', '/stud4.jpeg']
 
-    useEffect(() => {
-        const section = sectionRef.current
-        if (!section) return
-
-        const observer = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        setIsVisible(true)
-                    }
-                })
-            },
-            { threshold: 0.2 }
-        )
-
-        observer.observe(section)
-        return () => observer.disconnect()
-    }, [])
-
-    return (
-        <div ref={sectionRef} id="join-section" className="w-full px-4 md:px-8 lg:px-16 py-16 md:py-24 bg-white relative overflow-hidden">
-            {/* Decorative */}
-            <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-br from-[#ef4444]/8 to-transparent rounded-full blur-3xl" />
-            </div>
-            
-            <div className="mx-auto max-w-4xl relative z-10">
-                {/* Top Row Images */}
-                <div className="flex justify-between items-center mb-6 md:mb-10">
-                    <div className="relative">
-                        <div className="absolute -inset-2 bg-gradient-to-br from-[#ef4444]/20 to-transparent rounded-2xl blur-sm" />
-                        <div className="relative w-20 h-20 sm:w-28 sm:h-28 md:w-36 md:h-36 rounded-2xl overflow-hidden shadow-lg transform -rotate-3 hover:rotate-0 transition-transform duration-500">
-                            <Image
-                                src="/stud1.jpeg"
-                                alt="Learner 1"
-                                fill
-                                sizes="(max-width: 640px) 80px, (max-width: 768px) 112px, 144px"
-                                quality={85}
-                                loading="lazy"
-                                className="object-cover"
-                            />
-                        </div>
-                    </div>
-                    <div className="relative">
-                        <div className="absolute -inset-2 bg-gradient-to-br from-[#ef4444]/20 to-transparent rounded-2xl blur-sm" />
-                        <div className="relative w-20 h-20 sm:w-28 sm:h-28 md:w-36 md:h-36 rounded-2xl overflow-hidden shadow-lg transform rotate-3 hover:rotate-0 transition-transform duration-500">
-                            <Image
-                                src="/stud2.jpeg"
-                                alt="Learner 2"
-                                fill
-                                sizes="(max-width: 640px) 80px, (max-width: 768px) 112px, 144px"
-                                quality={85}
-                                loading="lazy"
-                                className="object-cover"
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                {/* Content */}
-                <div className={`text-center mb-6 md:mb-10 ${isVisible ? 'animate-[scaleIn_0.8s_ease-out_forwards]' : 'opacity-0'}`}>
-                    <span className="text-[10px] md:text-xs font-semibold text-red-600 tracking-wide uppercase mb-3 block">Community</span>
-                    <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4 leading-tight">
-                        JOIN 8,000+ LEARNERS<br />
-                        <span className="bg-gradient-to-r from-red-600 to-red-800 bg-clip-text text-transparent">TODAY!</span>
-                    </h2>
-                    <p className="text-base sm:text-lg md:text-xl text-gray-500 mb-6 md:mb-8">
-                        Start your learning journey now!
-                    </p>
+const Join = () => (
+    <section id="join-section" aria-labelledby="community-title" className="bg-slate-900 px-5 py-14 text-white sm:px-8 sm:py-16 lg:px-10">
+        <div className="mx-auto grid max-w-7xl items-center gap-8 lg:grid-cols-[1fr_0.8fr] lg:gap-16">
+            <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.17em] text-emerald-300">Community</p>
+                <h2 id="community-title" className="mt-3 max-w-xl text-3xl font-semibold leading-tight tracking-[-0.04em] sm:text-4xl">
+                    Learn alongside a community.
+                </h2>
+                <p className="mt-3 max-w-lg text-sm leading-6 text-slate-300 sm:text-base">
+                    Start your learning journey now and connect with other learners.
+                </p>
+                <div className="mt-6">
                     <TelegramButton />
                 </div>
+            </div>
 
-                {/* Bottom Row Images */}
-                <div className="flex justify-between items-center">
-                    <div className="relative">
-                        <div className="absolute -inset-2 bg-gradient-to-br from-[#ef4444]/20 to-transparent rounded-2xl blur-sm" />
-                        <div className="relative w-20 h-20 sm:w-28 sm:h-28 md:w-36 md:h-36 rounded-2xl overflow-hidden shadow-lg transform rotate-3 hover:rotate-0 transition-transform duration-500">
-                            <Image
-                                src="/stud3.jpeg"
-                                alt="Learner 3"
-                                fill
-                                sizes="(max-width: 640px) 80px, (max-width: 768px) 112px, 144px"
-                                quality={85}
-                                loading="lazy"
-                                className="object-cover"
-                            />
-                        </div>
+            <div className="grid grid-cols-4 gap-2 sm:gap-3" aria-label="Learners in the community">
+                {learners.map((src, index) => (
+                    <div key={src} className={`relative aspect-[4/5] overflow-hidden bg-slate-800 ${index % 2 === 1 ? 'mt-5' : ''}`}>
+                        <Image
+                            src={src}
+                            alt={`Tech Trailblazer learner ${index + 1}`}
+                            fill
+                            sizes="(max-width: 640px) 22vw, (max-width: 1024px) 18vw, 13vw"
+                            quality={75}
+                            loading="lazy"
+                            className="object-cover transition duration-500 hover:scale-105 motion-reduce:transform-none"
+                        />
                     </div>
-                    <div className="relative">
-                        <div className="absolute -inset-2 bg-gradient-to-br from-[#ef4444]/20 to-transparent rounded-2xl blur-sm" />
-                        <div className="relative w-20 h-20 sm:w-28 sm:h-28 md:w-36 md:h-36 rounded-2xl overflow-hidden shadow-lg transform -rotate-3 hover:rotate-0 transition-transform duration-500">
-                            <Image
-                                src="/stud4.jpeg"
-                                alt="Learner 4"
-                                fill
-                                sizes="(max-width: 640px) 80px, (max-width: 768px) 112px, 144px"
-                                quality={85}
-                                loading="lazy"
-                                className="object-cover"
-                            />
-                        </div>
-                    </div>
-                </div>
+                ))}
             </div>
         </div>
-    )
-}
+    </section>
+)
 
 export default Join
