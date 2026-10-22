@@ -3,87 +3,91 @@
 import { COURSE_CATALOG } from '@/lib/course-catalog'
 
 const Home = () => (
-    <section
-        id="home"
-        aria-labelledby="hero-title"
-        className="relative isolate overflow-hidden bg-[#f8faf8]"
-    >
-        <div aria-hidden="true" className="absolute inset-y-0 right-0 hidden w-[48%] bg-gradient-to-br from-emerald-50 via-[#f0f5f1] to-white lg:block" />
-        <div aria-hidden="true" className="absolute inset-y-0 right-0 hidden w-[48%] opacity-30 lg:block landing-grid-pattern" />
-        <div aria-hidden="true" className="hero-green-wash pointer-events-none absolute -right-40 top-10 h-96 w-96 rounded-full lg:right-[4%] lg:top-1/2 lg:-translate-y-1/2" />
+    <section id="home" aria-labelledby="hero-title" className="relative isolate overflow-hidden bg-[#10251b] text-white">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[0.12] [background-image:radial-gradient(#a7f3d0_0.65px,transparent_0.65px)] [background-size:24px_24px]" />
+        <div aria-hidden="true" className="hero-green-wash pointer-events-none absolute -right-44 top-1/2 h-[32rem] w-[32rem] -translate-y-1/2 rounded-full opacity-90 lg:right-[4%]" />
+        <div aria-hidden="true" className="pointer-events-none absolute -bottom-64 left-[14%] h-[30rem] w-[30rem] rounded-full bg-emerald-800/25 blur-[110px]" />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-0 hidden w-px bg-gradient-to-b from-transparent via-emerald-300/50 to-transparent lg:block" />
 
-        <div className="relative mx-auto grid max-w-7xl items-center gap-8 px-5 py-16 sm:px-8 sm:py-20 lg:min-h-[calc(100svh-5rem)] lg:grid-cols-[1.06fr_0.94fr] lg:gap-12 lg:px-10 lg:py-16">
-            <div className="relative z-10 max-w-2xl">
-                <div className="mb-7 inline-flex items-center gap-2.5 rounded-full border border-emerald-800/10 bg-white/80 px-3.5 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-900 shadow-sm sm:text-xs">
-                    <span className="h-2 w-2 rounded-full bg-emerald-600" aria-hidden="true" />
-                    Education that works
-                </div>
+        <div className="relative mx-auto grid min-h-[calc(100svh-5rem)] max-w-7xl items-center gap-10 px-5 py-16 sm:px-8 sm:py-20 lg:grid-cols-[1.12fr_0.88fr] lg:gap-8 lg:px-10 lg:py-16">
+            <div className="relative z-10 max-w-3xl">
+                <p className="mb-6 inline-flex items-center gap-2.5 rounded-full border border-emerald-200/15 bg-white/[0.04] px-3.5 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-100/90 sm:text-xs">
+                    <span className="h-2 w-2 rounded-full bg-emerald-400" aria-hidden="true" />
+                    Tech Trailblazer Academy
+                </p>
 
-                <h1
-                    id="hero-title"
-                    className="text-[clamp(3.25rem,6.2vw,5.75rem)] font-semibold leading-[0.94] tracking-[-0.065em] text-slate-950"
-                >
-                    <span className="block">LEARN.</span>
-                    <span className="block">GROW.</span>
-                    <span className="hero-headline-accent mt-1 block text-emerald-800">SUCCEED.</span>
+                <h1 id="hero-title" className="text-[clamp(2.65rem,6vw,5.5rem)] font-semibold leading-[0.99] tracking-[-0.06em] text-white">
+                    <span className="block">Tuition Free Tech</span>
+                    <span className="hero-headline-accent block">Scholarships — Start</span>
+                    <span className="block">Your Career Today</span>
                 </h1>
 
-                <p className="mt-7 max-w-lg text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">
-                    Learn from industry experts and gain the skills to advance your career.
+                <p className="mt-6 max-w-2xl text-base leading-7 text-emerald-50/75 sm:mt-7 sm:text-lg sm:leading-8">
+                    Launch your career in tech with up to <strong className="font-semibold text-white">₦0 tuition</strong>. Learn from expert tutors, gain hands-on experience, and get mentorship to guide your journey.
                 </p>
 
-                <div className="mt-9 flex flex-col gap-3 min-[430px]:flex-row">
+                <ul className="mt-6 grid gap-3 text-sm text-emerald-50/85 sm:text-base">
+                    {[
+                        'Beginner Friendly — No prior experience required',
+                        'Flexible Learning — Online, Physical, or Hybrid',
+                        'Internship & Job Placement Support',
+                    ].map((benefit) => (
+                        <li key={benefit} className="flex items-start gap-3">
+                            <svg className="mt-0.5 h-5 w-5 shrink-0 text-emerald-400" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                                <path d="m5 10 3.2 3.2L15.5 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                            <span>{benefit}</span>
+                        </li>
+                    ))}
+                </ul>
+
+                <div className="mt-8 flex flex-col gap-3 min-[430px]:flex-row min-[430px]:items-center">
                     <a
                         href="#contact"
-                        className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-emerald-800 px-6 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-emerald-900 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2 motion-reduce:transform-none"
+                        className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-emerald-400 px-6 text-sm font-semibold text-emerald-950 shadow-[0_8px_24px_rgba(4,120,87,0.25)] transition duration-200 hover:-translate-y-0.5 hover:bg-emerald-300 hover:shadow-[0_12px_30px_rgba(4,120,87,0.32)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-200 motion-reduce:transform-none"
                     >
-                        Start your application
-                        <svg aria-hidden="true" className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M5 12h14m-6-6 6 6-6 6" />
+                        Explore Courses
+                        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14m-6-6 6 6-6 6" />
                         </svg>
                     </a>
-                    <a
-                        href="#application-process"
-                        className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-200 bg-white/90 px-6 text-sm font-semibold text-slate-800 shadow-sm transition hover:border-slate-300 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2"
-                    >
-                        See how it works
+                    <a href="#contact" className="inline-flex min-h-12 items-center justify-center rounded-xl px-5 text-sm font-semibold text-emerald-100/80 transition-colors hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-200">
+                        Apply
                     </a>
                 </div>
-
-                <p className="mt-5 text-xs text-slate-500">
-                    Choose a course that fits your goals. We&apos;ll guide you through the next steps.
-                </p>
             </div>
 
-            <aside aria-label="A glimpse of the Tech Trailblazer learning experience" className="pointer-events-none absolute right-0 top-36 z-0 w-[310px] translate-x-[54%] opacity-45 sm:top-28 sm:w-[360px] sm:opacity-60 md:w-[420px] md:opacity-75 lg:pointer-events-auto lg:static lg:z-10 lg:ml-auto lg:w-full lg:max-w-xl lg:translate-x-0 lg:opacity-100">
+            <aside aria-label={`${COURSE_CATALOG.length} available learning paths`} className="pointer-events-none absolute right-0 top-1/2 z-0 w-[310px] -translate-y-1/2 translate-x-[54%] opacity-50 sm:w-[360px] sm:opacity-60 md:w-[420px] md:opacity-75 lg:pointer-events-auto lg:static lg:z-10 lg:ml-auto lg:w-full lg:max-w-[480px] lg:translate-x-0 lg:opacity-100">
                 <div className="hero-orbit-stage" aria-hidden="true">
                     <div className="hero-orbit-glow" />
                     <div className="hero-orbit">
                         <div className="hero-orbit-ring hero-orbit-ring-outer" />
                         <div className="hero-orbit-ring hero-orbit-ring-inner" />
-                        <div className="hero-orbit-sphere">
-                            <div className="hero-orbit-sphere-shine" />
-                            <div className="hero-orbit-sphere-continent hero-orbit-continent-one" />
-                            <div className="hero-orbit-sphere-continent hero-orbit-continent-two" />
+                        <div className="premium-orbit-core">
+                            <div className="premium-orbit-shine" />
+                            <div className="premium-orbit-land premium-orbit-land-one" />
+                            <div className="premium-orbit-land premium-orbit-land-two" />
                         </div>
                     </div>
                     <span className="hero-orbit-point hero-orbit-point-one" />
                     <span className="hero-orbit-point hero-orbit-point-two" />
                 </div>
 
-                <div className="hero-orbit-caption mx-auto mt-2 hidden max-w-sm rounded-2xl border border-white/80 bg-white/90 p-4 shadow-[0_12px_32px_-20px_rgba(15,23,42,0.24)] backdrop-blur-sm lg:block">
+                <div className="mx-auto mt-2 hidden max-w-sm rounded-2xl border border-white/15 bg-white/[0.06] p-4 shadow-[0_12px_32px_-20px_rgba(0,0,0,0.45)] backdrop-blur-sm lg:block">
                     <div className="flex items-center justify-between gap-4">
                         <div className="min-w-0">
-                            <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-emerald-800">Your next chapter</p>
-                            <p className="mt-1 truncate text-sm font-semibold tracking-tight text-slate-900">Skills to move you forward</p>
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-emerald-200">Your next chapter</p>
+                            <p className="mt-1 truncate text-sm font-semibold tracking-tight text-white">Skills to move you forward</p>
                         </div>
-                        <span className="shrink-0 text-xl font-semibold tracking-tight text-emerald-800">{COURSE_CATALOG.length}<span className="ml-1 text-xs font-medium text-slate-500">paths</span></span>
+                        <span className="shrink-0 text-xl font-semibold tracking-tight text-emerald-300">
+                            {COURSE_CATALOG.length}<span className="ml-1 text-xs font-medium text-emerald-50/65">paths</span>
+                        </span>
                     </div>
                     <div className="mt-3 flex gap-1.5" aria-hidden="true">
-                        <span className="h-1 flex-1 rounded-full bg-emerald-700" />
-                        <span className="h-1 flex-1 rounded-full bg-emerald-600/50" />
-                        <span className="h-1 flex-1 rounded-full bg-emerald-500/25" />
-                        <span className="h-1 flex-1 rounded-full bg-slate-200" />
+                        <span className="h-1 flex-1 rounded-full bg-emerald-300" />
+                        <span className="h-1 flex-1 rounded-full bg-emerald-300/50" />
+                        <span className="h-1 flex-1 rounded-full bg-emerald-300/25" />
+                        <span className="h-1 flex-1 rounded-full bg-white/15" />
                     </div>
                 </div>
             </aside>
