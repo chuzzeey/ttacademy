@@ -1,98 +1,106 @@
 'use client'
-import React, { useState, useEffect } from 'react'
-import Image from 'next/image'
-import Stat from './stat'
+
+const heroSpiralPath = Array.from({ length: 361 }, (_, index) => {
+    const progress = index / 360
+    const angle = -Math.PI * 4 + progress * Math.PI * 8
+    const latitude = (progress - 0.5) * Math.PI * 0.84
+    const x = 1080 + 285 * Math.cos(latitude) * Math.cos(angle)
+    const y = 450 + 205 * Math.sin(latitude)
+
+    return `${index === 0 ? 'M' : 'L'}${x.toFixed(1)} ${y.toFixed(1)}`
+}).join(' ')
 
 const Home = () => {
-    const [currentHeroIndex, setCurrentHeroIndex] = useState(0)
-
-    const scrollToFeaturedCourses = () => {
-        const featuredCourses = document.getElementById('featured-courses')
-        if (featuredCourses) {
-            featuredCourses.scrollIntoView({ behavior: 'smooth' })
-        }
-    }
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setCurrentHeroIndex((prev) => (prev + 1) % 3)
-        }, 5000)
-        return () => clearInterval(interval)
-    }, [])
-
     return (
-        <>
-            {/* Hero Section */}
-            <section className="relative min-h-screen flex items-center overflow-hidden bg-gradient-to-br from-white via-red-50/30 to-white">
-                {/* Decorative Elements */}
-                <div className="absolute top-20 right-0 w-96 h-96 bg-gradient-to-bl from-[#ef4444]/10 to-transparent rounded-full blur-3xl" />
-                <div className="absolute bottom-40 left-20 w-64 h-64 bg-gradient-to-tr from-[#991b1b]/8 to-transparent rounded-full blur-3xl" />
-
-                {/* Accent Line */}
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-transparent via-[#ef4444]/40 to-transparent hidden lg:block" />
-
-                {/* Fade transition to next section */}
-                <div className="absolute bottom-0 left-0 right-0 h-32 md:h-48 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none z-10" />
-
-                {/* Stats - Desktop Only */}
-                <div className="hidden lg:block absolute bottom-8 left-0 right-0 z-10 px-8">
-                    <Stat />
-                </div>
-
-                <div className="max-w-9xl mx-auto px-4 sm:px-6 md:px-8 lg:pl-20 w-full pt-20">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
-                        {/* Hero Content */}
-                        <div className="text-center md:text-left lg:text-left space-y-5 md:space-y-6 relative z-10 px-4 sm:px-6 md:px-8 lg:px-0">
-                            <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm border border-[#ef4444]/20 rounded-full px-4 py-1.5">
-                                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                                <span className="text-xs font-semibold text-red-500 tracking-wide">Education That Works</span>
-                            </div>
-                            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold text-gray-900 leading-[1.02] tracking-tight">
-                                <span className="inline-block">LEARN.</span>{' '}
-                                <span className="inline-block">GROW.</span><br/>
-                                <span className="inline-block bg-gradient-to-r from-red-500 to-red-600/80 bg-clip-text text-transparent">SUCCEED.</span>
-                            </h1>
-                            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-500 max-w-xl mx-auto md:mx-auto lg:mx-0 leading-relaxed">
-                                Learn from industry experts and gain the skills to advance your career.
-                            </p>
-                            <button
-                                onClick={scrollToFeaturedCourses}
-                                className="bg-gradient-to-r from-red-500 to-red-600/80 text-white hover:from-red-700 hover:to-red-800 px-8 lg:px-10 py-3.5 lg:py-4 text-base sm:text-lg lg:text-xl font-semibold rounded-full transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:shadow-red-500/25 transform hover:-translate-y-0.5 mx-auto lg:mx-0"
-                            >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        <section id="hero" className="relative overflow-hidden bg-[#10251b] text-white">
+            <div className="pointer-events-none absolute inset-0 opacity-[0.14] [background-image:radial-gradient(#a7f3d0_0.65px,transparent_0.65px)] [background-size:24px_24px]" aria-hidden="true" />
+            <div className="pointer-events-none absolute -right-40 -top-48 h-[34rem] w-[34rem] rounded-full bg-emerald-500/15 blur-[110px]" aria-hidden="true" />
+            <div className="pointer-events-none absolute -bottom-64 left-[20%] h-[30rem] w-[30rem] rounded-full bg-emerald-800/30 blur-[100px]" aria-hidden="true" />
+            <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-px bg-gradient-to-b from-transparent via-emerald-300/60 to-transparent lg:block" aria-hidden="true" />
+            <svg
+                className="hero-orbit-artwork pointer-events-none absolute inset-0 h-full w-full opacity-20 sm:opacity-30"
+                viewBox="0 0 1440 900"
+                preserveAspectRatio="xMidYMid slice"
+                fill="none"
+                aria-hidden="true"
+            >
+                <defs>
+                    <radialGradient id="hero-orbit-glow">
+                        <stop stopColor="#34d399" stopOpacity=".16" />
+                        <stop offset="1" stopColor="#34d399" stopOpacity="0" />
+                    </radialGradient>
+                    <linearGradient id="hero-orbit-line" x1="0" y1="0" x2="1" y2="1">
+                        <stop stopColor="#a7f3d0" stopOpacity=".05" />
+                        <stop offset=".5" stopColor="#34d399" stopOpacity=".7" />
+                        <stop offset="1" stopColor="#a7f3d0" stopOpacity=".08" />
+                    </linearGradient>
+                </defs>
+                <circle cx="1080" cy="450" r="390" fill="url(#hero-orbit-glow)" />
+                <g className="hero-orbit-sphere" stroke="url(#hero-orbit-line)" strokeWidth="1.2">
+                    <circle cx="1080" cy="450" r="310" strokeOpacity=".45" />
+                    <ellipse cx="1080" cy="450" rx="310" ry="112" transform="rotate(-28 1080 450)" strokeOpacity=".65" />
+                    <ellipse cx="1080" cy="450" rx="310" ry="112" transform="rotate(28 1080 450)" strokeOpacity=".55" />
+                    <ellipse cx="1080" cy="450" rx="145" ry="310" transform="rotate(-24 1080 450)" strokeOpacity=".55" />
+                    <ellipse cx="1080" cy="450" rx="145" ry="310" transform="rotate(24 1080 450)" strokeOpacity=".45" />
+                    <path d="M790 450c115-180 465-180 580 0-115 180-465 180-580 0Z" strokeOpacity=".65" />
+                    <path d="M805 450c110 180 440 180 550 0-110-180-440-180-550 0Z" strokeDasharray="5 9" strokeOpacity=".5" />
+                </g>
+                <g className="hero-spiral-wrap" fill="none" strokeLinecap="round">
+                    <path d={heroSpiralPath} className="hero-spiral-halo" />
+                    <path d={heroSpiralPath} className="hero-spiral-track" />
+                    <path d={heroSpiralPath} className="hero-spiral-light" />
+                    <circle className="hero-spiral-node hero-spiral-node-one" cx="837" cy="450" r="4" />
+                    <circle className="hero-spiral-node hero-spiral-node-two" cx="1080" cy="245" r="3" />
+                    <circle className="hero-spiral-node hero-spiral-node-three" cx="1323" cy="450" r="3.5" />
+                </g>
+                <g className="hero-orbit-trails" stroke="#6ee7b7" strokeOpacity=".32" strokeWidth="1">
+                    <path d="M0 700c300-180 470-210 690-110s425 85 750-155" strokeDasharray="3 12" />
+                    <path d="M0 190c290 140 490 190 700 100s455-160 740-90" strokeDasharray="2 14" />
+                    <path d="M160 900c240-210 380-300 610-285s390 90 670-110" strokeDasharray="2 16" />
+                </g>
+            </svg>
+            <div className="relative mx-auto flex min-h-[calc(100svh-5rem)] max-w-[1440px] items-center px-4 py-16 sm:px-6 sm:py-20 md:px-8 lg:px-16 lg:py-24">
+                <div className="relative z-10 max-w-4xl">
+                    <h1 className="text-[clamp(2.75rem,6.5vw,5.75rem)] font-semibold leading-[1.02] tracking-[-0.055em] text-white">
+                        <span className="block">Tuition Free Tech</span>
+                        <span className="block bg-gradient-to-r from-emerald-300 via-emerald-400 to-green-300 bg-clip-text text-transparent">Scholarships — Start</span>
+                        <span className="block">Your Career Today</span>
+                    </h1>
+                    <p className="mt-6 max-w-2xl text-base leading-7 text-emerald-50/75 sm:mt-7 sm:text-lg sm:leading-8">
+                        Launch your career in tech with up to <strong className="font-semibold text-white">₦0 tuition</strong>. Learn from expert tutors, gain hands-on experience, and get mentorship to guide your journey.
+                    </p>
+                    <ul className="mt-6 grid gap-3 text-sm text-emerald-50/85 sm:text-base">
+                        {[
+                            "Beginner Friendly — No prior experience required",
+                            "Flexible Learning — Online, Physical, or Hybrid",
+                            "Internship & Job Placement Support",
+                        ].map((benefit) => (
+                            <li key={benefit} className="flex items-start gap-3">
+                                <svg className="mt-0.5 h-5 w-5 shrink-0 text-emerald-400" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                                    <path d="m5 10 3.2 3.2L15.5 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                                 </svg>
-                                Explore courses
-                            </button>
-                        </div>
-
-                        {/* Hero Image - Blended with Background */}
-                        <div className="relative flex justify-center">
-                            <div className="relative w-[320px] h-[320px] sm:w-[380px] sm:h-[380px] md:w-[480px] md:h-[480px] lg:w-[650px] lg:h-[650px]">
-                                {[
-                                    'https://res.cloudinary.com/dwry4zb9z/image/upload/q_auto/f_auto/v1779339410/ceoo-Photoroom_fr28w6.png',
-                                    'https://res.cloudinary.com/dwry4zb9z/image/upload/q_auto/f_auto/v1779339410/so3-Photoroom_chmd5i.png',
-                                    'https://res.cloudinary.com/dwry4zb9z/image/upload/q_auto/f_auto/v1779339410/so2-Photoroom_i3ih86.png'
-                                ].map((src, index) => (
-                                    <Image
-                                        key={src}
-                                        src={src}
-                                        alt={`Professional ${index + 1}`}
-                                        width={700}
-                                        height={800}
-                                        sizes="(max-width: 768px) 320px, (max-width: 1024px) 480px, 650px"
-                                        quality={90}
-                                        className={`object-cover absolute inset-0 transition-all duration-1000 ease-in-out ${currentHeroIndex === index ? 'opacity-100 scale-100' : 'opacity-0 scale-105'}`}
-                                        priority={index === 0}
-                                        loading={index === 0 ? "eager" : "lazy"}
-                                    />
-                                ))}
-                            </div>
-                        </div>
+                                <span>{benefit}</span>
+                            </li>
+                        ))}
+                    </ul>
+                    <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+                        <a
+                            href="#contact"
+                            className="inline-flex min-h-12 items-center justify-center gap-2 bg-emerald-400 px-6 text-sm font-semibold text-emerald-950 shadow-[0_8px_24px_rgba(4,120,87,0.25)] transition duration-200 hover:-translate-y-0.5 hover:bg-emerald-300 hover:shadow-[0_12px_30px_rgba(4,120,87,0.32)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-200"
+                        >
+                            Explore Courses
+                            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14m-6-6 6 6-6 6" />
+                            </svg>
+                        </a>
+                        <a href="#contact" className="inline-flex min-h-12 items-center justify-center px-5 text-sm font-semibold text-emerald-100/80 transition-colors hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-200">
+                            Apply
+                        </a>
                     </div>
                 </div>
-            </section>
-        </>
+
+            </div>
+        </section>
     )
 }
 
