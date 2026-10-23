@@ -203,7 +203,12 @@ BEGIN
   )
   INTO payment_data
   FROM (
-    SELECT COALESCE(NULLIF(BTRIM(payment_status), ''), 'Not recorded') AS label, COUNT(*) AS count
+    SELECT
+      CASE
+        WHEN LOWER(BTRIM(payment_status)) IN ('not paid', 'not paid yet') THEN 'Not Paid Yet'
+        ELSE COALESCE(NULLIF(BTRIM(payment_status), ''), 'Not recorded')
+      END AS label,
+      COUNT(*) AS count
     FROM public.students
     WHERE created_at IS NOT NULL
       AND (created_at AT TIME ZONE 'Africa/Lagos')::DATE BETWEEN range_start AND local_today

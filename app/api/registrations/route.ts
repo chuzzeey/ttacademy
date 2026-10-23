@@ -6,6 +6,7 @@ import { createAdminClient } from "@/lib/supabase/server-admin";
 const studentDirectoryColumns = [
   "id",
   "name",
+  "date_of_birth",
   "email",
   "phone",
   "course",
@@ -57,6 +58,7 @@ export async function POST(request: NextRequest) {
 
     const {
       full_name,
+      date_of_birth,
       email,
       phone_whatsapp,
       sex,
@@ -70,6 +72,7 @@ export async function POST(request: NextRequest) {
 
     if (
       !full_name ||
+      !date_of_birth ||
       !email ||
       !phone_whatsapp ||
       !sex ||
@@ -85,6 +88,20 @@ export async function POST(request: NextRequest) {
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const dateOfBirth = new Date(`${date_of_birth}T00:00:00.000Z`);
+    const validDateOfBirth =
+      typeof date_of_birth === "string" &&
+      /^\d{4}-\d{2}-\d{2}$/.test(date_of_birth) &&
+      !Number.isNaN(dateOfBirth.getTime()) &&
+      dateOfBirth.toISOString().slice(0, 10) === date_of_birth &&
+      date_of_birth <= new Date().toISOString().slice(0, 10);
+
+    if (!validDateOfBirth) {
+      return NextResponse.json(
+        { error: "A valid date of birth is required and cannot be in the future" },
+        { status: 400 },
+      );
+    }
 
     if (!emailRegex.test(email)) {
       return NextResponse.json(
@@ -127,6 +144,7 @@ export async function POST(request: NextRequest) {
       .from('students')
       .insert({
         name: full_name.trim(),
+        date_of_birth,
         email: email.trim().toLowerCase(),
         phone: phone_whatsapp.trim(),
         course: course_applying_for,
@@ -136,7 +154,8 @@ export async function POST(request: NextRequest) {
         employment_status: employment_status,
         has_laptop: has_laptop,
         reason: (learning_reason || "").trim(),
-        payment_status: "Not Paid",
+        payment_plan: "Not Paid Yet",
+        payment_status: "Not Paid Yet",
         reg_date: regDate,
         reg_time: regTime,
       })
@@ -240,10 +259,11 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const updateData: { payment_status?: string; restricted?: boolean } = {}
+    const updateData: { payment_status?: string; payment_plan?: string; restricted?: boolean } = {}
 
     if (payment_status !== undefined) {
       const validStatuses = [
+        "Not Paid Yet",
         "Not Paid",
         "Fully Paid",
         "1st Installment",
@@ -261,6 +281,7 @@ export async function PATCH(request: NextRequest) {
         );
       }
       updateData.payment_status = payment_status
+      updateData.payment_plan = payment_status
     }
 
     if (restricted !== undefined) {
@@ -279,7 +300,7 @@ export async function PATCH(request: NextRequest) {
       .from('students')
       .update(updateData)
       .eq('id', studentId.trim())
-      .select('id,payment_status,restricted')
+      .select('id,payment_status,payment_plan,restricted')
       .single()
 
     if (updateError) {

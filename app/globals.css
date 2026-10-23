@@ -734,6 +734,39 @@ svg .hero-orbit-sphere {
   100% { transform: scale(1); opacity: 1; }
 }
 
+.application-success-dialog::backdrop {
+  background: rgb(15 23 42 / 52%);
+  backdrop-filter: blur(8px);
+  animation: fadeIn 280ms ease-out both;
+}
+
+.application-success-card {
+  animation: application-success-enter 360ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.application-success-checkmark {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+  animation: application-check-draw 520ms ease-out 180ms forwards;
+}
+
+@keyframes application-success-enter {
+  from { opacity: 0; transform: translateY(8px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes application-check-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .application-success-dialog::backdrop,
+  .application-success-card,
+  .application-success-checkmark {
+    animation: none;
+  }
+}
+
 @keyframes slideInLeft {
   0% { transform: translateX(-30px); opacity: 0; }
   100% { transform: translateX(0); opacity: 1; }

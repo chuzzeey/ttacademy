@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS public.students (
   name TEXT NOT NULL,
   email TEXT NOT NULL,
   phone TEXT,
+  date_of_birth DATE,
   course TEXT NOT NULL,
   sex TEXT,
   country TEXT,
@@ -15,7 +16,8 @@ CREATE TABLE IF NOT EXISTS public.students (
   employment_status TEXT,
   has_laptop TEXT,
   reason TEXT,
-  payment_status TEXT NOT NULL DEFAULT 'Not Paid',
+  payment_status TEXT NOT NULL DEFAULT 'Not Paid Yet',
+  payment_plan TEXT NOT NULL DEFAULT 'Not Paid Yet',
   restricted BOOLEAN NOT NULL DEFAULT FALSE,
   pin TEXT DEFAULT '123456',
   reg_date TEXT,
@@ -28,6 +30,7 @@ ALTER TABLE public.students
   ADD COLUMN IF NOT EXISTS name TEXT,
   ADD COLUMN IF NOT EXISTS email TEXT,
   ADD COLUMN IF NOT EXISTS phone TEXT,
+  ADD COLUMN IF NOT EXISTS date_of_birth DATE,
   ADD COLUMN IF NOT EXISTS course TEXT,
   ADD COLUMN IF NOT EXISTS reg_date TEXT,
   ADD COLUMN IF NOT EXISTS sex TEXT,
@@ -36,7 +39,8 @@ ALTER TABLE public.students
   ADD COLUMN IF NOT EXISTS employment_status TEXT,
   ADD COLUMN IF NOT EXISTS has_laptop TEXT,
   ADD COLUMN IF NOT EXISTS reason TEXT,
-  ADD COLUMN IF NOT EXISTS payment_status TEXT NOT NULL DEFAULT 'Not Paid',
+  ADD COLUMN IF NOT EXISTS payment_status TEXT NOT NULL DEFAULT 'Not Paid Yet',
+  ADD COLUMN IF NOT EXISTS payment_plan TEXT NOT NULL DEFAULT 'Not Paid Yet',
   ADD COLUMN IF NOT EXISTS restricted BOOLEAN NOT NULL DEFAULT FALSE,
   ADD COLUMN IF NOT EXISTS pin TEXT DEFAULT '123456',
   ADD COLUMN IF NOT EXISTS reg_time TEXT,
@@ -74,6 +78,18 @@ END $$;
 CREATE INDEX IF NOT EXISTS idx_students_email ON public.students (email);
 
 ALTER TABLE public.students ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.students
+  ALTER COLUMN payment_status SET DEFAULT 'Not Paid Yet',
+  ALTER COLUMN payment_plan SET DEFAULT 'Not Paid Yet';
+
+GRANT SELECT ON public.students TO authenticated;
+DROP POLICY IF EXISTS "Allow full access to students" ON public.students;
+DROP POLICY IF EXISTS "Admins can receive student realtime updates" ON public.students;
+CREATE POLICY "Admins can receive student realtime updates"
+  ON public.students
+  FOR SELECT
+  TO authenticated
+  USING (LOWER(auth.jwt() ->> 'email') = 'adminb@atomic.io');
 
 CREATE TABLE IF NOT EXISTS public.admin_profiles (
   user_id UUID PRIMARY KEY REFERENCES auth.users (id) ON DELETE CASCADE,

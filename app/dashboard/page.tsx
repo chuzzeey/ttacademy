@@ -249,7 +249,9 @@ export default function DashboardPage() {
     [data],
   )
   const unpaidCount = useMemo(
-    () => data?.paymentStatuses.find(({ label }) => label === "Not Paid")?.count ?? 0,
+    () => data?.paymentStatuses
+      .filter(({ label }) => label === "Not Paid" || label === "Not Paid Yet")
+      .reduce((count, status) => count + status.count, 0) ?? 0,
     [data],
   )
   const periodChange = useMemo(() => {
@@ -452,11 +454,15 @@ export default function DashboardPage() {
                         <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-medium ${
                           student.paymentStatus === "Fully Paid"
                             ? "bg-emerald-50 text-emerald-700"
-                            : student.paymentStatus === "Not Paid"
+                            : student.paymentStatus === "Not Paid" || student.paymentStatus === "Not Paid Yet"
                               ? "bg-rose-50 text-rose-700"
                               : "bg-slate-100 text-slate-600"
                         }`}>
-                          {student.paymentStatus || "Not recorded"}
+                          {student.paymentStatus === "Fully Paid"
+                            ? "Paid"
+                            : student.paymentStatus === "Not Paid"
+                              ? "Not Paid Yet"
+                              : student.paymentStatus || "Not recorded"}
                         </span>
                       </td>
                       <td className="py-3 text-right text-xs text-slate-500">{formatDate(student.createdAt, { hour: "numeric", minute: "2-digit" })}</td>

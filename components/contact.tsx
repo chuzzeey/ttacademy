@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
-import { Menu, X } from 'lucide-react'
+import { LoaderCircle, Menu, X } from 'lucide-react'
 import { BRAND_LOGO_URL } from '@/lib/brand'
 import { COURSE_CATALOG } from '@/lib/course-catalog'
 
@@ -175,7 +175,7 @@ export function HeaderNav() {
 
 export default function Contact() {
   const [form, setForm] = useState({
-    name: "", email: "", mobile: "", dialCode: "+234", sex: "", country: "", state: "",
+    name: "", dateOfBirth: "", email: "", mobile: "", dialCode: "+234", sex: "", country: "", state: "",
     course: "", employment: "", laptop: "", reason: "",
   })
 
@@ -185,6 +185,7 @@ export default function Contact() {
   const [loadingStates, setLoadingStates] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [applicationSaved, setApplicationSaved] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [emailChecking, setEmailChecking] = useState(false)
   const [emailStatus, setEmailStatus] = useState<{
@@ -194,7 +195,10 @@ export default function Contact() {
   const [whatsappFocused, setWhatsappFocused] = useState(false)
   const [showEmailExistsPopup, setShowEmailExistsPopup] = useState(false)
   const formRef = useRef<HTMLDivElement>(null)
-  const successRef = useRef<HTMLDivElement>(null)
+  const submitButtonRef = useRef<HTMLButtonElement>(null)
+  const successDialogRef = useRef<HTMLDialogElement>(null)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const submissionInProgressRef = useRef(false)
 
   useEffect(() => {
     const requestedCourse = new URLSearchParams(window.location.search).get("course")
@@ -207,13 +211,28 @@ export default function Contact() {
   }, [])
 
   useEffect(() => {
-    if (submitted && successRef.current) {
-      // Small delay to ensure the DOM has updated
-      setTimeout(() => {
-        successRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
-      }, 100)
+    const dialog = successDialogRef.current
+    if (!submitted || !dialog || dialog.open) return
+
+    const previousOverflow = document.body.style.overflow
+    const previousPaddingRight = document.body.style.paddingRight
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth
+    document.body.style.overflow = "hidden"
+    if (scrollbarWidth > 0) {
+      document.body.style.paddingRight = `calc(${previousPaddingRight || "0px"} + ${scrollbarWidth}px)`
+    }
+    dialog.showModal()
+    closeButtonRef.current?.focus()
+    return () => {
+      document.body.style.overflow = previousOverflow
+      document.body.style.paddingRight = previousPaddingRight
+      if (dialog.open) dialog.close()
     }
   }, [submitted])
+
+  const closeSuccessDialog = () => {
+    successDialogRef.current?.close()
+  }
 
 
   useEffect(() => {
@@ -275,6 +294,9 @@ export default function Contact() {
     else if (/\d/.test(form.name)) e.name = "Name should not contain numbers."
     else if (form.name.trim().split(/\s+/).filter((w: string) => w.length > 0).length < 2) e.name = "Please enter your second name as well."
 
+    if (!form.dateOfBirth) e.dateOfBirth = "Date of birth is required"
+    else if (form.dateOfBirth > new Date().toISOString().slice(0, 10)) e.dateOfBirth = "Date of birth cannot be in the future"
+
     if (!form.email.trim()) e.email = "Email is required"
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = "Please enter a valid email address"
     else if (emailStatus.status === "duplicate") e.email = emailStatus.message
@@ -297,14 +319,19 @@ export default function Contact() {
     setErrors(e)
     if (Object.keys(e).length > 0) {
       const firstError = Object.keys(e)[0]
-      const el = document.getElementById(`err-${firstError}`)
-      if (el) el.scrollIntoView({ behavior: "smooth", block: "center" })
+      const field = document.getElementById(`application-${firstError}`)
+      if (field instanceof HTMLElement) {
+        field.scrollIntoView({ behavior: "smooth", block: "center" })
+        field.focus({ preventScroll: true })
+      }
     }
     return Object.keys(e).length === 0
   }
 
   const handleSubmit = async () => {
+    if (submissionInProgressRef.current || applicationSaved) return
     if (!validate()) return
+    submissionInProgressRef.current = true
     setSubmitting(true)
     const fullPhone = `${form.dialCode}${form.mobile}`
     const countryName = countries.find(c => c.code === form.country)?.name || form.country
@@ -312,13 +339,14 @@ export default function Contact() {
       const res = await fetch("/api/registrations", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          full_name: form.name.trim(), email: form.email.trim().toLowerCase(), phone_whatsapp: fullPhone,
+          full_name: form.name.trim(), date_of_birth: form.dateOfBirth, email: form.email.trim().toLowerCase(), phone_whatsapp: fullPhone,
           sex: form.sex, country: countryName, state: form.state || null, course_applying_for: form.course,
           employment_status: form.employment, has_laptop: form.laptop, heard_about_us: "registration", learning_reason: form.reason.trim(),
         }),
       })
       const r = await res.json()
       if (res.ok) {
+        setApplicationSaved(true)
         setSubmitted(true)
       } else { 
         // Check if email already exists
@@ -330,34 +358,10 @@ export default function Contact() {
         }
       }
     } catch { alert("Registration failed. Please check your connection and try again.") }
-    finally { setSubmitting(false) }
-  }
-
-  if (submitted) {
-    return (
-      <section ref={successRef} id="contact" className="scroll-mt-16 bg-white relative w-full overflow-hidden px-4 py-16 md:scroll-mt-20 md:px-8 md:py-24 lg:px-16">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-br from-emerald-500/5 to-transparent rounded-full blur-3xl" />
-        </div>
-        <div className="mx-auto max-w-md relative z-10 text-center">
-          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center">
-            <svg className="w-10 h-10 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13l4 4L19 7" /></svg>
-          </div>
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">Application Submitted!</h2>
-          <p className="text-gray-500 text-sm mb-2">Thank you, <span className="text-gray-900 font-medium">{form.name.split(" ")[0]}</span>!</p>
-          <p className="text-gray-500 text-sm mb-8 leading-relaxed">We will contact you via <span className="text-gray-900 font-medium">email</span> and <span className="text-gray-900 font-medium">WhatsApp</span> using the details you provided. Please check your inbox regularly for updates.</p>
-          <div className="p-4 rounded-xl border border-gray-200 bg-gray-50/50 mb-6">
-            <p className="text-gray-400 text-xs mb-2">Application Summary</p>
-            <div className="text-left space-y-1 text-sm">
-              <p className="text-gray-600"><span className="text-gray-400">Name:</span> {form.name}</p>
-              <p className="text-gray-600"><span className="text-gray-400">Email:</span> {form.email}</p>
-              <p className="text-gray-600"><span className="text-gray-400">Course:</span> {form.course || "Not selected"}</p>
-            </div>
-          </div>
-          <button onClick={() => { setSubmitted(false); setForm({ name: "", email: "", mobile: "", dialCode: "+234", sex: "", country: "", state: "", course: "", employment: "", laptop: "", reason: "" }) }} className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2">Register Another Student</button>
-        </div>
-      </section>
-    )
+    finally {
+      submissionInProgressRef.current = false
+      setSubmitting(false)
+    }
   }
 
   // Email Exists Popup
@@ -387,7 +391,7 @@ export default function Contact() {
 
   return (
     <>
-      <section id="contact" aria-labelledby="registration-title" className="scroll-mt-16 bg-[#f7f8f7] px-5 py-16 sm:px-8 sm:py-20 md:scroll-mt-20 lg:px-10">
+      <section id="contact" aria-labelledby="registration-title" inert={submitted} className="scroll-mt-16 bg-[#f7f8f7] px-5 py-16 sm:px-8 sm:py-20 md:scroll-mt-20 lg:px-10">
       <div className="mx-auto grid max-w-7xl items-start gap-10 lg:grid-cols-[0.72fr_1.28fr] lg:gap-14">
         <aside className="lg:sticky lg:top-28">
           <p className="text-[10px] font-semibold uppercase tracking-[0.17em] text-emerald-800">Registration</p>
@@ -414,6 +418,21 @@ export default function Contact() {
                     onChange={(e) => updateForm("name", e.target.value.replace(/[0-9]/g, ""))}
                     className={`w-full px-5 py-4 rounded-xl bg-gray-50/50 border text-gray-900 placeholder:text-gray-400/40 text-sm focus:outline-none focus:border-red-400/50 focus:bg-gray-50/70 transition-all duration-200 ${errors.name ? "border-red-500/50" : "border-gray-200"}`} />
                   {errors.name && <p id="err-name" className="text-red-500 text-xs mt-1">{errors.name}</p>}
+                </div>
+                <div>
+                  <label htmlFor="application-dateOfBirth" className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600">Date of birth *</label>
+                  <input
+                    id="application-dateOfBirth"
+                    type="date"
+                    required
+                    max={new Date().toISOString().slice(0, 10)}
+                    aria-invalid={Boolean(errors.dateOfBirth)}
+                    aria-describedby={errors.dateOfBirth ? "err-dateOfBirth" : undefined}
+                    value={form.dateOfBirth}
+                    onChange={(e) => updateForm("dateOfBirth", e.target.value)}
+                    className={`w-full border-b bg-transparent px-1 py-3 text-sm text-slate-900 outline-none transition-colors focus:border-[#a0c44b] ${errors.dateOfBirth ? "border-red-500" : "border-slate-300"}`}
+                  />
+                  {errors.dateOfBirth && <p id="err-dateOfBirth" className="mt-1 text-xs text-red-600">{errors.dateOfBirth}</p>}
                 </div>
               </div>
             </div>
@@ -579,9 +598,11 @@ export default function Contact() {
             {/* Submit */}
             <div className="text-center">
               <p className="text-gray-500 text-[10px] mb-4">Please review your details carefully before submitting.</p>
-              <button type="button" onClick={handleSubmit} disabled={submitting}
-                className="w-full rounded-xl bg-emerald-800 px-8 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-900 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2 md:w-auto">
-                {submitting ? <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block mr-2 align-middle" /> Submitting...</> : "Submit Application"}
+              <button ref={submitButtonRef} type="button" onClick={handleSubmit} disabled={submitting} aria-live="polite"
+                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#a0c44b] px-8 py-3.5 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-[#91b13f] hover:shadow-md disabled:cursor-wait disabled:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#83945a] focus-visible:ring-offset-2 md:w-auto">
+                {submitting
+                  ? <><LoaderCircle aria-hidden="true" className="h-5 w-5 animate-spin" />Submitting your application…</>
+                  : applicationSaved ? "Application Submitted" : "Submit Application"}
               </button>
             </div>
           </div>
@@ -590,6 +611,41 @@ export default function Contact() {
         </div>
       </div>
       </section>
+      <dialog
+        ref={successDialogRef}
+        aria-labelledby="application-success-title"
+        aria-describedby="application-success-description"
+        onCancel={(event) => event.preventDefault()}
+        onClose={() => {
+          setSubmitted(false)
+          requestAnimationFrame(() => submitButtonRef.current?.focus())
+        }}
+        className="application-success-dialog fixed inset-0 m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-lg overflow-y-auto border-0 bg-transparent p-0 text-left shadow-none"
+      >
+        <div className="application-success-card rounded-[1.75rem] border border-emerald-100 bg-white px-6 py-8 text-center shadow-[0_28px_90px_rgba(15,23,42,0.22)] sm:px-10 sm:py-10">
+          <div className="application-success-check mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700">
+            <svg aria-hidden="true" viewBox="0 0 32 32" fill="none" className="h-9 w-9">
+              <path className="application-success-checkmark" d="m8 16.5 5.2 5.2L24 11" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+          <h2 id="application-success-title" className="text-2xl font-semibold tracking-tight text-slate-950 sm:text-[1.75rem]">
+            Application Submitted Successfully
+          </h2>
+          <div id="application-success-description" className="mt-4 space-y-3 text-sm leading-6 text-slate-600 sm:text-[15px]">
+            <p>Your application has been received and saved successfully.</p>
+            <p>We will contact you through your registered WhatsApp number or email address regarding the next steps.</p>
+            <p>Please keep your contact details accessible and watch out for our follow up message.</p>
+          </div>
+          <button
+            ref={closeButtonRef}
+            type="button"
+            onClick={closeSuccessDialog}
+            className="mt-7 inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-emerald-800 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2 sm:w-auto sm:min-w-36"
+          >
+            Close
+          </button>
+        </div>
+      </dialog>
     </>
   )
 }

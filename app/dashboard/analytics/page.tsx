@@ -16,11 +16,18 @@ import { useStudents } from "@/lib/hooks/use-students"
 import type { Student } from "@/lib/stores/student-store"
 
 const paymentStatuses = [
-  "Fully Paid",
-  "1st Installment",
-  "2nd Installment",
-  "Not Paid",
+  "Paid",
+  "First Installment",
+  "Second Installment",
+  "Not Paid Yet",
 ]
+
+const paymentStatusLabels: Record<string, string> = {
+  "Fully Paid": "Paid",
+  "1st Installment": "First Installment",
+  "2nd Installment": "Second Installment",
+  "Not Paid": "Not Paid Yet",
+}
 
 function createCsv(students: Student[]) {
   const rows = [
@@ -89,7 +96,9 @@ export default function AnalyticsPage() {
       const course = student.course?.trim() || "Unspecified"
       courses.set(course, (courses.get(course) || 0) + 1)
 
-      const status = student.payment_status || "Unknown"
+      const status = paymentStatusLabels[student.payment_status]
+        || student.payment_status
+        || "Unknown"
       payments.set(status, (payments.get(status) || 0) + 1)
     }
 

@@ -36,7 +36,9 @@ export function ProfitChart() {
       })
 
       const joined = dayStudents.length
-      const enrolled = dayStudents.filter((s: any) => s.payment_status && s.payment_status !== "Not Paid").length
+      const enrolled = dayStudents.filter((s: any) =>
+        s.payment_status && s.payment_status !== "Not Paid" && s.payment_status !== "Not Paid Yet"
+      ).length
       
       const revenue = dayStudents.reduce((sum: number, s: any) => {
         if (s.payment_status === "Fully Paid") return sum + 50000

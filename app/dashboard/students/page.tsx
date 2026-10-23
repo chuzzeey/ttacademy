@@ -14,6 +14,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu"
+import { createClient } from "@/lib/supabase/client"
 
 const COURSES = [
   "Cybersecurity", "Data Science", "AI Automation", "Computer Networking",
@@ -24,15 +25,16 @@ const COURSES = [
 
 const PAYMENT_STATUSES = [
   { value: "all", label: "All Payments" },
-  { value: "Not Paid", label: "Not Paid" },
-  { value: "Fully Paid", label: "Fully Paid" },
-  { value: "1st Installment", label: "1st Installment" },
-  { value: "2nd Installment", label: "2nd Installment" },
+  { value: "Not Paid Yet", label: "Not Paid Yet" },
+  { value: "Fully Paid", label: "Paid" },
+  { value: "1st Installment", label: "First Installment" },
+  { value: "2nd Installment", label: "Second Installment" },
 ]
 
 interface Student {
   id: string
   name: string
+  date_of_birth: string | null
   email: string
   phone: string
   course: string
@@ -96,6 +98,24 @@ export default function StudentsPage() {
   }, [reloadKey])
 
   useEffect(() => {
+    const supabase = createClient()
+    const channel = supabase
+      .channel("admin-student-records")
+      .on("postgres_changes", { event: "*", schema: "public", table: "students" }, () => {
+        setReloadKey((key) => key + 1)
+      })
+      .subscribe((status, error) => {
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+          console.error("Student live updates unavailable:", error ?? status)
+        }
+      })
+
+    return () => {
+      void supabase.removeChannel(channel)
+    }
+  }, [])
+
+  useEffect(() => {
     setCurrentPage(1)
   }, [searchQuery, courseFilter, paymentFilter])
 
@@ -118,7 +138,9 @@ export default function StudentsPage() {
         student.course.toLowerCase() === courseFilter.toLowerCase()
 
       const matchesPayment = paymentFilter === "all" ||
-        student.payment_status === paymentFilter
+        (paymentFilter === "Not Paid Yet"
+          ? student.payment_status === "Not Paid Yet" || student.payment_status === "Not Paid"
+          : student.payment_status === paymentFilter)
 
       return matchesSearch && matchesCourse && matchesPayment
     })
@@ -161,7 +183,7 @@ export default function StudentsPage() {
   }
 
   const getPaymentColor = (payment: string) => {
-    if (payment === "Not Paid") return "text-red-500"
+    if (payment === "Not Paid" || payment === "Not Paid Yet") return "text-red-600"
     if (payment === "Fully Paid") return "text-green-500"
     if (payment === "1st Installment") return "text-amber-500"
     if (payment === "2nd Installment") return "text-blue-500"
@@ -169,7 +191,7 @@ export default function StudentsPage() {
   }
 
   const getPaymentBg = (payment: string) => {
-    if (payment === "Not Paid") return "bg-red-50"
+    if (payment === "Not Paid" || payment === "Not Paid Yet") return "bg-red-50"
     if (payment === "Fully Paid") return "bg-green-50"
     if (payment === "1st Installment") return "bg-amber-50"
     if (payment === "2nd Installment") return "bg-blue-50"
@@ -235,7 +257,15 @@ export default function StudentsPage() {
       .join(" ")
   }
 
-  const paymentOptions = ["Not Paid", "Fully Paid", "1st Installment", "2nd Installment"]
+  const getPaymentLabel = (payment: string) => {
+    if (payment === "Not Paid") return "Not Paid Yet"
+    if (payment === "Fully Paid") return "Paid"
+    if (payment === "1st Installment") return "First Installment"
+    if (payment === "2nd Installment") return "Second Installment"
+    return payment
+  }
+
+  const paymentOptions = ["Not Paid Yet", "Fully Paid", "1st Installment", "2nd Installment"]
 
   return (
     <>
@@ -255,7 +285,7 @@ export default function StudentsPage() {
           <p className="text-lg font-semibold tabular-nums">
             {loading
               ? "—"
-              : students.filter((student) => student.payment_status && student.payment_status !== "Not Paid").length}
+              : students.filter((student) => student.payment_status && student.payment_status !== "Not Paid" && student.payment_status !== "Not Paid Yet").length}
           </p>
           <p className="text-xs text-muted-foreground">Payment recorded</p>
         </div>
@@ -263,7 +293,7 @@ export default function StudentsPage() {
           <p className="text-lg font-semibold tabular-nums">
             {loading
               ? "—"
-              : students.filter((student) => student.payment_status === "Not Paid").length}
+              : students.filter((student) => student.payment_status === "Not Paid" || student.payment_status === "Not Paid Yet").length}
           </p>
           <p className="text-xs text-muted-foreground">Awaiting payment</p>
         </div>
@@ -427,12 +457,13 @@ export default function StudentsPage() {
                             <p className="text-sm font-medium truncate">{student.name}</p>
                             <p className="text-[11px] text-muted-foreground truncate">{student.email}</p>
                             <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
-                              {/* Payment Dropdown */}
+                              <span className="text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">Payment status</span>
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                   <button
                                     onClick={(e) => e.stopPropagation()}
-                                    className={`inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full ${getPaymentBg(student.payment_status)} ${getPaymentColor(student.payment_status)} hover:opacity-80 transition-opacity`}
+                                    aria-label={`Payment status: ${getPaymentLabel(student.payment_status)}. Change status`}
+                                    className={`inline-flex min-h-7 items-center gap-1.5 border border-current/15 px-2.5 py-1 text-[11px] font-semibold ${getPaymentBg(student.payment_status)} ${getPaymentColor(student.payment_status)} transition-opacity hover:opacity-80`}
                                     disabled={updatingPaymentMap[student.id]}
                                   >
                                     {updatingPaymentMap[student.id] ? (
@@ -442,7 +473,7 @@ export default function StudentsPage() {
                                       </span>
                                     ) : (
                                       <>
-                                        {student.payment_status}
+                                        {getPaymentLabel(student.payment_status)}
                                         <ChevronDown className="w-2.5 h-2.5" />
                                       </>
                                     )}
@@ -461,16 +492,16 @@ export default function StudentsPage() {
                                         updatePaymentStatus(student.id, option)
                                       }}
                                       className={`rounded-lg text-xs py-2 cursor-pointer ${
-                                        student.payment_status === option
+                                        getPaymentLabel(student.payment_status) === getPaymentLabel(option)
                                           ? "bg-amber-500/10 text-amber-600 font-medium"
                                           : ""
                                       }`}
                                     >
-                                      {option === "Not Paid" && <span className="text-red-500 mr-2">●</span>}
+                                      {(option === "Not Paid" || option === "Not Paid Yet") && <span className="text-red-500 mr-2">●</span>}
                                       {option === "Fully Paid" && <span className="text-green-500 mr-2">●</span>}
                                       {option === "1st Installment" && <span className="text-amber-500 mr-2">●</span>}
                                       {option === "2nd Installment" && <span className="text-blue-500 mr-2">●</span>}
-                                      {option}
+                                      {getPaymentLabel(option)}
                                     </DropdownMenuItem>
                                   ))}
                                 </DropdownMenuContent>
@@ -576,6 +607,17 @@ export default function StudentsPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/30">
+                    <div className="p-1.5 rounded-lg bg-muted shrink-0"><Clock className="w-3.5 h-3.5 text-muted-foreground" /></div>
+                    <div className="min-w-0">
+                      <p className="text-[10px] text-muted-foreground">Date of birth</p>
+                      <p className="text-xs font-medium">
+                        {selectedStudent.date_of_birth
+                          ? new Intl.DateTimeFormat("en", { dateStyle: "medium", timeZone: "UTC" }).format(new Date(`${selectedStudent.date_of_birth}T00:00:00.000Z`))
+                          : "Not provided"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/30">
                     <div className="p-1.5 rounded-lg bg-muted shrink-0"><Mail className="w-3.5 h-3.5 text-muted-foreground" /></div>
                     <div className="min-w-0 flex-1">
                       <p className="text-[10px] text-muted-foreground">Email</p>
@@ -636,7 +678,7 @@ export default function StudentsPage() {
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <button className={`inline-flex items-center gap-1 text-xs font-medium mt-0.5 ${getPaymentColor(selectedStudent.payment_status)} hover:opacity-80 transition-opacity`}>
-                            {selectedStudent.payment_status}
+                            {getPaymentLabel(selectedStudent.payment_status)}
                             <ChevronDown className="w-3 h-3" />
                           </button>
                         </DropdownMenuTrigger>
@@ -646,16 +688,16 @@ export default function StudentsPage() {
                               key={option}
                               onClick={() => updatePaymentStatus(selectedStudent.id, option)}
                               className={`rounded-lg text-xs py-2 cursor-pointer ${
-                                selectedStudent.payment_status === option
+                                getPaymentLabel(selectedStudent.payment_status) === getPaymentLabel(option)
                                   ? "bg-amber-500/10 text-amber-600 font-medium"
                                   : ""
                               }`}
                             >
-                              {option === "Not Paid" && <span className="text-red-500 mr-2">●</span>}
+                              {(option === "Not Paid" || option === "Not Paid Yet") && <span className="text-red-500 mr-2">●</span>}
                               {option === "Fully Paid" && <span className="text-green-500 mr-2">●</span>}
                               {option === "1st Installment" && <span className="text-amber-500 mr-2">●</span>}
                               {option === "2nd Installment" && <span className="text-blue-500 mr-2">●</span>}
-                              {option}
+                              {getPaymentLabel(option)}
                             </DropdownMenuItem>
                           ))}
                         </DropdownMenuContent>

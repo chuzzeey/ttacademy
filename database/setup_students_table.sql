@@ -13,9 +13,11 @@ CREATE TABLE IF NOT EXISTS public.students (
   name TEXT NOT NULL,
   email TEXT NOT NULL,
   phone TEXT NOT NULL,
+  date_of_birth DATE,
   course TEXT NOT NULL,
   reg_date TEXT NOT NULL,
   reg_time TEXT,
+  payment_status TEXT NOT NULL DEFAULT 'Not Paid Yet',
   payment_plan TEXT NOT NULL DEFAULT 'Not Paid Yet',
   amount_paid NUMERIC DEFAULT 0,
   balance_remaining NUMERIC DEFAULT 0,
@@ -35,15 +37,29 @@ CREATE TABLE IF NOT EXISTS public.students (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+ALTER TABLE public.students
+  ADD COLUMN IF NOT EXISTS date_of_birth DATE,
+  ADD COLUMN IF NOT EXISTS payment_status TEXT NOT NULL DEFAULT 'Not Paid Yet',
+  ADD COLUMN IF NOT EXISTS payment_plan TEXT NOT NULL DEFAULT 'Not Paid Yet';
+ALTER TABLE public.students
+  ALTER COLUMN payment_status SET DEFAULT 'Not Paid Yet',
+  ALTER COLUMN payment_plan SET DEFAULT 'Not Paid Yet';
+
 -- 3. Add indexes
 CREATE INDEX IF NOT EXISTS idx_students_email ON public.students(email);
 CREATE INDEX IF NOT EXISTS idx_students_course ON public.students(course);
 CREATE INDEX IF NOT EXISTS idx_students_status ON public.students(status);
 
--- 4. Enable Row Level Security and allow all access
+-- 4. Enable Row Level Security and allow admin dashboard reads only.
 ALTER TABLE public.students ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Allow full access to students" ON public.students;
-CREATE POLICY "Allow full access to students" ON public.students FOR ALL USING (true);
+DROP POLICY IF EXISTS "Admins can receive student realtime updates" ON public.students;
+GRANT SELECT ON public.students TO authenticated;
+CREATE POLICY "Admins can receive student realtime updates"
+  ON public.students
+  FOR SELECT
+  TO authenticated
+  USING (LOWER(auth.jwt() ->> 'email') = 'adminb@atomic.io');
 
 -- Done! Your landing page wizard form will now save data here.
 
