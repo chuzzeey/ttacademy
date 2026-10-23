@@ -7,6 +7,7 @@ import Contact, { HeaderNav } from '@/components/contact'
 import Join from '@/components/join'
 import FAQ from '@/components/faq'
 import Footer from '@/components/footer'
+import LiveSupport from '@/components/live-support'
 
 export default function HomePage() {
   return (
@@ -19,6 +20,7 @@ export default function HomePage() {
       <FAQ />
       <Join />
       <Footer />
+      <LiveSupport />
     </main>
   )
 }
