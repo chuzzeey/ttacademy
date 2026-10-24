@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
-import { LoaderCircle, Menu, X } from 'lucide-react'
+import { Check, Copy, LoaderCircle, Menu, X } from 'lucide-react'
 import { BRAND_LOGO_URL } from '@/lib/brand'
 import { COURSE_CATALOG } from '@/lib/course-catalog'
+import WhatsAppButton from './whatsapp'
 
 const AFRICAN_COUNTRIES = [
   { code: "NG", name: "Nigeria", dial: "+234" },
@@ -186,6 +187,8 @@ export default function Contact() {
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [applicationSaved, setApplicationSaved] = useState(false)
+  const [applicationStudentCode, setApplicationStudentCode] = useState("")
+  const [applicationCodeCopied, setApplicationCodeCopied] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [emailChecking, setEmailChecking] = useState(false)
   const [emailStatus, setEmailStatus] = useState<{
@@ -232,6 +235,17 @@ export default function Contact() {
 
   const closeSuccessDialog = () => {
     successDialogRef.current?.close()
+  }
+
+  const copyApplicationStudentCode = async () => {
+    try {
+      await navigator.clipboard.writeText(applicationStudentCode)
+      setApplicationCodeCopied(true)
+      window.setTimeout(() => setApplicationCodeCopied(false), 2000)
+    } catch (error) {
+      console.error("Failed to copy student ID:", error)
+      alert("Unable to copy the student ID. Please select and copy it manually.")
+    }
   }
 
 
@@ -346,6 +360,7 @@ export default function Contact() {
       })
       const r = await res.json()
       if (res.ok) {
+        setApplicationStudentCode(r.data.student_code)
         setApplicationSaved(true)
         setSubmitted(true)
       } else { 
@@ -633,8 +648,33 @@ export default function Contact() {
           </h2>
           <div id="application-success-description" className="mt-4 space-y-3 text-sm leading-6 text-slate-600 sm:text-[15px]">
             <p>Your application has been received and saved successfully.</p>
+            <div>
+              <p>Your student ID:</p>
+              <div className="mt-1 inline-flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2">
+                <strong className="font-semibold text-emerald-800">{applicationStudentCode}</strong>
+                <button
+                  type="button"
+                  onClick={copyApplicationStudentCode}
+                  aria-label="Copy student ID"
+                  title={applicationCodeCopied ? "Copied" : "Copy student ID"}
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-md text-emerald-800 transition hover:bg-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700"
+                >
+                  {applicationCodeCopied
+                    ? <Check aria-hidden="true" className="h-4 w-4" />
+                    : <Copy aria-hidden="true" className="h-4 w-4" />}
+                </button>
+              </div>
+              <p className="mt-2">Save it to log in to your classroom and search for your record.</p>
+            </div>
             <p>We will contact you through your registered WhatsApp number or email address regarding the next steps.</p>
             <p>Please keep your contact details accessible and watch out for our follow up message.</p>
+          </div>
+          <div className="mt-6 rounded-2xl border border-emerald-100 bg-emerald-50/70 px-5 py-5">
+            <h3 className="text-base font-semibold text-slate-950">Join our WhatsApp community</h3>
+            <p className="mt-1 text-sm leading-6 text-slate-600">Connect with other learners and stay up to date while you wait for your application follow-up.</p>
+            <div className="mt-4">
+              <WhatsAppButton />
+            </div>
           </div>
           <button
             ref={closeButtonRef}

@@ -13,13 +13,12 @@ const Home = () => (
                 </p>
 
                 <h1 id="hero-title" className="text-[clamp(2.65rem,6vw,5.5rem)] font-semibold leading-[0.99] tracking-[-0.06em] text-white">
-                    <span className="block">Tuition Free Tech</span>
-                    <span className="hero-headline-accent block">Scholarships Start</span>
-                    <span className="block">Your Career Today</span>
+                    <span className="block">Affordable tuition.</span>
+                    <span className="hero-headline-accent block">Premium learning.</span>
                 </h1>
 
                 <p className="mt-6 max-w-2xl text-base leading-7 text-emerald-50/75 sm:mt-7 sm:text-lg sm:leading-8">
-                    Launch your career in tech with up to <strong className="font-semibold text-white">₦0 tuition</strong>. Learn from expert tutors, gain hands-on experience, and get mentorship to guide your journey.
+                    We keep our programs accessible so financial constraints never stop talent from rising, but our standards remain uncompromisingly high because your career deserves the absolute best.
                 </p>
 
                 <ul className="mt-6 grid gap-3 text-sm text-emerald-50/85 sm:text-base">

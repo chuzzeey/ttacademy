@@ -33,6 +33,7 @@ const PAYMENT_STATUSES = [
 
 interface Student {
   id: string
+  student_code: string
   name: string
   date_of_birth: string | null
   email: string
@@ -69,10 +70,15 @@ export default function StudentsPage() {
   const [updatingPaymentMap, setUpdatingPaymentMap] = useState<Record<string, boolean>>({})
   const itemsPerPage = 10
 
-  const copyToClipboard = (text: string, id: string) => {
-    navigator.clipboard.writeText(text)
-    setCopiedId(id)
-    setTimeout(() => setCopiedId(null), 2000)
+  const copyToClipboard = async (text: string, id: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopiedId(id)
+      setTimeout(() => setCopiedId(null), 2000)
+    } catch (error) {
+      console.error("Failed to copy student information:", error)
+      alert("Unable to copy. Please select and copy the text manually.")
+    }
   }
 
   useEffect(() => {
@@ -130,6 +136,7 @@ export default function StudentsPage() {
       const searchLower = searchQuery.toLowerCase().trim()
       const matchesSearch = !searchLower ||
         student.name.toLowerCase().includes(searchLower) ||
+        student.student_code.toLowerCase().includes(searchLower) ||
         student.email.toLowerCase().includes(searchLower) ||
         student.course.toLowerCase().includes(searchLower) ||
         student.phone.includes(searchLower)
@@ -307,7 +314,7 @@ export default function StudentsPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Search students..."
+                placeholder="Search by name, student ID, email..."
                 aria-label="Search students"
                 className="pl-9 pr-9 w-full h-10 sm:h-11 text-sm rounded-xl bg-muted/30 border-border/60 focus:bg-background focus:border-amber-400/50 transition-all"
                 value={searchQuery}
@@ -455,6 +462,23 @@ export default function StudentsPage() {
                         <div className="flex items-start justify-between gap-1.5">
                           <div className="min-w-0 flex-1">
                             <p className="text-sm font-medium truncate">{student.name}</p>
+                            <div className="flex items-center gap-1">
+                              <p className="text-[11px] font-medium text-emerald-700">{student.student_code}</p>
+                              <button
+                                type="button"
+                                onClick={(event) => {
+                                  event.stopPropagation()
+                                  void copyToClipboard(student.student_code, `student-code-${student.id}`)
+                                }}
+                                aria-label={`Copy student ID ${student.student_code}`}
+                                title={copiedId === `student-code-${student.id}` ? "Copied" : "Copy student ID"}
+                                className="inline-flex h-6 w-6 items-center justify-center rounded text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                              >
+                                {copiedId === `student-code-${student.id}`
+                                  ? <Check className="h-3 w-3 text-green-600" />
+                                  : <Copy className="h-3 w-3" />}
+                              </button>
+                            </div>
                             <p className="text-[11px] text-muted-foreground truncate">{student.email}</p>
                             <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
                               <span className="text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">Payment status</span>
@@ -605,6 +629,16 @@ export default function StudentsPage() {
                       <p className="text-[10px] text-muted-foreground">Full Name</p>
                       <p className="text-xs font-medium truncate">{selectedStudent.name}</p>
                     </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/30">
+                    <div className="p-1.5 rounded-lg bg-muted shrink-0"><User className="w-3.5 h-3.5 text-muted-foreground" /></div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] text-muted-foreground">Student ID</p>
+                      <p className="text-xs font-semibold text-emerald-700">{selectedStudent.student_code}</p>
+                    </div>
+                    <button onClick={() => copyToClipboard(selectedStudent.student_code, "student-code")} aria-label="Copy student ID" className="p-1.5 hover:bg-muted rounded-md shrink-0">
+                      {copiedId === "student-code" ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3 text-muted-foreground" />}
+                    </button>
                   </div>
                   <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/30">
                     <div className="p-1.5 rounded-lg bg-muted shrink-0"><Clock className="w-3.5 h-3.5 text-muted-foreground" /></div>

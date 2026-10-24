@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/server-admin";
 
 const studentDirectoryColumns = [
   "id",
+  "student_code",
   "name",
   "date_of_birth",
   "email",
@@ -159,7 +160,7 @@ export async function POST(request: NextRequest) {
         reg_date: regDate,
         reg_time: regTime,
       })
-      .select("id,name,email,course,created_at")
+      .select("id,student_code,name,email,course,created_at")
       .single()
 
     if (insertError) {

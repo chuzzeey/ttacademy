@@ -3,25 +3,29 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email } = body;
+    const identifier = typeof body.identifier === "string"
+      ? body.identifier.trim()
+      : typeof body.email === "string"
+        ? body.email.trim()
+        : "";
 
-    if (!email) {
+    if (!identifier) {
       return NextResponse.json(
-        { error: "Email is required" },
+        { error: "Email address or student ID is required" },
         { status: 400 }
       );
     }
 
-    // Simple database query - no authentication needed
     const { createAdminClient } = await import('@/lib/supabase/server-admin')
     const supabase = await createAdminClient()
 
-    // Check if student exists in database
-    const { data: student, error: studentError } = await supabase
+    const isStudentCode = /^TTA-\d{5}[A-Z]$/i.test(identifier)
+    const studentQuery = supabase
       .from('students')
-      .select('id, payment_status, course, restricted, name, email')
-      .eq('email', email.trim().toLowerCase())
-      .single()
+      .select('id, student_code, payment_status, course, restricted, name, email')
+    const { data: student, error: studentError } = isStudentCode
+      ? await studentQuery.eq('student_code', identifier.toUpperCase()).single()
+      : await studentQuery.eq('email', identifier.toLowerCase()).single()
 
     if (studentError || !student) {
       return NextResponse.json(
@@ -55,8 +59,8 @@ export async function POST(request: NextRequest) {
         { 
           error: "Your account has been restricted by the admin. Please contact support for assistance.",
           code: "ACCOUNT_RESTRICTED",
-          studentName: student.name || email.trim().toLowerCase(),
-          studentEmail: email.trim().toLowerCase()
+          studentName: student.name || student.email,
+          studentEmail: student.email
         },
         { status: 403 }
       )
@@ -74,9 +78,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       {
-        message: "Email verified successfully",
+        message: "Student identity verified successfully",
         data: {
           id: student.id,
+          studentCode: student.student_code,
           name: student.name || "",
           email: student.email || "",
           course: userCourseRaw,

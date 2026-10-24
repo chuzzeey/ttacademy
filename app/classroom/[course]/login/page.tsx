@@ -84,7 +84,7 @@ export default function CourseLoginPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          email: email.trim().toLowerCase(),
+          identifier: email.trim(),
           password: 'dummy', // Send dummy password since API requires it
         }),
       })
@@ -107,7 +107,12 @@ export default function CourseLoginPage() {
         return
       }
 
-      // Email is valid - show PIN entry
+      if (typeof result.data?.email !== 'string' || !result.data.email) {
+        setError('Unable to retrieve your student account. Please try again.')
+        setIsLoading(false)
+        return
+      }
+      setEmail(result.data.email)
       setShowPinEntry(true)
       setIsLoading(false)
     } catch (err) {
@@ -298,20 +303,21 @@ export default function CourseLoginPage() {
 
               {!showPinEntry ? (
                 <form onSubmit={handleEmailSubmit} className="space-y-4">
-                  {/* Email Input */}
+                  {/* Student ID or email input */}
                   <div>
                     <label className="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">
-                      Email Address
+                      Student ID or Email Address
                     </label>
                     <div className="relative group">
                       <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                         <Mail className="h-4 w-4 text-gray-500 group-focus-within:text-[#25d366] transition-colors" />
                       </div>
                       <input
-                        type="email"
+                        type="text"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder="Enter registered email"
+                        placeholder="TTA-12345A or registered email"
+                        autoComplete="username"
                         className="w-full pl-10 pr-3.5 py-3 bg-[#111b21] border border-[#2a3942] rounded-xl text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#25d366]/40 focus:border-[#25d366] transition-all text-sm"
                         required
                       />
