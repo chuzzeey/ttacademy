@@ -98,7 +98,7 @@ function Panel({
   className?: string
 }) {
   return (
-    <section className={`min-w-0 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_2px_12px_rgba(15,23,42,0.025)] sm:p-6 ${className}`}>
+    <section className={`dashboard-analytics-panel min-w-0 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_2px_12px_rgba(15,23,42,0.025)] sm:p-6 ${className}`}>
       <div className="mb-5">
         <h2 className="text-sm font-semibold tracking-tight text-slate-900">{title}</h2>
         {description && <p className="mt-1 text-xs leading-5 text-slate-500">{description}</p>}
@@ -110,7 +110,7 @@ function Panel({
 
 function ChartEmpty({ message = "No registrations in this period" }: { message?: string }) {
   return (
-    <div className="flex min-h-24 items-center justify-center rounded-xl bg-slate-50/80 px-3 py-4 text-center text-xs leading-5 text-slate-500 sm:min-h-28 sm:px-5">
+    <div className="dashboard-analytics-empty flex min-h-24 items-center justify-center rounded-xl bg-slate-50/80 px-3 py-4 text-center text-xs leading-5 text-slate-500 sm:min-h-28 sm:px-5">
       {message}
     </div>
   )
@@ -135,21 +135,21 @@ function DistributionChart({
       <div style={{ height }}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} layout="vertical" margin={{ top: 0, right: 12, left: 0, bottom: 0 }}>
-            <CartesianGrid horizontal={false} stroke="#eef1f4" />
-            <XAxis type="number" allowDecimals={false} axisLine={false} tickLine={false} tick={{ fill: "#94a3b8", fontSize: 11 }} />
+            <CartesianGrid horizontal={false} stroke="var(--analytics-chart-grid)" />
+            <XAxis type="number" allowDecimals={false} axisLine={false} tickLine={false} tick={{ fill: "var(--analytics-chart-label)", fontSize: 11 }} />
             <YAxis
               type="category"
               dataKey="label"
               width={92}
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "#64748b", fontSize: 11 }}
+              tick={{ fill: "var(--analytics-chart-label)", fontSize: 11 }}
               tickFormatter={(label: string) => label.length > 15 ? `${label.slice(0, 14)}…` : label}
             />
             <Tooltip
-              cursor={{ fill: "#f8fafc" }}
+              cursor={{ fill: "var(--analytics-chart-hover)" }}
               formatter={(value: number) => [numberFormat.format(value), name]}
-              contentStyle={{ borderRadius: 12, borderColor: "#e2e8f0", fontSize: 12 }}
+              contentStyle={{ borderRadius: 12, borderColor: "var(--analytics-chart-border)", backgroundColor: "var(--analytics-tooltip-bg)", color: "var(--analytics-text)", fontSize: 12 }}
             />
             <Bar dataKey="count" fill={color} radius={[0, 6, 6, 0]} maxBarSize={20} />
           </BarChart>
@@ -188,7 +188,7 @@ function DonutChart({ items, label }: { items: CountItem[]; label: string }) {
             </Pie>
             <Tooltip
               formatter={(value: number, name: string) => [numberFormat.format(value), name]}
-              contentStyle={{ borderRadius: 12, borderColor: "#e2e8f0", fontSize: 12 }}
+              contentStyle={{ borderRadius: 12, borderColor: "var(--analytics-chart-border)", backgroundColor: "var(--analytics-tooltip-bg)", color: "var(--analytics-text)", fontSize: 12 }}
             />
           </PieChart>
         </ResponsiveContainer>
@@ -260,7 +260,7 @@ export default function DashboardPage() {
   }, [data])
 
   return (
-    <main className="min-w-0 space-y-6 pb-10">
+    <main className="dashboard-analytics min-w-0 space-y-6 pb-10">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-xs font-medium uppercase tracking-[0.16em] text-emerald-700">Academy administration</p>
@@ -330,10 +330,10 @@ export default function DashboardPage() {
         ].map((metric) => {
           const Icon = metric.icon
           return (
-            <article key={metric.label} className="min-w-0 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_2px_12px_rgba(15,23,42,0.025)] sm:p-5">
+            <article key={metric.label} className="dashboard-analytics-panel min-w-0 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_2px_12px_rgba(15,23,42,0.025)] sm:p-5">
               <div className="flex items-center justify-between gap-3">
                 <span className="text-xs font-medium text-slate-500">{metric.label}</span>
-                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-50 text-slate-600">
+                <span className="dashboard-analytics-icon flex h-8 w-8 items-center justify-center rounded-xl bg-slate-50 text-slate-600">
                   <Icon size={16} strokeWidth={1.8} />
                 </span>
               </div>
@@ -356,7 +356,7 @@ export default function DashboardPage() {
       <div className="grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-3">
         <Panel title="Registration trend" description="New learner registrations over the selected period." className="xl:col-span-2">
           {isLoading ? (
-            <div className="h-64 animate-pulse rounded-xl bg-slate-50" />
+            <div className="dashboard-analytics-skeleton h-64 animate-pulse rounded-xl bg-slate-50" />
           ) : error ? <ChartEmpty message="Unable to load analytics data." /> : data?.periodRegistrations === 0 ? (
             <ChartEmpty message="No registrations in this period." />
           ) : data?.trend.length ? (
@@ -369,20 +369,20 @@ export default function DashboardPage() {
                       <stop offset="95%" stopColor="#16a36a" stopOpacity={0.01} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid vertical={false} stroke="#eef1f4" />
+                  <CartesianGrid vertical={false} stroke="var(--analytics-chart-grid)" />
                   <XAxis
                     dataKey="period"
                     tickFormatter={(value: string) => formatTrendLabel(value, period)}
                     axisLine={false}
                     tickLine={false}
                     minTickGap={24}
-                    tick={{ fill: "#94a3b8", fontSize: 11 }}
+                    tick={{ fill: "var(--analytics-chart-label)", fontSize: 11 }}
                   />
-                  <YAxis allowDecimals={false} axisLine={false} tickLine={false} tick={{ fill: "#94a3b8", fontSize: 11 }} />
+                  <YAxis allowDecimals={false} axisLine={false} tickLine={false} tick={{ fill: "var(--analytics-chart-label)", fontSize: 11 }} />
                   <Tooltip
                     labelFormatter={(value: string) => formatDate(value, { weekday: "short" })}
                     formatter={(value: number) => [numberFormat.format(value), "Registrations"]}
-                    contentStyle={{ borderRadius: 12, borderColor: "#e2e8f0", fontSize: 12 }}
+                    contentStyle={{ borderRadius: 12, borderColor: "var(--analytics-chart-border)", backgroundColor: "var(--analytics-tooltip-bg)", color: "var(--analytics-text)", fontSize: 12 }}
                   />
                   <Area type="monotone" dataKey="registrations" stroke="#159765" strokeWidth={2.5} fill="url(#registrationFill)" activeDot={{ r: 4, strokeWidth: 0 }} />
                 </AreaChart>
@@ -392,7 +392,7 @@ export default function DashboardPage() {
         </Panel>
 
         <Panel title={data?.locationLabel ? `Registrations by ${data.locationLabel.toLowerCase()}` : "Registrations by location"} description="Learner location recorded at registration.">
-          {isLoading ? <div className="h-56 animate-pulse rounded-xl bg-slate-50" /> : error ? <ChartEmpty message="Unable to load analytics data." /> : (
+          {isLoading ? <div className="dashboard-analytics-skeleton h-56 animate-pulse rounded-xl bg-slate-50" /> : error ? <ChartEmpty message="Unable to load analytics data." /> : (
             <DistributionChart items={data?.locations ?? []} color="#5b8def" name="Learners" />
           )}
         </Panel>
@@ -400,22 +400,22 @@ export default function DashboardPage() {
 
       <div className="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-2">
         <Panel title="Popular courses" description="Course selections from registrations in this date range.">
-          {isLoading ? <div className="h-56 animate-pulse rounded-xl bg-slate-50" /> : error ? <ChartEmpty message="Unable to load analytics data." /> : (
+          {isLoading ? <div className="dashboard-analytics-skeleton h-56 animate-pulse rounded-xl bg-slate-50" /> : error ? <ChartEmpty message="Unable to load analytics data." /> : (
             <DistributionChart items={data?.courses ?? []} color="#16a36a" name="Registrations" />
           )}
         </Panel>
         <Panel title="Payment status" description="Recorded status of registrations in this date range.">
-          {isLoading ? <div className="h-40 animate-pulse rounded-xl bg-slate-50" /> : error ? <ChartEmpty message="Unable to load analytics data." /> : (
+          {isLoading ? <div className="dashboard-analytics-skeleton h-40 animate-pulse rounded-xl bg-slate-50" /> : error ? <ChartEmpty message="Unable to load analytics data." /> : (
             <DonutChart items={data?.paymentStatuses ?? []} label="payment" />
           )}
         </Panel>
         <Panel title="Learner profile" description="Sex distribution, including records without a value.">
-          {isLoading ? <div className="h-40 animate-pulse rounded-xl bg-slate-50" /> : error ? <ChartEmpty message="Unable to load analytics data." /> : (
+          {isLoading ? <div className="dashboard-analytics-skeleton h-40 animate-pulse rounded-xl bg-slate-50" /> : error ? <ChartEmpty message="Unable to load analytics data." /> : (
             <DonutChart items={data?.sexDistribution ?? []} label="profile" />
           )}
         </Panel>
         <Panel title="Registration by weekday" description="Which days learners most often register.">
-          {isLoading ? <div className="h-56 animate-pulse rounded-xl bg-slate-50" /> : error ? <ChartEmpty message="Unable to load analytics data." /> : (
+          {isLoading ? <div className="dashboard-analytics-skeleton h-56 animate-pulse rounded-xl bg-slate-50" /> : error ? <ChartEmpty message="Unable to load analytics data." /> : (
             <DistributionChart items={data?.weekdays ?? []} color="#9b7aea" name="Registrations" height={230} />
           )}
         </Panel>
@@ -427,7 +427,7 @@ export default function DashboardPage() {
       >
         {isLoading ? (
           <div className="space-y-3">
-            {[0, 1, 2].map((row) => <div key={row} className="h-11 animate-pulse rounded-lg bg-slate-50" />)}
+            {[0, 1, 2].map((row) => <div key={row} className="dashboard-analytics-skeleton h-11 animate-pulse rounded-lg bg-slate-50" />)}
           </div>
         ) : error ? (
           <ChartEmpty message="Unable to load recent registrations." />
@@ -453,10 +453,10 @@ export default function DashboardPage() {
                       <td className="py-3 pr-4">
                         <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-medium ${
                           student.paymentStatus === "Fully Paid"
-                            ? "bg-emerald-50 text-emerald-700"
+                            ? "dashboard-payment-paid bg-emerald-50 text-emerald-700"
                             : student.paymentStatus === "Not Paid" || student.paymentStatus === "Not Paid Yet"
-                              ? "bg-rose-50 text-rose-700"
-                              : "bg-slate-100 text-slate-600"
+                                ? "dashboard-payment-unpaid bg-rose-50 text-rose-700"
+                                : "dashboard-payment-other bg-slate-100 text-slate-600"
                         }`}>
                           {student.paymentStatus === "Fully Paid"
                             ? "Paid"

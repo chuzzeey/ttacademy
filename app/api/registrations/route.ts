@@ -305,8 +305,13 @@ export async function PATCH(request: NextRequest) {
       .single()
 
     if (updateError) {
-      console.error("Student update query failed:", updateError);
-      return NextResponse.json({ error: "Unable to update student" }, { status: 500 });
+      console.error("Student update query failed:", {
+        code: updateError.code,
+        message: updateError.message,
+        details: updateError.details,
+        hint: updateError.hint,
+      });
+      return NextResponse.json({ error: updateError.message }, { status: 500 });
     }
 
     return NextResponse.json(

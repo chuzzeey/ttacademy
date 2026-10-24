@@ -213,14 +213,15 @@ export default function StudentsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ studentId, payment_status }),
       })
-      if (!res.ok) throw new Error("Failed to update")
+      const result = await res.json()
+      if (!res.ok) throw new Error(result.error || "Failed to update payment status")
       setStudents(prev => prev.map(s => s.id === studentId ? { ...s, payment_status } : s))
       if (selectedStudent?.id === studentId) {
         setSelectedStudent({ ...selectedStudent, payment_status })
       }
     } catch (err) {
       console.error("Failed to update payment status:", err)
-      alert("Failed to update payment status. Please try again.")
+      alert(err instanceof Error ? err.message : "Failed to update payment status. Please try again.")
     } finally {
       setUpdatingPaymentMap(prev => ({ ...prev, [studentId]: false }))
     }
