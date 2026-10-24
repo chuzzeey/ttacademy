@@ -54,6 +54,20 @@ const courseIcons: Record<string, LucideIcon> = {
 function ApplicationSteps() {
     const [selectedCourse, setSelectedCourse] = useState<{ slug: string; title: string } | null>(null)
 
+    const confirmCourseApplication = () => {
+        if (!selectedCourse) return
+
+        window.dispatchEvent(new CustomEvent('ttacademy:select-application-course', {
+            detail: { course: selectedCourse.title.toLowerCase() },
+        }))
+        setSelectedCourse(null)
+        window.requestAnimationFrame(() => {
+            const courseField = document.getElementById('application-course')
+            courseField?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            courseField?.focus({ preventScroll: true })
+        })
+    }
+
     return (
         <>
             <section id="application-process" aria-labelledby="application-process-title" className="scroll-mt-16 bg-white px-5 py-16 sm:px-8 sm:py-20 md:scroll-mt-20 lg:px-10">
@@ -124,12 +138,13 @@ function ApplicationSteps() {
                             >
                                 No
                             </button>
-                            <a
-                                href={`/?course=${encodeURIComponent(selectedCourse.slug)}#contact`}
+                            <button
+                                type="button"
+                                onClick={confirmCourseApplication}
                                 className="inline-flex min-h-11 items-center justify-center bg-[#a0c44b] px-4 text-sm font-semibold text-slate-950 transition hover:bg-[#91b13f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700"
                             >
                                 Yes
-                            </a>
+                            </button>
                         </div>
                     </section>
                 </div>

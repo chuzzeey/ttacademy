@@ -589,6 +589,32 @@ svg .hero-orbit-sphere {
   padding-right: 2rem;
 }
 
+#application-course.course-selection-highlight {
+  animation: course-selection-highlight 900ms ease-in-out 2;
+  transform-origin: left center;
+}
+
+@keyframes course-selection-highlight {
+  0%, 100% {
+    font-size: 0.875rem;
+    font-weight: 400;
+    transform: scale(1);
+  }
+  50% {
+    font-size: 1.125rem;
+    font-weight: 700;
+    transform: scale(1.04);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #application-course.course-selection-highlight {
+    animation: none;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+}
+
 .registration-form textarea {
   min-height: 7rem;
   padding-top: 0.75rem;

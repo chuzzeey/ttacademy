@@ -189,6 +189,7 @@ export default function Contact() {
   const [applicationSaved, setApplicationSaved] = useState(false)
   const [applicationStudentCode, setApplicationStudentCode] = useState("")
   const [applicationCodeCopied, setApplicationCodeCopied] = useState(false)
+  const [highlightCourseSelection, setHighlightCourseSelection] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [emailChecking, setEmailChecking] = useState(false)
   const [emailStatus, setEmailStatus] = useState<{
@@ -202,6 +203,32 @@ export default function Contact() {
   const successDialogRef = useRef<HTMLDialogElement>(null)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
   const submissionInProgressRef = useRef(false)
+  const courseHighlightTimeoutRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    const handleCourseSelection = (event: Event) => {
+      const course = (event as CustomEvent<{ course?: unknown }>).detail?.course
+      if (typeof course !== "string" || !COURSE_CATALOG.some(({ title }) => title.toLowerCase() === course)) return
+
+      setForm((current) => ({ ...current, course }))
+      setHighlightCourseSelection(true)
+      if (courseHighlightTimeoutRef.current !== null) {
+        window.clearTimeout(courseHighlightTimeoutRef.current)
+      }
+      courseHighlightTimeoutRef.current = window.setTimeout(() => {
+        setHighlightCourseSelection(false)
+        courseHighlightTimeoutRef.current = null
+      }, 1800)
+    }
+
+    window.addEventListener("ttacademy:select-application-course", handleCourseSelection)
+    return () => {
+      window.removeEventListener("ttacademy:select-application-course", handleCourseSelection)
+      if (courseHighlightTimeoutRef.current !== null) {
+        window.clearTimeout(courseHighlightTimeoutRef.current)
+      }
+    }
+  }, [])
 
   useEffect(() => {
     const requestedCourse = new URLSearchParams(window.location.search).get("course")
@@ -564,7 +591,7 @@ export default function Contact() {
                   <label htmlFor="application-course" className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600">Course applying for *</label>
                   <div className="relative">
                     <select id="application-course" required aria-invalid={Boolean(errors.course)} aria-describedby={errors.course ? "err-course" : undefined} value={form.course} onChange={(e) => updateForm("course", e.target.value)}
-                      className={`w-full px-5 py-4 rounded-xl bg-white border text-gray-600 text-sm focus:outline-none focus:border-red-400/50 transition-all duration-200 appearance-none cursor-pointer ${errors.course ? "border-red-500/50" : "border-gray-200"}`}>
+                      className={`w-full px-5 py-4 rounded-xl bg-white border text-gray-600 text-sm focus:outline-none focus:border-red-400/50 transition-all duration-200 appearance-none cursor-pointer ${errors.course ? "border-red-500/50" : "border-gray-200"}${highlightCourseSelection ? " course-selection-highlight" : ""}`}>
                       <option value="" disabled>Select course</option>
                       {COURSE_CATALOG.map(({ title }) => <option key={title} value={title.toLowerCase()}>{title}</option>)}
                     </select>
