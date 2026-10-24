@@ -3,10 +3,10 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import {
-  ArrowRight, BookOpenCheck, Check, Copy, DoorOpen, LockKeyhole,
-  LoaderCircle, ShieldAlert, UnlockKeyhole, Users, X,
+  ArrowRight, ArrowUpRight, BadgeCheck, BookOpenCheck, Check, Copy, DoorOpen,
+  GraduationCap, LockKeyhole, LoaderCircle, Plus, ShieldAlert, Sparkles,
+  UnlockKeyhole, Users, X,
 } from "lucide-react"
-import { PageHeader } from "../components/dashboard/page-header"
 
 type Course = { slug: string; title: string; is_active: boolean }
 type Teacher = {
@@ -146,10 +146,46 @@ export default function ClassroomManagementPage() {
   const students = data?.students ?? []
   const pendingTeachers = teachers.filter(({ status }) => status === "pending").length
   const pendingStudents = students.filter(({ status }) => status === "pending").length
+  const approvedTeachers = teachers.filter(({ status }) => status === "approved").length
 
   return (
     <main className="space-y-6 pb-10">
-      <PageHeader title="Classroom Management" description="Enter classes, manage teacher access, and approve enrolled students." />
+      <section className="relative isolate overflow-hidden rounded-[1.75rem] border border-emerald-900/10 bg-gradient-to-br from-[#092e22] via-[#0f5134] to-[#0a382a] px-5 py-6 text-white shadow-xl shadow-emerald-950/10 sm:px-8 sm:py-8">
+        <div aria-hidden="true" className="pointer-events-none absolute -right-16 -top-24 h-72 w-72 rounded-full bg-emerald-300/15 blur-3xl" />
+        <div aria-hidden="true" className="pointer-events-none absolute -bottom-32 right-1/3 h-64 w-64 rounded-full bg-teal-300/10 blur-3xl" />
+        <div className="relative flex flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-2xl">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.08] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-100">
+              <Sparkles aria-hidden="true" className="h-3.5 w-3.5 text-emerald-300" />
+              Academy operations
+              <span className="ml-1 flex items-center gap-1.5 border-l border-white/20 pl-2.5 normal-case tracking-normal text-white/70">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-300 shadow-[0_0_10px_rgba(110,231,183,0.9)]" />
+                Workspace live
+              </span>
+            </div>
+            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Classroom Management</h1>
+            <p className="mt-2 max-w-xl text-sm leading-6 text-emerald-50/75">
+              Your classes, people, and access controls — all moving in one place.
+            </p>
+            <div className="mt-5 flex flex-wrap gap-2 text-xs font-medium text-white/80">
+              <span className="rounded-lg border border-white/10 bg-black/10 px-3 py-2">{data?.courses.length ?? 0} courses</span>
+              <span className="rounded-lg border border-white/10 bg-black/10 px-3 py-2">{pendingTeachers + pendingStudents} awaiting review</span>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2.5">
+            <button type="button" onClick={() => setShowEnterModal(true)} className="classroom-hero-primary group inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-white px-4 text-sm font-semibold text-emerald-950 shadow-lg shadow-black/15 transition hover:-translate-y-0.5 hover:bg-emerald-50 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-900">
+              <DoorOpen aria-hidden="true" className="h-4 w-4" /> Enter a class
+              <ArrowUpRight aria-hidden="true" className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+            </button>
+            <button type="button" onClick={() => setShowTeacherModal(true)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/[0.08] px-4 text-sm font-semibold text-white shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:border-white/35 hover:bg-white/[0.14] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
+              <Plus aria-hidden="true" className="h-4 w-4" /> Add teacher
+            </button>
+            <a href={pendingStudents > 0 ? "#student-approvals" : "#teacher-approvals"} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold text-emerald-100 transition hover:bg-white/[0.08] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
+              Review requests <ArrowRight aria-hidden="true" className="h-4 w-4" />
+            </a>
+          </div>
+        </div>
+      </section>
 
       {(error || notice) && (
         <div role={error ? "alert" : "status"} className={`flex items-start justify-between gap-3 rounded-xl border px-4 py-3 text-sm ${
@@ -160,28 +196,48 @@ export default function ClassroomManagementPage() {
         </div>
       )}
 
-      <section className="grid gap-3 sm:grid-cols-3" aria-label="Classroom actions">
-        <button type="button" onClick={() => setShowEnterModal(true)} className="dashboard-card flex min-h-28 items-center gap-4 rounded-2xl p-5 text-left transition hover:-translate-y-0.5">
-          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700"><DoorOpen className="h-5 w-5" /></span>
-          <span><span className="block text-sm font-semibold">Enter a class</span><span className="mt-1 block text-xs text-muted-foreground">Open the course group chat</span></span>
-        </button>
-        <button type="button" onClick={() => setShowTeacherModal(true)} className="dashboard-card flex min-h-28 items-center gap-4 rounded-2xl p-5 text-left transition hover:-translate-y-0.5">
-          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-50 text-sky-700"><BookOpenCheck className="h-5 w-5" /></span>
-          <span><span className="block text-sm font-semibold">Teacher access</span><span className="mt-1 block text-xs text-muted-foreground">{pendingTeachers} awaiting approval</span></span>
-        </button>
-        <div className="dashboard-card flex min-h-28 items-center gap-4 rounded-2xl p-5">
-          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-50 text-violet-700"><Users className="h-5 w-5" /></span>
-          <span><span className="block text-sm font-semibold">Student access</span><span className="mt-1 block text-xs text-muted-foreground">{pendingStudents} awaiting approval</span></span>
-        </div>
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Classroom overview">
+        {[
+          { label: "Active classes", value: data?.courses.length ?? 0, detail: `${students.length} student records`, icon: BookOpenCheck, tone: "bg-emerald-50 text-emerald-700" },
+          { label: "Approved teachers", value: approvedTeachers, detail: `${teachers.length} assigned`, icon: BadgeCheck, tone: "bg-sky-50 text-sky-700" },
+          { label: "Teachers awaiting approval", value: pendingTeachers, detail: "Awaiting review", icon: Users, tone: "bg-amber-50 text-amber-800", href: "#teacher-approvals" },
+          { label: "Students awaiting approval", value: pendingStudents, detail: "Awaiting review", icon: GraduationCap, tone: "bg-violet-50 text-violet-700", href: "#student-approvals" },
+        ].map(({ label, value, detail, icon: Icon, tone, href }) => {
+          const content = (
+            <>
+              <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${tone}`}><Icon aria-hidden="true" className="h-5 w-5" /></span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-xs font-medium text-muted-foreground">{label}</span>
+                <span className="mt-1 flex items-baseline gap-2">
+                  <span className="text-2xl font-semibold tracking-tight tabular-nums">{loading && !data ? "—" : value}</span>
+                  <span className="truncate text-[11px] text-muted-foreground">{detail}</span>
+                </span>
+              </span>
+              {href && <ArrowRight aria-hidden="true" className="h-4 w-4 shrink-0 text-muted-foreground" />}
+            </>
+          )
+          return href ? (
+            <a key={label} href={href} className="dashboard-card flex min-h-24 items-center gap-3 rounded-2xl p-4 transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700">
+              {content}
+            </a>
+          ) : (
+            <article key={label} className="dashboard-card flex min-h-24 items-center gap-3 rounded-2xl p-4">
+              {content}
+            </article>
+          )
+        })}
       </section>
 
-      <section className="dashboard-card rounded-2xl p-4 sm:p-6">
-        <div className="mb-4">
-          <h2 className="text-sm font-semibold">Classes</h2>
-          <p className="mt-1 text-xs text-muted-foreground">Available classes match the courses offered on the registration form.</p>
+      <section id="classes" className="dashboard-card scroll-mt-24 rounded-2xl p-4 sm:p-6">
+        <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="text-base font-semibold tracking-tight">Classes</h2>
+            <p className="mt-1 text-xs text-muted-foreground">Manage class access and jump into a course workspace.</p>
+          </div>
+          <span className="rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium text-muted-foreground">{data?.courses.length ?? 0} courses</span>
         </div>
         {loading && !data ? (
-          <div className="flex min-h-28 items-center justify-center text-sm text-muted-foreground"><LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> Loading classes…</div>
+          <div className="flex min-h-40 items-center justify-center text-sm text-muted-foreground"><LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> Loading classes…</div>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {(data?.courses ?? []).map((course) => {
@@ -189,27 +245,31 @@ export default function ClassroomManagementPage() {
               const classStudents = students.filter((item) => item.course_slug === course.slug)
               const locked = roomLocked(course.slug)
               return (
-                <article key={course.slug} className="rounded-xl border border-border/60 bg-muted/10 p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <h3 className="truncate text-sm font-semibold">{course.title}</h3>
-                      <p className="mt-1 truncate text-xs text-muted-foreground">{teacher ? `Teacher: ${teacher.display_name}` : "Teacher not assigned"}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">{classStudents.length} registered students</p>
+                <article key={course.slug} className="group flex min-w-0 flex-col rounded-2xl border border-border/60 bg-background p-4 transition duration-200 hover:-translate-y-1 hover:border-emerald-700/30 hover:shadow-lg hover:shadow-emerald-950/[0.06]">
+                  <div className="flex items-start gap-3">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 ring-1 ring-emerald-900/[0.04] transition duration-200 group-hover:scale-105 group-hover:shadow-sm"><BookOpenCheck aria-hidden="true" className="h-5 w-5" /></span>
+                    <div className="min-w-0 flex-1">
+                      <p className="mb-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Course workspace</p>
+                      <h3 className="truncate text-sm font-semibold tracking-tight">{course.title}</h3>
+                      <p className="mt-1 truncate text-xs text-muted-foreground">{teacher ? teacher.display_name : "Teacher not assigned"}</p>
                     </div>
                     <button
                       type="button"
                       disabled={busyKey === `lock-${course.slug}`}
                       onClick={() => void postAction({ action: "set-lock", courseSlug: course.slug, locked: !locked }, `lock-${course.slug}`)}
-                      className="inline-flex shrink-0 items-center gap-1.5 rounded-lg px-2 py-1.5 text-[11px] font-medium text-muted-foreground hover:bg-muted"
+                      className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-[10px] font-semibold transition disabled:opacity-50 ${locked ? "border-amber-200/70 bg-amber-50 text-amber-800 hover:bg-amber-100" : "border-emerald-200/70 bg-emerald-50 text-emerald-800 hover:bg-emerald-100"}`}
                       aria-label={`${locked ? "Unlock" : "Lock"} ${course.title} class`}
                     >
-                      {locked ? <UnlockKeyhole className="h-3.5 w-3.5" /> : <LockKeyhole className="h-3.5 w-3.5" />}
+                      {busyKey === `lock-${course.slug}` ? <LoaderCircle className="h-3.5 w-3.5 animate-spin" /> : locked ? <UnlockKeyhole className="h-3.5 w-3.5" /> : <LockKeyhole className="h-3.5 w-3.5" />}
                       {locked ? "Locked" : "Open"}
                     </button>
                   </div>
-                  <button type="button" onClick={() => router.push(`/dashboard/classrooms/${course.slug}`)} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 px-3 py-2.5 text-xs font-semibold text-white transition hover:bg-emerald-800">
-                    Enter class <ArrowRight className="h-3.5 w-3.5" />
-                  </button>
+                  <div className="mt-5 flex items-center justify-between gap-2 border-t border-border/60 pt-3">
+                    <span className="inline-flex items-center gap-1.5 rounded-lg bg-muted/70 px-2.5 py-1.5 text-[11px] font-medium text-muted-foreground"><Users className="h-3.5 w-3.5" />{classStudents.length} {classStudents.length === 1 ? "student" : "students"}</span>
+                    <button type="button" onClick={() => router.push(`/dashboard/classrooms/${course.slug}`)} className="group/launch inline-flex min-h-9 items-center gap-2 rounded-xl bg-emerald-700 px-3 text-xs font-semibold text-white shadow-sm shadow-emerald-950/10 transition hover:-translate-y-0.5 hover:bg-emerald-800 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2">
+                      Open class <ArrowUpRight aria-hidden="true" className="h-3.5 w-3.5 transition-transform group-hover/launch:translate-x-0.5 group-hover/launch:-translate-y-0.5" />
+                    </button>
+                  </div>
                 </article>
               )
             })}
@@ -217,39 +277,63 @@ export default function ClassroomManagementPage() {
         )}
       </section>
 
-      <section className="dashboard-card rounded-2xl p-4 sm:p-6">
-        <div className="mb-4 flex items-start justify-between gap-4">
-          <div><h2 className="text-sm font-semibold">Teacher approvals</h2><p className="mt-1 text-xs text-muted-foreground">Each course has one teacher account. Credentials are generated individually.</p></div>
-          <button type="button" onClick={() => setShowTeacherModal(true)} className="shrink-0 rounded-lg bg-emerald-700 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-800">Add teacher</button>
-        </div>
-        <div className="divide-y divide-border/60">
-          {teachers.length === 0 ? <p className="py-6 text-center text-xs text-muted-foreground">No teachers assigned yet.</p> : teachers.map((teacher) => (
-            <div key={teacher.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
-              <div className="min-w-0"><p className="truncate text-sm font-medium">{teacher.display_name}</p><p className="truncate text-xs text-muted-foreground">{courseTitle.get(teacher.course_slug) ?? teacher.course_slug} · {teacher.email}</p></div>
-              <div className="flex items-center gap-2"><StatusBadge status={teacher.status} />
-                {teacher.status === "pending" && <button type="button" disabled={Boolean(busyKey)} onClick={() => void postAction({ action: "update-status", type: "teacher", id: teacher.id, status: "approved" }, `teacher-${teacher.id}`)} className="rounded-lg px-2.5 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 disabled:opacity-50">Approve</button>}
-                {teacher.status === "restricted" && <button type="button" disabled={Boolean(busyKey)} onClick={() => void postAction({ action: "update-status", type: "teacher", id: teacher.id, status: "pending" }, `teacher-${teacher.id}`)} className="rounded-lg px-2.5 py-1.5 text-xs font-semibold text-sky-700 hover:bg-sky-50 disabled:opacity-50">Restore</button>}
-                {teacher.status !== "restricted" && <button type="button" disabled={Boolean(busyKey)} onClick={() => void postAction({ action: "update-status", type: "teacher", id: teacher.id, status: "restricted" }, `teacher-${teacher.id}`)} className="rounded-lg px-2.5 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50 disabled:opacity-50">Restrict</button>}
-              </div>
+      <section className="grid items-start gap-4 xl:grid-cols-2">
+        <section id="teacher-approvals" className="dashboard-card scroll-mt-24 rounded-2xl p-4 sm:p-6">
+          <div className="mb-4 flex items-start justify-between gap-3">
+            <div>
+              <h2 className="text-base font-semibold tracking-tight">Teacher approvals</h2>
+              <p className="mt-1 text-xs text-muted-foreground">Review teacher access for each course.</p>
             </div>
-          ))}
-        </div>
-      </section>
+            <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-800">{pendingTeachers} pending</span>
+          </div>
+          <div className="space-y-2">
+            {teachers.length === 0 ? <div className="rounded-xl border border-dashed border-border/60 px-4 py-7 text-center"><p className="text-xs text-muted-foreground">No teachers assigned yet.</p><button type="button" onClick={() => setShowTeacherModal(true)} className="mt-3 inline-flex min-h-9 items-center gap-2 rounded-xl border border-border bg-background px-3 text-xs font-semibold transition hover:border-emerald-700/30 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700"><Plus aria-hidden="true" className="h-3.5 w-3.5" /> Add your first teacher</button></div> : teachers.map((teacher) => (
+              <article key={teacher.id} className="flex flex-col gap-3 rounded-xl border border-border/60 bg-background p-3.5 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-sky-700"><Users className="h-4 w-4" /></span>
+                  <div className="min-w-0"><p className="truncate text-sm font-semibold">{teacher.display_name}</p><p className="truncate text-xs text-muted-foreground">{courseTitle.get(teacher.course_slug) ?? teacher.course_slug} · {teacher.email}</p></div>
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5 sm:justify-end"><StatusBadge status={teacher.status} />
+                  {teacher.status === "pending" && <button type="button" disabled={Boolean(busyKey)} onClick={() => void postAction({ action: "update-status", type: "teacher", id: teacher.id, status: "approved" }, `teacher-${teacher.id}`)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl bg-emerald-700 px-3 text-xs font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-emerald-800 hover:shadow-md disabled:opacity-50"><Check aria-hidden="true" className="h-3.5 w-3.5" /> Approve</button>}
+                  {teacher.status === "restricted" && <button type="button" disabled={Boolean(busyKey)} onClick={() => void postAction({ action: "update-status", type: "teacher", id: teacher.id, status: "pending" }, `teacher-${teacher.id}`)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-border bg-background px-3 text-xs font-semibold text-foreground transition hover:bg-muted disabled:opacity-50"><UnlockKeyhole aria-hidden="true" className="h-3.5 w-3.5" /> Restore</button>}
+                  {teacher.status !== "restricted" && <button type="button" disabled={Boolean(busyKey)} onClick={() => void postAction({ action: "update-status", type: "teacher", id: teacher.id, status: "restricted" }, `teacher-${teacher.id}`)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-rose-200/70 px-3 text-xs font-semibold text-rose-700 transition hover:bg-rose-50 disabled:opacity-50"><ShieldAlert aria-hidden="true" className="h-3.5 w-3.5" /> Restrict</button>}
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
 
-      <section className="dashboard-card rounded-2xl p-4 sm:p-6">
-        <div className="mb-4"><h2 className="text-sm font-semibold">Student approvals</h2><p className="mt-1 text-xs text-muted-foreground">Students are grouped by their registered course and payment status.</p></div>
-        <div className="divide-y divide-border/60">
-          {students.length === 0 ? <p className="py-6 text-center text-xs text-muted-foreground">No student classroom records yet.</p> : students.map((entry) => (
-            <div key={entry.student_id} className="flex flex-wrap items-center justify-between gap-3 py-3">
-              <div className="min-w-0"><p className="truncate text-sm font-medium">{entry.student?.name || "Learner"}</p><p className="truncate text-xs text-muted-foreground">{courseTitle.get(entry.course_slug) ?? entry.course_slug} · {entry.student?.email ?? "No email"} · {entry.student?.payment_status ?? "Payment not recorded"}</p></div>
-              <div className="flex items-center gap-2"><StatusBadge status={entry.student?.restricted ? "restricted" : entry.status} />
-                {entry.status !== "approved" && !entry.student?.restricted && <button type="button" disabled={Boolean(busyKey)} onClick={() => void postAction({ action: "update-status", type: "student", id: entry.student_id, status: "approved" }, `student-${entry.student_id}`)} className="rounded-lg px-2.5 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 disabled:opacity-50">Approve</button>}
-                {(entry.status === "restricted" || entry.student?.restricted) && <button type="button" disabled={Boolean(busyKey)} onClick={() => void postAction({ action: "restore-student", id: entry.student_id }, `student-${entry.student_id}`)} className="rounded-lg px-2.5 py-1.5 text-xs font-semibold text-sky-700 hover:bg-sky-50 disabled:opacity-50">Restore</button>}
-                {entry.status !== "restricted" && <button type="button" disabled={Boolean(busyKey)} onClick={() => void postAction({ action: "update-status", type: "student", id: entry.student_id, status: "restricted" }, `student-${entry.student_id}`)} className="rounded-lg px-2.5 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50 disabled:opacity-50">Restrict</button>}
-              </div>
+        <section id="student-approvals" className="dashboard-card scroll-mt-24 rounded-2xl p-4 sm:p-6">
+          <div className="mb-4 flex items-start justify-between gap-3">
+            <div>
+              <h2 className="text-base font-semibold tracking-tight">Student approvals</h2>
+              <p className="mt-1 text-xs text-muted-foreground">Check course and payment status before approving access.</p>
             </div>
-          ))}
-        </div>
+            <span className="rounded-full bg-violet-50 px-2.5 py-1 text-[11px] font-semibold text-violet-700">{pendingStudents} pending</span>
+          </div>
+          <div className="space-y-2">
+            {students.length === 0 ? <p className="rounded-xl border border-dashed border-border/60 px-4 py-8 text-center text-xs text-muted-foreground">No student classroom records yet.</p> : students.map((entry) => (
+              <article key={entry.student_id} className="flex flex-col gap-3 rounded-xl border border-border/60 bg-background p-3.5">
+                <div className="flex min-w-0 items-start gap-3">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-700"><GraduationCap className="h-4 w-4" /></span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="truncate text-sm font-semibold">{entry.student?.name || "Learner"}</p>
+                      <StatusBadge status={entry.student?.restricted ? "restricted" : entry.status} />
+                    </div>
+                    <p className="mt-1 truncate text-xs text-muted-foreground">{courseTitle.get(entry.course_slug) ?? entry.course_slug} · {entry.student?.email ?? "No email"}</p>
+                    <span className="mt-2 inline-flex rounded-full bg-muted px-2.5 py-1 text-[10px] font-medium text-muted-foreground">{entry.student?.payment_status ?? "Payment not recorded"}</span>
+                  </div>
+                </div>
+                <div className="flex flex-wrap justify-end gap-1.5 border-t border-border/60 pt-2">
+                  {entry.status !== "approved" && !entry.student?.restricted && <button type="button" disabled={Boolean(busyKey)} onClick={() => void postAction({ action: "update-status", type: "student", id: entry.student_id, status: "approved" }, `student-${entry.student_id}`)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl bg-emerald-700 px-3 text-xs font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-emerald-800 hover:shadow-md disabled:opacity-50"><Check aria-hidden="true" className="h-3.5 w-3.5" /> Approve</button>}
+                  {(entry.status === "restricted" || entry.student?.restricted) && <button type="button" disabled={Boolean(busyKey)} onClick={() => void postAction({ action: "restore-student", id: entry.student_id }, `student-${entry.student_id}`)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-border bg-background px-3 text-xs font-semibold text-foreground transition hover:bg-muted disabled:opacity-50"><UnlockKeyhole aria-hidden="true" className="h-3.5 w-3.5" /> Restore</button>}
+                  {entry.status !== "restricted" && <button type="button" disabled={Boolean(busyKey)} onClick={() => void postAction({ action: "update-status", type: "student", id: entry.student_id, status: "restricted" }, `student-${entry.student_id}`)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-rose-200/70 px-3 text-xs font-semibold text-rose-700 transition hover:bg-rose-50 disabled:opacity-50"><ShieldAlert aria-hidden="true" className="h-3.5 w-3.5" /> Restrict</button>}
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
       </section>
 
       {showEnterModal && (

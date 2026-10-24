@@ -191,6 +191,46 @@ html {
   background-color: #214a35 !important;
 }
 
+.admin-theme-dark .bg-sky-50 {
+  background-color: #1b3340 !important;
+}
+
+.admin-theme-dark .bg-violet-50 {
+  background-color: #302640 !important;
+}
+
+.admin-theme-dark .bg-amber-50 {
+  background-color: #3a3422 !important;
+}
+
+.admin-theme-dark .text-sky-700 {
+  color: #92cce4 !important;
+}
+
+.admin-theme-dark .text-violet-700 {
+  color: #c6a8e8 !important;
+}
+
+.admin-theme-dark .text-amber-800 {
+  color: #e2c57e !important;
+}
+
+.admin-theme-dark .bg-rose-50 {
+  background-color: #3a2929 !important;
+}
+
+.admin-theme-dark .text-rose-700 {
+  color: #dfa0a0 !important;
+}
+
+.admin-theme-dark [class~="border-rose-200/70"] {
+  border-color: #694144 !important;
+}
+
+.admin-theme-dark .hover\:bg-rose-50:hover {
+  background-color: #493133 !important;
+}
+
 .admin-theme-dark .text-slate-950,
 .admin-theme-dark .text-slate-900,
 .admin-theme-dark .text-slate-800,
@@ -254,6 +294,11 @@ html {
 .admin-theme-dark .admin-notification-panel {
   border-color: rgb(144 174 151 / 0.16) !important;
   background-color: #1a2720 !important;
+}
+
+.admin-theme-dark .classroom-hero-primary {
+  background-color: #edfff3 !important;
+  color: #123723 !important;
 }
 
 .admin-theme-dark .admin-sidebar,

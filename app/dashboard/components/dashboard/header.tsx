@@ -5,6 +5,7 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import {
   Activity,
+  ArrowLeft,
   BarChart3,
   Bell,
   BookOpenCheck,
@@ -70,14 +71,19 @@ export function Header() {
   const [mobileMenuMounted, setMobileMenuMounted] = useState(false)
   const [notificationOpen, setNotificationOpen] = useState(false)
   const [notifications, setNotifications] = useState<RecentRegistration[]>([])
-  const [notificationCount, setNotificationCount] = useState(0)
+  const [selectedNotification, setSelectedNotification] = useState<RecentRegistration | null>(null)
+  const [readNotificationIds, setReadNotificationIds] = useState<string[]>([])
+  const [readStateLoaded, setReadStateLoaded] = useState(false)
   const [notificationLoading, setNotificationLoading] = useState(false)
   const [notificationError, setNotificationError] = useState("")
   const [logoutPhase, setLogoutPhase] = useState<LogoutPhase | null>(null)
   const [logoutError, setLogoutError] = useState("")
-  const notificationRef = useRef<HTMLDivElement>(null)
+  const notificationDialogRef = useRef<HTMLElement>(null)
+  const notificationTriggerRef = useRef<HTMLButtonElement>(null)
   const notificationRequestRef = useRef(false)
   const drawerCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const notificationStorageKey = user ? `academy-notification-read:${user.id}` : null
+  const unreadCount = notifications.filter((item) => !readNotificationIds.includes(item.id)).length
 
   const isActive = (href: string) => {
     if (href === "/dashboard") return pathname === href
@@ -118,7 +124,6 @@ export function Header() {
       const result = await response.json()
       if (!response.ok) throw new Error(result.error || "Unable to load recent activity.")
       setNotifications(result.recentRegistrations ?? [])
-      setNotificationCount(result.periodRegistrations ?? 0)
     } catch (error) {
       setNotificationError(error instanceof Error ? error.message : "Unable to load recent activity.")
     } finally {
@@ -129,8 +134,34 @@ export function Header() {
 
   const toggleNotifications = () => {
     const nextOpen = !notificationOpen
+    if (nextOpen) setSelectedNotification(null)
+    else setSelectedNotification(null)
     setNotificationOpen(nextOpen)
     if (nextOpen) void loadNotifications()
+  }
+
+  const setNotificationRead = (id: string, read: boolean) => {
+    if (!notificationStorageKey) return
+    const nextReadIds = read
+      ? Array.from(new Set([...readNotificationIds, id]))
+      : readNotificationIds.filter((readId) => readId !== id)
+    try {
+      window.localStorage.setItem(notificationStorageKey, JSON.stringify(nextReadIds))
+      setReadNotificationIds(nextReadIds)
+    } catch {
+      setNotificationError("Unable to save notification read status in this browser.")
+    }
+  }
+
+  const markAllNotificationsRead = () => {
+    if (!notificationStorageKey) return
+    const nextReadIds = Array.from(new Set([...readNotificationIds, ...notifications.map((item) => item.id)]))
+    try {
+      window.localStorage.setItem(notificationStorageKey, JSON.stringify(nextReadIds))
+      setReadNotificationIds(nextReadIds)
+    } catch {
+      setNotificationError("Unable to save notification read status in this browser.")
+    }
   }
 
   const confirmLogout = async () => {
@@ -173,20 +204,62 @@ export function Header() {
   }, [loadNotifications])
 
   useEffect(() => {
+    if (!notificationStorageKey) {
+      setReadStateLoaded(false)
+      return
+    }
+    try {
+      const stored = window.localStorage.getItem(notificationStorageKey)
+      const parsed: unknown = stored ? JSON.parse(stored) : []
+      if (!Array.isArray(parsed) || parsed.some((id) => typeof id !== "string")) {
+        throw new Error("Stored notification read status is invalid.")
+      }
+      setReadNotificationIds(parsed)
+    } catch {
+      setNotificationError("Unable to load notification read status from this browser.")
+      setReadNotificationIds([])
+    } finally {
+      setReadStateLoaded(true)
+    }
+  }, [notificationStorageKey])
+
+  useEffect(() => {
     if (!notificationOpen) return
-    const handlePointerDown = (event: MouseEvent) => {
-      if (!notificationRef.current?.contains(event.target as Node)) setNotificationOpen(false)
-    }
+    const previousOverflow = document.body.style.overflow
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setNotificationOpen(false)
+      if (event.key === "Escape") {
+        if (selectedNotification) setSelectedNotification(null)
+        else setNotificationOpen(false)
+        return
+      }
+      if (event.key !== "Tab") return
+      const focusable = notificationDialogRef.current?.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      )
+      if (!focusable?.length) {
+        event.preventDefault()
+        notificationDialogRef.current?.focus()
+        return
+      }
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (event.shiftKey && (document.activeElement === first || document.activeElement === notificationDialogRef.current)) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
     }
-    document.addEventListener("mousedown", handlePointerDown)
+    document.body.style.overflow = "hidden"
+    notificationDialogRef.current?.focus()
     document.addEventListener("keydown", handleKeyDown)
     return () => {
-      document.removeEventListener("mousedown", handlePointerDown)
+      document.body.style.overflow = previousOverflow
       document.removeEventListener("keydown", handleKeyDown)
+      notificationTriggerRef.current?.focus()
     }
-  }, [notificationOpen])
+  }, [notificationOpen, selectedNotification])
 
   const navigation = (mobile = false) => (
     <nav aria-label="Main navigation" className="space-y-1">
@@ -248,89 +321,22 @@ export function Header() {
   )
 
   const notificationButton = (
-    <div className="relative" ref={notificationRef}>
-      <button
-        type="button"
-        aria-label="Recent learner activity"
-        aria-expanded={notificationOpen}
-        onClick={toggleNotifications}
-        className="admin-notification-trigger relative inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border/70 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-emerald-800"
-      >
-        <Bell aria-hidden="true" className="h-[18px] w-[18px]" />
-        {notificationCount > 0 && (
-          <span className="admin-notification-badge absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-white bg-emerald-600 px-1 text-[9px] font-bold leading-none text-white">
-            {notificationCount > 9 ? "9+" : notificationCount}
-          </span>
-        )}
-      </button>
-      {notificationOpen && (
-        <section className="admin-notification-panel absolute right-0 top-12 z-[60] w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_20px_60px_-20px_rgba(15,23,42,.25)]" aria-label="Recent learner activity">
-          <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3.5">
-            <div>
-              <h2 className="text-sm font-semibold text-slate-900">Recent activity</h2>
-              <p className="mt-0.5 text-[11px] text-slate-500">New registrations · last 7 days</p>
-            </div>
-            <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold text-emerald-800">
-              {notificationCount} new
-            </span>
-          </div>
-          {notificationLoading ? (
-            <div className="space-y-3 p-4" role="status" aria-label="Loading activity">
-              {[0, 1, 2].map((item) => <div key={item} className="h-12 animate-pulse rounded-lg bg-slate-50" />)}
-            </div>
-          ) : notificationError ? (
-            <div className="p-5 text-center">
-              <p role="alert" className="text-xs text-rose-700">{notificationError}</p>
-              <button type="button" onClick={() => void loadNotifications()} className="mt-2 text-xs font-semibold text-emerald-800">Try again</button>
-            </div>
-          ) : notifications.length ? (
-            <ul className="max-h-[min(22rem,65vh)] overflow-y-auto p-2">
-              {notifications.slice(0, 6).map((item) => (
-                <li key={item.id}>
-                  <Link
-                    href="/dashboard/students"
-                    onClick={() => setNotificationOpen(false)}
-                    className="flex items-start gap-3 rounded-xl border border-slate-100 p-3 transition hover:bg-slate-50"
-                  >
-                    <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
-                      <Activity className="h-4 w-4" />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-xs font-semibold text-slate-900">{item.name || "New learner"}</span>
-                      <span className="mt-1 block truncate text-[11px] text-slate-600">{item.course || "Course unspecified"}</span>
-                      <span className="mt-0.5 block truncate text-[11px] text-slate-500">
-                        {[item.state, item.country].filter(Boolean).join(", ") || "Location not provided"}
-                      </span>
-                      <span className="mt-2 flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
-                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600">
-                          {formatPaymentStatus(item.paymentStatus)}
-                        </span>
-                        <span className="text-[10px] text-slate-400">
-                          <span className="font-medium">Registered</span> {formatRegistrationDate(item.createdAt)}
-                        </span>
-                      </span>
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <div className="p-7 text-center">
-              <span className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-slate-50 text-slate-400"><Bell className="h-4 w-4" /></span>
-              <p className="mt-3 text-xs font-medium text-slate-700">You’re all caught up</p>
-              <p className="mt-1 text-[11px] text-slate-500">New learner registrations will appear here.</p>
-            </div>
-          )}
-          <Link
-            href="/dashboard/students"
-            onClick={() => setNotificationOpen(false)}
-            className="flex items-center justify-center gap-1 border-t border-slate-100 px-4 py-3 text-xs font-semibold text-emerald-800 transition hover:bg-emerald-50/50"
-          >
-            Open student directory <ChevronRight className="h-3.5 w-3.5" />
-          </Link>
-        </section>
+    <button
+      ref={notificationTriggerRef}
+      type="button"
+      aria-label={readStateLoaded && unreadCount > 0 ? `Notifications, ${unreadCount} unread` : "Notifications"}
+      aria-expanded={notificationOpen}
+      aria-haspopup="dialog"
+      onClick={toggleNotifications}
+      className="admin-notification-trigger relative inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border/70 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-emerald-800"
+    >
+      <Bell aria-hidden="true" className="h-[18px] w-[18px]" />
+      {readStateLoaded && unreadCount > 0 && (
+        <span className="admin-notification-badge absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-white bg-emerald-600 px-1 text-[9px] font-bold leading-none text-white">
+          {unreadCount > 9 ? "9+" : unreadCount}
+        </span>
       )}
-    </div>
+    </button>
   )
 
   return (
@@ -439,6 +445,218 @@ export function Header() {
           </div>
         </div>
       </header>
+
+      {notificationOpen && (
+        <div
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/45 p-3 backdrop-blur-sm sm:p-6"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setSelectedNotification(null)
+              setNotificationOpen(false)
+            }
+          }}
+        >
+          <section
+            ref={notificationDialogRef}
+            tabIndex={-1}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="notifications-title"
+            className="admin-notification-panel flex max-h-[min(44rem,calc(100dvh-1.5rem))] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_30px_100px_-28px_rgba(15,23,42,.5)]"
+          >
+            <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-5 sm:px-7">
+              <div>
+                <div className="flex items-center gap-2">
+                  {selectedNotification && (
+                    <button
+                      type="button"
+                      aria-label="Back to notifications"
+                      onClick={() => setSelectedNotification(null)}
+                      className="mr-1 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+                    >
+                      <ArrowLeft aria-hidden="true" className="h-4 w-4" />
+                    </button>
+                  )}
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+                    {selectedNotification ? <Activity aria-hidden="true" className="h-4 w-4" /> : <Bell aria-hidden="true" className="h-4 w-4" />}
+                  </span>
+                  <div>
+                    <h2 id="notifications-title" className="max-w-[min(55vw,28rem)] truncate text-base font-semibold text-slate-900">
+                      {selectedNotification ? selectedNotification.name || "New learner" : "Notifications"}
+                    </h2>
+                    <p className="mt-0.5 text-xs text-slate-500">
+                      {selectedNotification ? "Registration details" : "Recent learner registrations · last 7 days"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                {!selectedNotification && unreadCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={markAllNotificationsRead}
+                    className="hidden min-h-9 items-center gap-1.5 rounded-xl px-3 text-xs font-semibold text-emerald-800 transition hover:bg-emerald-50 sm:inline-flex"
+                  >
+                    <Check aria-hidden="true" className="h-3.5 w-3.5" /> Mark all read
+                  </button>
+                )}
+                <span className="inline-flex min-h-8 items-center gap-1.5 rounded-full bg-emerald-50 px-3 text-[11px] font-semibold text-emerald-800">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
+                  {unreadCount} unread
+                </span>
+                <button
+                  type="button"
+                  aria-label="Close notifications"
+                  onClick={() => {
+                    setSelectedNotification(null)
+                    setNotificationOpen(false)
+                  }}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+                >
+                  <X aria-hidden="true" className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+            {!selectedNotification && unreadCount > 0 && (
+              <div className="px-5 pt-3 sm:hidden">
+                <button type="button" onClick={markAllNotificationsRead} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl px-3 text-xs font-semibold text-emerald-800 transition hover:bg-emerald-50">
+                  <Check aria-hidden="true" className="h-3.5 w-3.5" /> Mark all as read
+                </button>
+              </div>
+            )}
+            <div className="min-h-0 flex-1 overflow-y-auto p-3 sm:p-5">
+              {notificationLoading ? (
+                <div className="space-y-3 p-2" role="status" aria-label="Loading notifications">
+                  {[0, 1, 2].map((item) => <div key={item} className="h-24 animate-pulse rounded-2xl bg-slate-50" />)}
+                </div>
+              ) : notificationError ? (
+                <div className="p-8 text-center">
+                  <p role="alert" className="text-sm text-rose-700">{notificationError}</p>
+                  <button type="button" onClick={() => void loadNotifications()} className="mt-3 min-h-9 rounded-xl bg-emerald-700 px-4 text-xs font-semibold text-white transition hover:bg-emerald-800">Try again</button>
+                </div>
+              ) : selectedNotification ? (
+                <div className="mx-auto max-w-xl py-2">
+                  <div className="rounded-2xl border border-emerald-200/80 bg-gradient-to-br from-emerald-50/80 to-white p-5 sm:p-6">
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-emerald-700 shadow-sm">
+                        <Activity aria-hidden="true" className="h-5 w-5" />
+                      </span>
+                      <div>
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-800">New registration</p>
+                        <p className="mt-1 text-sm font-semibold text-slate-900">{selectedNotification.name || "New learner"}</p>
+                      </div>
+                    </div>
+                    <dl className="mt-5 grid gap-3 sm:grid-cols-2">
+                      <div className="rounded-xl border border-slate-100 bg-white/90 p-3.5">
+                        <dt className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Course</dt>
+                        <dd className="mt-1.5 text-sm font-medium text-slate-900">{selectedNotification.course || "Course unspecified"}</dd>
+                      </div>
+                      <div className="rounded-xl border border-slate-100 bg-white/90 p-3.5">
+                        <dt className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Payment status</dt>
+                        <dd className="mt-1.5 text-sm font-medium text-slate-900">{formatPaymentStatus(selectedNotification.paymentStatus)}</dd>
+                      </div>
+                      <div className="rounded-xl border border-slate-100 bg-white/90 p-3.5">
+                        <dt className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Location</dt>
+                        <dd className="mt-1.5 text-sm font-medium text-slate-900">
+                          {[selectedNotification.state, selectedNotification.country].filter(Boolean).join(", ") || "Location not provided"}
+                        </dd>
+                      </div>
+                      <div className="rounded-xl border border-slate-100 bg-white/90 p-3.5">
+                        <dt className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Registered</dt>
+                        <dd className="mt-1.5 text-sm font-medium text-slate-900">{formatRegistrationDate(selectedNotification.createdAt)}</dd>
+                      </div>
+                    </dl>
+                    <div className="mt-4 flex items-center justify-between gap-3 rounded-xl bg-white/70 px-3.5 py-3">
+                      <span className="text-xs text-slate-600">Notification status</span>
+                      <button
+                        type="button"
+                        onClick={() => setNotificationRead(selectedNotification.id, !readNotificationIds.includes(selectedNotification.id))}
+                        className="text-xs font-semibold text-emerald-800 hover:underline"
+                      >
+                        Mark as {readNotificationIds.includes(selectedNotification.id) ? "unread" : "read"}
+                      </button>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedNotification(null)}
+                    className="mt-4 inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+                  >
+                    <ArrowLeft aria-hidden="true" className="h-3.5 w-3.5" /> Back to all notifications
+                  </button>
+                </div>
+              ) : notifications.length ? (
+                <ul className="space-y-2">
+                  {notifications.map((item) => {
+                    const isRead = readNotificationIds.includes(item.id)
+                    return (
+                      <li key={item.id} className={`group relative rounded-2xl border transition ${
+                        isRead
+                          ? "border-slate-100 bg-white hover:border-slate-200 hover:bg-slate-50"
+                          : "border-emerald-200/80 bg-emerald-50/50 hover:border-emerald-300 hover:bg-emerald-50"
+                      }`}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setNotificationRead(item.id, true)
+                            setSelectedNotification(item)
+                          }}
+                          aria-label={`View registration details for ${item.name || "new learner"}`}
+                          className="flex w-full items-start gap-3 rounded-2xl p-3.5 pb-10 pr-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-700 sm:gap-4 sm:p-4 sm:pb-10"
+                        >
+                          <span className={`relative mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
+                            isRead ? "bg-slate-100 text-slate-500" : "bg-white text-emerald-700 shadow-sm"
+                          }`}>
+                            <Activity aria-hidden="true" className="h-[18px] w-[18px]" />
+                            {!isRead && <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-600" />}
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="flex flex-wrap items-center gap-2">
+                              <span className={`truncate text-sm ${isRead ? "font-medium text-slate-700" : "font-semibold text-slate-900"}`}>{item.name || "New learner"}</span>
+                              {!isRead && <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-800">New</span>}
+                            </span>
+                            <span className="mt-1 block truncate text-xs text-slate-600">{item.course || "Course unspecified"}</span>
+                            <span className="mt-0.5 block truncate text-[11px] text-slate-500">{[item.state, item.country].filter(Boolean).join(", ") || "Location not provided"}</span>
+                            <span className="mt-2 flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+                              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600">{formatPaymentStatus(item.paymentStatus)}</span>
+                              <span className="text-[10px] text-slate-400"><span className="font-medium">Registered</span> {formatRegistrationDate(item.createdAt)}</span>
+                            </span>
+                          </span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setNotificationRead(item.id, !isRead)}
+                          aria-label={isRead ? `Mark ${item.name || "notification"} as unread` : `Mark ${item.name || "notification"} as read`}
+                          className="absolute bottom-3 right-3 rounded-lg px-2 py-1 text-[10px] font-semibold text-emerald-800 transition hover:bg-white/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 sm:bottom-4 sm:right-4"
+                        >
+                          Mark as {isRead ? "unread" : "read"}
+                        </button>
+                      </li>
+                    )
+                  })}
+                </ul>
+              ) : (
+                <div className="flex min-h-56 flex-col items-center justify-center px-6 text-center">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50 text-slate-400"><Bell aria-hidden="true" className="h-5 w-5" /></span>
+                  <p className="mt-4 text-sm font-semibold text-slate-800">You’re all caught up</p>
+                  <p className="mt-1 max-w-xs text-xs leading-5 text-slate-500">New learner registrations from the last 7 days will appear here.</p>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center justify-between gap-3 border-t border-slate-100 px-5 py-3.5 sm:px-7">
+              <span className="text-[11px] text-slate-500">
+                {selectedNotification
+                  ? "Learner registration notification"
+                  : `${notifications.length} recent ${notifications.length === 1 ? "notification" : "notifications"}`}
+              </span>
+              <Link href="/dashboard/students" onClick={() => setNotificationOpen(false)} className="inline-flex min-h-9 items-center gap-1 rounded-xl px-3 text-xs font-semibold text-emerald-800 transition hover:bg-emerald-50">
+                Open student directory <ChevronRight aria-hidden="true" className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+          </section>
+        </div>
+      )}
 
       {mobileMenuMounted && (
         <div
