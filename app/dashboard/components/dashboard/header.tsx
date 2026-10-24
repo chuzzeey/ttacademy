@@ -24,6 +24,7 @@ import {
 } from "lucide-react"
 import { BRAND_LOGO_URL } from "@/lib/brand"
 import { useAdminProfile } from "@/lib/hooks/use-admin-profile"
+import { formatRegistrationDate } from "@/lib/format-registration-date"
 import { useAdminTheme } from "./admin-theme-provider"
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
 import {
@@ -38,6 +39,9 @@ type RecentRegistration = {
   id: string
   name: string
   course: string | null
+  country: string | null
+  state: string | null
+  paymentStatus: string | null
   createdAt: string
 }
 
@@ -52,10 +56,9 @@ const navItems = [
   { label: "Settings", href: "/dashboard/settings", icon: Settings },
 ]
 
-function formatActivityDate(value: string) {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return "Recently"
-  return new Intl.DateTimeFormat("en", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(date)
+function formatPaymentStatus(value: string | null) {
+  if (!value || value === "Not Paid") return "Not Paid Yet"
+  return value
 }
 
 export function Header() {
@@ -287,15 +290,25 @@ export function Header() {
                   <Link
                     href="/dashboard/students"
                     onClick={() => setNotificationOpen(false)}
-                    className="flex items-start gap-3 rounded-xl p-3 transition hover:bg-slate-50"
+                    className="flex items-start gap-3 rounded-xl border border-slate-100 p-3 transition hover:bg-slate-50"
                   >
                     <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
                       <Activity className="h-4 w-4" />
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-xs font-semibold text-slate-900">{item.name || "New learner"}</span>
-                      <span className="mt-0.5 block truncate text-[11px] text-slate-500">{item.course || "Course unspecified"}</span>
-                      <span className="mt-1 block text-[10px] text-slate-400">{formatActivityDate(item.createdAt)}</span>
+                      <span className="mt-1 block truncate text-[11px] text-slate-600">{item.course || "Course unspecified"}</span>
+                      <span className="mt-0.5 block truncate text-[11px] text-slate-500">
+                        {[item.state, item.country].filter(Boolean).join(", ") || "Location not provided"}
+                      </span>
+                      <span className="mt-2 flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600">
+                          {formatPaymentStatus(item.paymentStatus)}
+                        </span>
+                        <span className="text-[10px] text-slate-400">
+                          <span className="font-medium">Registered</span> {formatRegistrationDate(item.createdAt)}
+                        </span>
+                      </span>
                     </span>
                   </Link>
                 </li>

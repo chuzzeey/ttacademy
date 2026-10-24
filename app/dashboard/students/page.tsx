@@ -7,6 +7,7 @@ import { Button } from "../components/ui/button"
 import { Input } from "../components/ui/input"
 import { Search, Eye, ChevronLeft, ChevronRight, User, X, Mail, BookOpen, Clock, Phone, MapPin, Copy, Check, Shield, ShieldOff, SlidersHorizontal, ChevronDown } from "lucide-react"
 import { formatLocation } from "@/lib/state-utils"
+import { formatRegistrationDate } from "@/lib/format-registration-date"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select"
 import {
   DropdownMenu,
@@ -697,7 +698,9 @@ export default function StudentsPage() {
                     <div className="p-1.5 rounded-lg bg-muted shrink-0"><Clock className="w-3.5 h-3.5 text-muted-foreground" /></div>
                     <div className="min-w-0">
                       <p className="text-[10px] text-muted-foreground">Joined</p>
-                      <p className="text-xs font-medium">{selectedStudent.reg_date} at {selectedStudent.reg_time}</p>
+                      <p className="text-xs font-medium">
+                        {formatRegistrationDate(selectedStudent.createdAt, selectedStudent.reg_date, selectedStudent.reg_time)}
+                      </p>
                     </div>
                   </div>
                 </div>

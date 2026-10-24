@@ -21,7 +21,7 @@ const studentDirectoryColumns = [
   "restricted",
   "reg_date",
   "reg_time",
-  "created_at",
+  "createdAt:created_at",
 ].join(",");
 
 async function authorizeAdmin() {

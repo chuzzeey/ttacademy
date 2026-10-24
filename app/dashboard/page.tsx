@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
+import { formatRegistrationDate } from "@/lib/format-registration-date"
 import {
   Activity,
   ArrowDownRight,
@@ -465,7 +466,7 @@ export default function DashboardPage() {
                               : student.paymentStatus || "Not recorded"}
                         </span>
                       </td>
-                      <td className="py-3 text-right text-xs text-slate-500">{formatDate(student.createdAt, { hour: "numeric", minute: "2-digit" })}</td>
+                      <td className="py-3 text-right text-xs text-slate-500">{formatRegistrationDate(student.createdAt)}</td>
                     </tr>
                   ))}
                 </tbody>
