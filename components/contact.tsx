@@ -359,11 +359,33 @@ export default function Contact() {
 
     setErrors(e)
     if (Object.keys(e).length > 0) {
-      const firstError = Object.keys(e)[0]
-      const field = document.getElementById(`application-${firstError}`)
-      if (field instanceof HTMLElement) {
-        field.scrollIntoView({ behavior: "smooth", block: "center" })
-        field.focus({ preventScroll: true })
+      const fieldIds: Record<string, string> = {
+        name: "application-name",
+        dateOfBirth: "application-dateOfBirth",
+        email: "application-email",
+        mobile: "application-phone",
+        sex: "application-sex",
+        country: "application-country",
+        state: "application-state",
+        course: "application-course",
+        employment: "application-employment",
+        laptop: "application-laptop",
+        reason: "application-reason",
+      }
+      const firstInvalidField = Object.keys(e)
+        .map((key) => document.getElementById(fieldIds[key]))
+        .filter((field): field is HTMLElement => field instanceof HTMLElement)
+        .sort((first, second) => {
+          const position = first.compareDocumentPosition(second)
+          if (position & Node.DOCUMENT_POSITION_FOLLOWING) return -1
+          if (position & Node.DOCUMENT_POSITION_PRECEDING) return 1
+          return 0
+        })[0]
+
+      if (firstInvalidField) {
+        const top = firstInvalidField.getBoundingClientRect().top + window.scrollY - 120
+        window.scrollTo({ top: Math.max(0, top), behavior: "smooth" })
+        firstInvalidField.focus({ preventScroll: true })
       }
     }
     return Object.keys(e).length === 0
