@@ -115,11 +115,18 @@ export default function AdminClassroomPage() {
       reactionsByMessage.set(reaction.message_id, reactions)
     }
     const parents = new Map((parentResult.data ?? []).map((parent) => [parent.id, parent]))
-    setMessages(data.map((message) => ({
+    const freshMessages = data.map((message) => ({
       ...message,
       reply_to: message.reply_to_message_id ? parents.get(message.reply_to_message_id) ?? null : null,
       reactions: reactionsByMessage.get(message.id) ?? [],
-    })) as ChatMessage[])
+    })) as ChatMessage[]
+    setMessages((previous) => {
+      const freshIds = new Set(freshMessages.map((message) => message.id))
+      return [
+        ...freshMessages,
+        ...previous.filter((message) => !freshIds.has(message.id)),
+      ]
+    })
   }, [courseSlug, supabase])
 
   useEffect(() => {
@@ -170,9 +177,22 @@ export default function AdminClassroomPage() {
             void loadMessages(user.id).catch((refreshError) => {
               console.error("Could not load the new classroom reply:", refreshError)
             })
-          } else {
-            setMessages((existing) => existing.some((message) => message.id === incoming.id) ? existing : [...existing, incoming])
+            return
           }
+          setMessages((existing) => {
+            if (existing.some((message) => message.id === incoming.id)) return existing
+            const optimisticIndex = existing.findIndex((message) =>
+              message.id.startsWith("temp-") &&
+              incoming.sender_user_id === user.id &&
+              message.content === incoming.content
+            )
+            if (optimisticIndex >= 0) {
+              const updated = [...existing]
+              updated[optimisticIndex] = { ...updated[optimisticIndex], ...incoming }
+              return updated
+            }
+            return [...existing, incoming]
+          })
         })
         .on("postgres_changes", {
           event: "UPDATE",
@@ -326,6 +346,25 @@ export default function AdminClassroomPage() {
       }
       return
     }
+    const tempId = `temp-${crypto.randomUUID()}`
+    const optimisticMessage: ChatMessage = {
+      id: tempId,
+      course_slug: courseSlug,
+      sender_user_id: userId,
+      sender_role: "admin",
+      sender_name: displayName,
+      content: draft.trim(),
+      attachment_path: null,
+      attachment_name: file?.name ?? null,
+      attachment_mime_type: file?.type ?? null,
+      created_at: new Date().toISOString(),
+      reply_to_message_id: replyingTo?.id ?? null,
+      reply_to: replyingTo
+        ? { id: replyingTo.id, content: replyingTo.content, sender_name: replyingTo.sender_name }
+        : null,
+      reactions: [],
+    }
+    setMessages((existing) => [...existing, optimisticMessage])
     let attachmentPath: string | undefined
     try {
       if (file) {
@@ -354,14 +393,22 @@ export default function AdminClassroomPage() {
       })
       const result = await response.json()
       if (!response.ok) throw new Error(result.error || "Unable to send message.")
+      const savedMessage = result.data as ChatMessage
+      setMessages((previous) => {
+        const tempIndex = previous.findIndex((message) => message.id === tempId)
+        if (tempIndex < 0) return previous.some((message) => message.id === savedMessage.id)
+          ? previous
+          : [...previous, savedMessage]
+        const updated = [...previous]
+        updated[tempIndex] = { ...updated[tempIndex], ...savedMessage }
+        return updated
+      })
       setDraft("")
       setReplyingTo(null)
       setFile(null)
       if (fileRef.current) fileRef.current.value = ""
-      void loadMessages(userId).catch((refreshError) => {
-        console.error("Could not refresh admin classroom messages:", refreshError)
-      })
     } catch (sendError) {
+      setMessages((existing) => existing.filter((message) => message.id !== tempId))
       setError(sendError instanceof Error ? sendError.message : "Unable to send message.")
       if (attachmentPath) {
         const { error: cleanupError } = await supabase.storage.from("classroom-files").remove([attachmentPath])

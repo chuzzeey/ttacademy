@@ -163,7 +163,11 @@ export default function TeacherCoursePage() {
     const result = await response.json()
     if (!response.ok) throw new Error(result.error || 'Unable to refresh classroom messages.')
     const freshMessages: Message[] = (result.data as DbMessage[]).map((item) => mapClassroomMessage(item, user?.id ?? null, 'teacher'))
-    setMessages((previous) => [...previous.filter((item) => item.sender === 'system'), ...freshMessages])
+    setMessages((previous) => {
+      const freshIds = new Set(freshMessages.map((item) => item.id))
+      const messagesNotInResponse = previous.filter((item) => !freshIds.has(item.id))
+      return [...freshMessages, ...messagesNotInResponse]
+    })
   }
 
   const beginReply = (target: Message) => {
@@ -240,7 +244,6 @@ export default function TeacherCoursePage() {
       })
       const result = await response.json()
       if (!response.ok) throw new Error(result.error || 'Unable to add this reaction.')
-      await refreshChatMessages()
     } catch (reactionError) {
       setError(reactionError instanceof Error ? reactionError.message : 'Unable to add this reaction.')
       try {
@@ -292,10 +295,13 @@ export default function TeacherCoursePage() {
           const dbMessages: Message[] = (data.data || []).map((msg: DbMessage) => mapClassroomMessage(msg, user?.id ?? null, 'teacher'))
           
           setMessages(prev => {
-            const initial = prev.filter(m => m.sender === 'system')
-            const existingIds = new Set([...initial, ...dbMessages].map(m => m.id))
-            const uniqueDbMessages = dbMessages.filter(m => !existingIds.has(m.id))
-            return [...initial, ...uniqueDbMessages]
+            const freshIds = new Set(dbMessages.map((message) => message.id))
+            const pendingMessages = prev.filter((message) =>
+              message.sender === 'system' || message.id.startsWith('temp-') || !freshIds.has(message.id)
+            )
+            const merged = new Map<string, Message>()
+            for (const message of [...pendingMessages, ...dbMessages]) merged.set(message.id, message)
+            return [...merged.values()].sort((left, right) => left.timestamp.getTime() - right.timestamp.getTime())
           })
         }
       } catch (err) {

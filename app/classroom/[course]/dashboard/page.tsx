@@ -58,7 +58,6 @@ export default function DashboardPage() {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const processedMessagesRef = useRef<Set<string>>(new Set())
-  const initialLoadCompleteRef = useRef(false)
   const prevMessagesLengthRef = useRef(0)
   const [studentData, setStudentData] = useState<{ name: string; email: string; avatar: string } | null>(null)
   const isRestrictedRef = useRef(false)
@@ -243,14 +242,14 @@ export default function DashboardPage() {
           
           setMessages(prev => {
             const systemMessages = prev.filter(m => m.sender === 'system')
-            return [...systemMessages, ...uniqueDbMessages]
+            const existingMessages = prev.filter(m => m.sender !== 'system' && !uniqueDbMessages.some(dbMessage => dbMessage.id === m.id))
+            return [...systemMessages, ...uniqueDbMessages, ...existingMessages]
           })
         }
       } catch (err) {
         console.error('Failed to fetch messages:', err)
       } finally {
         setLoadingMessages(false)
-        initialLoadCompleteRef.current = true
       }
     }
 
@@ -288,8 +287,6 @@ export default function DashboardPage() {
           filter: `course_slug=eq.${courseSlug}`,
         },
         (payload) => {
-          if (!initialLoadCompleteRef.current) return
-          
           const newMsg = payload.new as DbMessage
           setMessages(prev => {
             const exists = prev.some(m => m.id === newMsg.id)
@@ -440,7 +437,11 @@ export default function DashboardPage() {
     const result = await response.json()
     if (!response.ok) throw new Error(result.error || 'Unable to refresh classroom messages.')
     const freshMessages: Message[] = (result.data as DbMessage[]).map((item) => mapClassroomMessage(item, user?.id ?? null, 'student'))
-    setMessages((previous) => [...previous.filter((item) => item.sender === 'system'), ...freshMessages])
+    setMessages((previous) => {
+      const freshIds = new Set(freshMessages.map((item) => item.id))
+      const messagesNotInResponse = previous.filter((item) => !freshIds.has(item.id))
+      return [...freshMessages, ...messagesNotInResponse]
+    })
   }
 
   const beginReply = (target: Message) => {
@@ -517,7 +518,6 @@ export default function DashboardPage() {
       })
       const result = await response.json()
       if (!response.ok) throw new Error(result.error || 'Unable to add this reaction.')
-      await refreshChatMessages()
     } catch (reactionError) {
       setError(reactionError instanceof Error ? reactionError.message : 'Unable to add this reaction.')
       try {
