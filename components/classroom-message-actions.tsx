@@ -1,6 +1,6 @@
 "use client"
 
-import { useLayoutEffect, useRef, useState } from "react"
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { ChevronDown, MessageSquareReply, Pencil, Pin, Trash2 } from "lucide-react"
 
 const quickReactions = ["👍", "😂", "🔥", "🙏"]
@@ -64,6 +64,27 @@ export function ClassroomMessageActions({
       window.removeEventListener("scroll", positionMenu, true)
     }
   }, [open])
+
+  useEffect(() => {
+    if (!open) return
+
+    const closeOnOutsidePointer = (event: PointerEvent) => {
+      const target = event.target
+      if (!(target instanceof Node)) return
+      if (triggerRef.current?.contains(target) || menuRef.current?.contains(target)) return
+      onToggle()
+    }
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onToggle()
+    }
+
+    document.addEventListener("pointerdown", closeOnOutsidePointer)
+    document.addEventListener("keydown", closeOnEscape)
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsidePointer)
+      document.removeEventListener("keydown", closeOnEscape)
+    }
+  }, [onToggle, open])
 
   return (
     <div className="absolute right-1 top-1 z-20 opacity-100 transition focus-within:opacity-100">
