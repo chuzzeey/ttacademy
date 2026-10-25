@@ -2,7 +2,7 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { LoaderCircle, LogOut, Menu, Moon, Paperclip, Send, Smile, Sun, Users, X, Pin } from "lucide-react"
+import { LoaderCircle, LogOut, Menu, Moon, Paperclip, Send, Smile, Sun, Users, X, Pin, Trash2 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { COURSE_CATALOG } from "@/lib/course-catalog"
 import { ClassroomAttachment } from "@/components/classroom-attachment"
@@ -79,6 +79,8 @@ export default function AdminClassroomPage() {
   const [showClassMenu, setShowClassMenu] = useState(false)
   const [showSignoutConfirm, setShowSignoutConfirm] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
+  const [showClearChatConfirm, setShowClearChatConfirm] = useState(false)
+  const [clearingChat, setClearingChat] = useState(false)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const draftRef = useRef<HTMLTextAreaElement>(null)
@@ -212,6 +214,14 @@ export default function AdminClassroomPage() {
           setMessages((existing) => existing.map((message) => message.id === updated.id
             ? { ...message, ...updated }
             : message))
+        })
+        .on("postgres_changes", {
+          event: "DELETE",
+          schema: "public",
+          table: "classroom_messages",
+        }, (payload) => {
+          const deletedId = (payload.old as { id?: string }).id
+          if (deletedId) setMessages((existing) => existing.filter((message) => message.id !== deletedId))
         })
         .on("postgres_changes", {
           event: "*",
@@ -453,6 +463,32 @@ export default function AdminClassroomPage() {
     }
   }
 
+  const clearClassChat = async () => {
+    setClearingChat(true)
+    setError("")
+    try {
+      const response = await fetch("/api/messages/clear", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ course: courseSlug }),
+      })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result.error || "Unable to clear this classroom's chat.")
+      setMessages([])
+      setDraft("")
+      setReplyingTo(null)
+      setEditingMessageId(null)
+      setFile(null)
+      if (fileRef.current) fileRef.current.value = ""
+      setShowClearChatConfirm(false)
+      setShowClassMenu(false)
+    } catch (clearError) {
+      setError(clearError instanceof Error ? clearError.message : "Unable to clear this classroom's chat.")
+    } finally {
+      setClearingChat(false)
+    }
+  }
+
   if (!course) return null
   const palette = dark
     ? { page: "bg-[#0b141a] text-[#e9edef]", panel: "bg-[#202c33]", border: "border-[#2a3942]", muted: "text-[#aebac1]", bubble: "bg-[#202c33]" }
@@ -549,6 +585,9 @@ export default function AdminClassroomPage() {
               {dark ? <Sun aria-hidden="true" className="h-4 w-4" /> : <Moon aria-hidden="true" className="h-4 w-4" />}
               Switch to {dark ? "light" : "dark"} mode
             </button>
+            {role === "admin" && <button type="button" onClick={() => { setShowClassMenu(false); setShowClearChatConfirm(true) }} className="flex min-h-12 items-center gap-3 rounded-xl px-3 text-left text-sm text-rose-600 hover:bg-rose-50">
+              <Trash2 aria-hidden="true" className="h-4 w-4" /> Clear all chat history
+            </button>}
             <div className={`mt-auto border-t pt-3 ${palette.border}`}>
               <button type="button" onClick={() => void leaveClass()} className={`flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-black/5 ${palette.muted}`}>
                 <Users aria-hidden="true" className="h-4 w-4" /> Exit class
@@ -588,6 +627,26 @@ export default function AdminClassroomPage() {
             <div className="mt-5 flex justify-end gap-2">
               <button type="button" disabled={signingOut} onClick={() => setShowSignoutConfirm(false)} className={`min-h-10 rounded-xl px-4 text-sm ${palette.muted}`}>Cancel</button>
               <button type="button" disabled={signingOut} onClick={() => void signOut()} className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-rose-600 px-4 text-sm font-semibold text-white disabled:opacity-60">{signingOut && <LoaderCircle className="h-4 w-4 animate-spin" />}Sign out</button>
+            </div>
+          </section>
+        </div>
+      )}
+      {showClearChatConfirm && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/55 p-4" role="presentation">
+          <section role="alertdialog" aria-modal="true" aria-labelledby="clear-chat-title" aria-describedby="clear-chat-description" className={`w-full max-w-md rounded-2xl p-5 shadow-2xl ${palette.panel}`}>
+            <div className="flex items-start gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-700"><Trash2 aria-hidden="true" className="h-5 w-5" /></span>
+              <div>
+                <h2 id="clear-chat-title" className="text-base font-semibold">Permanently clear {course.title} chat?</h2>
+                <p id="clear-chat-description" className={`mt-2 text-sm ${palette.muted}`}>This deletes every message and reaction for this class from the database, including messages from students and staff. Attached chat files will also be removed. This cannot be undone.</p>
+              </div>
+            </div>
+            <div className="mt-5 flex flex-col-reverse justify-end gap-2 sm:flex-row">
+              <button type="button" disabled={clearingChat} onClick={() => setShowClearChatConfirm(false)} className={`min-h-10 rounded-xl px-4 text-sm ${palette.muted}`}>Cancel</button>
+              <button type="button" disabled={clearingChat} onClick={() => void clearClassChat()} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 text-sm font-semibold text-white hover:bg-rose-700 disabled:opacity-60">
+                {clearingChat && <LoaderCircle className="h-4 w-4 animate-spin" />}
+                {clearingChat ? "Clearing chat…" : "Delete all chat history"}
+              </button>
             </div>
           </section>
         </div>
