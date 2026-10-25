@@ -11,6 +11,8 @@ import { ClassroomMessageActions, MessageReactionList } from "@/components/class
 import { useAdminTheme } from "@/app/dashboard/components/dashboard/admin-theme-provider"
 import { announceClassroomJoin, announceClassroomLeave } from "@/lib/classroom-presence-announcements"
 import { toggleClassroomReaction } from "@/lib/classroom-reactions"
+import { useClassroomChatScroll } from "@/lib/hooks/use-classroom-chat-scroll"
+import { ClassroomNewMessagesButton } from "@/components/classroom-new-messages-button"
 
 type ChatMessage = {
   id: string
@@ -80,6 +82,12 @@ export default function AdminClassroomPage() {
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const draftRef = useRef<HTMLTextAreaElement>(null)
+  const { newMessageCount, scrollToLatest } = useClassroomChatScroll(
+    messages,
+    messagesContainerRef,
+    !loading,
+    (message) => message.sender_user_id === userId,
+  )
 
   const loadMessages = useCallback(async (viewerId: string) => {
     const { data, error: queryError } = await supabase
@@ -246,14 +254,6 @@ export default function AdminClassroomPage() {
     }
   }, [course, courseSlug, loadMessages, router, supabase])
 
-  useEffect(() => {
-    const messagesContainer = messagesContainerRef.current
-    messagesContainer?.scrollTo({
-      top: messagesContainer.scrollHeight,
-      behavior: "smooth",
-    })
-  }, [messages])
-
   const appendEmoji = (emoji: string) => {
     const input = draftRef.current
     const start = input?.selectionStart ?? draft.length
@@ -338,6 +338,8 @@ export default function AdminClassroomPage() {
         if (!response.ok) throw new Error(result.error || "Unable to edit this message.")
         setEditingMessageId(null)
         setDraft("")
+        setReplyingTo(null)
+        setOpenMessageActionsId(null)
         await loadMessages(userId)
       } catch (editError) {
         setError(editError instanceof Error ? editError.message : "Unable to edit this message.")
@@ -519,6 +521,7 @@ export default function AdminClassroomPage() {
             )
           })}
         </div>
+        <ClassroomNewMessagesButton count={newMessageCount} dark={dark} onClick={() => scrollToLatest()} />
         <form onSubmit={(event) => void send(event)} className={`relative shrink-0 border-t p-3 sm:px-6 ${palette.panel} ${palette.border}`}>
           {showEmoji && <div className="absolute bottom-[calc(100%+0.5rem)] right-3 z-50 w-[min(22rem,calc(100vw-1.5rem))]"><ClassroomEmojiPicker dark={dark} onSelect={(emoji) => { appendEmoji(emoji); setShowEmoji(false) }} /></div>}
           {(replyingTo || editingMessageId) && <div className={`mb-2 flex items-start gap-3 rounded-xl border-l-4 px-3 py-2 ${dark ? "border-emerald-400 bg-[#111b21]" : "border-emerald-700 bg-white"}`}><div className="min-w-0 flex-1"><p className="text-xs font-semibold text-emerald-700">{editingMessageId ? "Editing your message" : `Replying to ${replyingTo?.sender_name ?? "class member"}`}</p><p className={`mt-0.5 line-clamp-2 text-xs ${palette.muted}`}>{editingMessageId ? "Update your message and save." : replyingTo?.content}</p></div><button type="button" aria-label="Cancel reply or edit" onClick={() => { setReplyingTo(null); setEditingMessageId(null); setDraft("") }} className="rounded-lg p-1"><X className="h-4 w-4" /></button></div>}

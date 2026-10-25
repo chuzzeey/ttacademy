@@ -15,6 +15,8 @@ import { useClassroomTheme } from '@/lib/hooks/use-classroom-theme'
 import { mapClassroomMessage, type ClassroomMessageRecord } from '@/lib/classroom-chat'
 import { announceClassroomJoin, announceClassroomLeave } from '@/lib/classroom-presence-announcements'
 import { toggleClassroomReaction } from '@/lib/classroom-reactions'
+import { useClassroomChatScroll } from '@/lib/hooks/use-classroom-chat-scroll'
+import { ClassroomNewMessagesButton } from '@/components/classroom-new-messages-button'
 
 type DbMessage = ClassroomMessageRecord
 
@@ -54,7 +56,7 @@ export default function DashboardPage() {
   const [error, setError] = useState('')
   const [isSending, setIsSending] = useState(false)
   const [showEmoji, setShowEmoji] = useState(false)
-  const chatEndRef = useRef<HTMLDivElement>(null)
+  const chatScrollRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const processedMessagesRef = useRef<Set<string>>(new Set())
@@ -66,6 +68,12 @@ export default function DashboardPage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [showMembers, setShowMembers] = useState(false)
   const { dark, setDark } = useClassroomTheme(courseSlug, currentUserId)
+  const { newMessageCount, scrollToLatest } = useClassroomChatScroll(
+    messages,
+    chatScrollRef,
+    !loadingMessages,
+    (item) => item.sender === 'me',
+  )
 
   // Let longer messages expand while keeping the composer bounded.
   const autoResizeTextarea = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -375,11 +383,6 @@ export default function DashboardPage() {
       })
     }
   }, [messages.length])
-
-  // Auto scroll to bottom on new messages
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
 
   const getCourseIcon = (sizeClass: string = 'w-5 h-5') => {
     const iconMap: Record<string, React.ReactNode> = {
@@ -700,6 +703,7 @@ export default function DashboardPage() {
             {/* Messages Area */}
             <div 
               data-lenis-prevent=""
+              ref={chatScrollRef}
               className="classroom-chat-messages px-3 py-3 sm:px-4"
               style={{
                 backgroundColor: dark ? "#0b141a" : "#efeae2",
@@ -763,10 +767,11 @@ export default function DashboardPage() {
                   </div>
                 )}
 
-                <div ref={chatEndRef} />
                 <div className="h-8" />
               </div>
             </div>
+
+            <ClassroomNewMessagesButton count={newMessageCount} dark={dark} onClick={() => scrollToLatest()} />
 
             {/* Message Input Area */}
             <div className={`${dark ? 'bg-[#202c33]' : 'bg-[#F0F2F5]'} px-3 py-2 sm:px-4 shrink-0 z-10 mb-20`}>

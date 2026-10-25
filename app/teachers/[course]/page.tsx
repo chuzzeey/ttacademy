@@ -11,6 +11,8 @@ import { useClassroomTheme } from '@/lib/hooks/use-classroom-theme'
 import { mapClassroomMessage, type ClassroomMessageRecord } from '@/lib/classroom-chat'
 import { announceClassroomJoin, announceClassroomLeave } from '@/lib/classroom-presence-announcements'
 import { toggleClassroomReaction } from '@/lib/classroom-reactions'
+import { useClassroomChatScroll } from '@/lib/hooks/use-classroom-chat-scroll'
+import { ClassroomNewMessagesButton } from '@/components/classroom-new-messages-button'
 
 type DbMessage = ClassroomMessageRecord
 
@@ -105,9 +107,15 @@ export default function TeacherCoursePage() {
   const [isTyping, setIsTyping] = useState(false)
   const [showEmoji, setShowEmoji] = useState(false)
   const [loadingHistory, setLoadingHistory] = useState(true)
-  const chatEndRef = useRef<HTMLDivElement>(null)
+  const chatScrollRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const { newMessageCount, scrollToLatest } = useClassroomChatScroll(
+    messages,
+    chatScrollRef,
+    !loadingHistory,
+    (item) => item.sender === 'me',
+  )
 
   // Auto-resize textarea
   const autoResizeTextarea = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -437,11 +445,6 @@ export default function TeacherCoursePage() {
     }
   }, [params.course])
 
-  // Auto scroll to bottom on new messages
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
-
   if (!course) {
     return (
       <main className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -747,6 +750,7 @@ export default function TeacherCoursePage() {
         {/* Chat Messages */}
         <div
           data-lenis-prevent=""
+          ref={chatScrollRef}
           className="classroom-chat-messages px-3 py-3 sm:px-4 space-y-1"
           style={{
             backgroundColor: dark ? "#0b141a" : "#efeae2",
@@ -813,8 +817,9 @@ export default function TeacherCoursePage() {
             </motion.div>
           )}
 
-          <div ref={chatEndRef} />
         </div>
+
+        <ClassroomNewMessagesButton count={newMessageCount} dark={dark} onClick={() => scrollToLatest()} />
 
         {/* Message Input Area */}
         <div className={`${dark ? 'bg-[#202c33]' : 'bg-[#F0F2F5]'} px-3 py-2 sm:px-4 shrink-0 z-10`}>
