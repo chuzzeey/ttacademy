@@ -2,11 +2,10 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import Image from 'next/image'
 import {
-  Menu, PanelLeftClose, PanelLeftOpen, GraduationCap,
+  GraduationCap,
   Code, Palette, Globe, Database, PieChart, Brain, Shield, Lock,
-  Send, Smile, Megaphone, AlertTriangle, Paperclip, Moon, Sun, Users, X
+  Send, Smile, Megaphone, AlertTriangle, Paperclip, Moon, Sun, Users, X, LogOut
 } from 'lucide-react'
 import { getCourseData } from '@/lib/mock-data'
 import { createClient } from '@/lib/supabase/client'
@@ -44,11 +43,9 @@ export default function DashboardPage() {
   const courseData = getCourseData(courseSlug)
   const dashboard = courseData.dashboard
 
-  const [showProfileDropdown, setShowProfileDropdown] = useState(false)
   const [showLogoutModal, setShowLogoutModal] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [loadingMessages, setLoadingMessages] = useState(true)
-  const [desktopChatListOpen, setDesktopChatListOpen] = useState(true)
   const [message, setMessage] = useState('')
   const [replyingTo, setReplyingTo] = useState<Message | null>(null)
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null)
@@ -150,7 +147,6 @@ export default function DashboardPage() {
   }, [courseSlug])
 
   const studentName = studentData?.name || dashboard.profile.name || 'Student'
-  const studentAvatar = studentData?.avatar || dashboard.profile.avatar
 
   // Auth state listener - redirect to login if signed out
   useEffect(() => {
@@ -430,7 +426,6 @@ export default function DashboardPage() {
       }
       await supabase.auth.signOut()
       setShowLogoutModal(false)
-      setShowProfileDropdown(false)
       router.push(`/classroom/${courseSlug}/login`)
     } catch (err) {
       console.error('Logout error:', err)
@@ -662,35 +657,6 @@ export default function DashboardPage() {
       <div className="flex-1 flex flex-col w-full min-w-0 h-full min-h-0">
         
         <div className="flex flex-1 h-full min-h-0">
-          <aside className={`${desktopChatListOpen ? 'md:w-72' : 'md:w-[76px]'} hidden md:flex shrink-0 flex-col border-r transition-[width] duration-200 ${dark ? 'border-[#2a3942] bg-[#111b21]' : 'border-gray-200 bg-white'}`}>
-            <div className={`flex min-h-16 items-center gap-3 border-b px-3 ${dark ? 'border-[#2a3942]' : 'border-gray-200'}`}>
-              {desktopChatListOpen && (
-                <>
-                  <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-gray-200">
-                    <Image src={studentAvatar} alt="" width={40} height={40} className="h-full w-full object-cover" />
-                  </div>
-                  <p className={`min-w-0 flex-1 truncate text-sm font-semibold ${dark ? 'text-[#e9edef]' : 'text-[#111b21]'}`}>{studentName}</p>
-                </>
-              )}
-              <button
-                type="button"
-                onClick={() => setDesktopChatListOpen((open) => !open)}
-                aria-label={desktopChatListOpen ? 'Collapse chat sidebar' : 'Expand chat sidebar'}
-                title={desktopChatListOpen ? 'Collapse chat sidebar' : 'Expand chat sidebar'}
-                className={`hidden md:flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${dark ? 'text-[#aebac1] hover:bg-[#2a3942]' : 'text-[#667781] hover:bg-gray-100'}`}
-              >
-                {desktopChatListOpen ? <PanelLeftClose className="h-5 w-5" /> : <PanelLeftOpen className="h-5 w-5" />}
-              </button>
-            </div>
-            <button
-              type="button"
-              title={`${courseData.title} Classroom`}
-              className={`mx-2 mt-3 flex min-h-14 items-center gap-3 rounded-xl px-3 text-left ${desktopChatListOpen ? '' : 'justify-center'} ${dark ? 'bg-[#202c33]' : 'bg-[#f0f2f5]'}`}
-            >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#008069]/10 text-sm font-bold text-[#008069]">{courseData.title.charAt(0)}</span>
-              {desktopChatListOpen && <span className={`min-w-0 truncate text-sm font-medium ${dark ? 'text-[#e9edef]' : 'text-[#111b21]'}`}>{courseData.title} Classroom</span>}
-            </button>
-          </aside>
           <div className="flex flex-1 flex-col min-w-0 min-h-0">
             
             {/* Chat Header */}
@@ -702,6 +668,7 @@ export default function DashboardPage() {
                 <h1 className={`text-[16px] font-semibold ${dark ? 'text-[#e9edef]' : 'text-[#111B21]'} leading-tight truncate`}>
                   {courseData.title} Classroom
                 </h1>
+                <p className={`truncate text-[11px] ${dark ? 'text-[#aebac1]' : 'text-[#667781]'}`}>{studentName}</p>
                 <button type="button" onClick={() => setShowMembers(true)} className={`text-left text-[13px] ${dark ? 'text-[#aebac1]' : 'text-[#667781]'} leading-relaxed inline-flex items-center gap-1.5 hover:underline`}>
                   <span className="w-2 h-2 bg-green-500 rounded-full shrink-0"></span>
                   Class group · {onlineCount} online · See members
@@ -718,40 +685,15 @@ export default function DashboardPage() {
                 >
                   {dark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
                 </button>
-                <div className="relative">
-                  <button
-                    onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${dark ? 'text-[#aebac1] hover:bg-[#2a3942]' : 'text-gray-500 hover:bg-gray-200 hover:text-gray-700'}`}
-                  >
-                    <Menu className="w-5 h-5" />
-                  </button>
-                  {showProfileDropdown && (
-                    <>
-                      <button type="button" aria-label="Close student menu" onClick={() => setShowProfileDropdown(false)} className="fixed inset-0 z-40 bg-black/35" />
-                      <aside aria-label="Student classroom menu" className={`fixed right-0 top-0 z-50 flex h-dvh w-[min(20rem,88vw)] flex-col border-l shadow-2xl ${dark ? 'border-[#2a3942] bg-[#202c33]' : 'border-gray-200 bg-white'}`}>
-                        <div className={`flex items-center justify-between border-b px-5 py-4 ${dark ? 'border-[#2a3942]' : 'border-gray-200'}`}>
-                          <div className="flex min-w-0 items-center gap-3">
-                            <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-gray-200">
-                              <Image src={studentAvatar} alt="" width={40} height={40} className="h-full w-full object-cover" />
-                            </div>
-                            <div className="min-w-0">
-                              <p className={`truncate text-sm font-semibold ${dark ? 'text-[#e9edef]' : 'text-[#111b21]'}`}>{studentName}</p>
-                              <p className={`text-xs ${dark ? 'text-[#aebac1]' : 'text-[#667781]'}`}>Student</p>
-                            </div>
-                          </div>
-                          <button type="button" aria-label="Close student menu" onClick={() => setShowProfileDropdown(false)} className={`rounded-lg p-2 ${dark ? 'text-[#aebac1] hover:bg-[#2a3942]' : 'text-[#667781] hover:bg-gray-100'}`}><X className="h-4 w-4" /></button>
-                        </div>
-                        <div className="p-3">
-                          <button onClick={() => { setShowMembers(true); setShowProfileDropdown(false) }} className={`flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-sm ${dark ? 'text-[#e9edef] hover:bg-[#2a3942]' : 'text-gray-700 hover:bg-gray-100'}`}><Users className="h-4 w-4" /> Class members · {onlineCount} online</button>
-                          <button onClick={() => setDark((value) => !value)} className={`flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-sm ${dark ? 'text-[#e9edef] hover:bg-[#2a3942]' : 'text-gray-700 hover:bg-gray-100'}`}>{dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />} Switch to {dark ? 'light' : 'dark'} mode</button>
-                        </div>
-                        <div className={`mt-auto border-t p-3 ${dark ? 'border-[#2a3942]' : 'border-gray-200'}`}>
-                          <button onClick={() => { setShowLogoutModal(true); setShowProfileDropdown(false) }} className={`flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-sm text-red-500 ${dark ? 'hover:bg-[#2a3942]' : 'hover:bg-gray-100'}`}>Exit class</button>
-                        </div>
-                      </aside>
-                    </>
-                  )}
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowLogoutModal(true)}
+                  aria-label="Exit class"
+                  title="Exit class"
+                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${dark ? 'text-rose-300 hover:bg-[#2a3942]' : 'text-rose-600 hover:bg-rose-50'}`}
+                >
+                  <LogOut className="h-5 w-5" />
+                </button>
               </div>
             </div>
 
