@@ -369,7 +369,7 @@ export default function ClassroomManagementPage() {
         </section>
 
         <section id="student-approvals" className="dashboard-card scroll-mt-24 rounded-2xl p-4 sm:p-6">
-          <div className="mb-4 flex items-start justify-between gap-3">
+          <div className="mb-4 flex flex-col items-start gap-2 sm:flex-row sm:justify-between sm:gap-3">
             <div>
               <h2 className="text-base font-semibold tracking-tight">Student approvals</h2>
               <p className="mt-1 text-xs text-muted-foreground">Check course and payment status before approving access.</p>
@@ -378,22 +378,25 @@ export default function ClassroomManagementPage() {
           </div>
           <div className="space-y-2">
             {students.length === 0 ? <p className="rounded-xl border border-dashed border-border/60 px-4 py-8 text-center text-xs text-muted-foreground">No student classroom records yet.</p> : students.map((entry) => (
-              <article key={entry.student_id} className="flex flex-col gap-3 rounded-xl border border-border/60 bg-background p-3.5">
+              <article key={entry.student_id} className="flex min-w-0 flex-col gap-3 rounded-xl border border-border/60 bg-background p-3.5 sm:p-4">
                 <div className="flex min-w-0 items-start gap-3">
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-700"><GraduationCap className="h-4 w-4" /></span>
                   <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="truncate text-sm font-semibold">{entry.student?.name || "Learner"}</p>
+                    <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                      <p className="min-w-0 break-words text-sm font-semibold">{entry.student?.name || "Learner"}</p>
                       <StatusBadge status={entry.student?.restricted ? "restricted" : entry.status} />
                     </div>
-                    <p className="mt-1 truncate text-xs text-muted-foreground">{courseTitle.get(entry.course_slug) ?? entry.course_slug} · {entry.student?.email ?? "No email"}</p>
-                    <span className="mt-2 inline-flex rounded-full bg-muted px-2.5 py-1 text-[10px] font-medium text-muted-foreground">{entry.student?.payment_status ?? "Payment not recorded"}</span>
+                    <p className="mt-2 break-words text-xs font-medium text-foreground">{courseTitle.get(entry.course_slug) ?? entry.course_slug}</p>
+                    <p className="mt-0.5 break-all text-xs text-muted-foreground">{entry.student?.email ?? "No email"}</p>
+                    <span className="mt-2 inline-flex max-w-full flex-wrap rounded-full bg-muted px-2.5 py-1 text-[10px] font-medium text-muted-foreground">
+                      Payment: {entry.student?.payment_status ?? "Payment not recorded"}
+                    </span>
                   </div>
                 </div>
-                <div className="flex flex-wrap justify-end gap-1.5 border-t border-border/60 pt-2">
-                  {entry.status !== "approved" && !entry.student?.restricted && <button type="button" disabled={Boolean(busyKey)} onClick={() => void postAction({ action: "update-status", type: "student", id: entry.student_id, status: "approved" }, `student-${entry.student_id}`)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl bg-emerald-700 px-3 text-xs font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-emerald-800 hover:shadow-md disabled:opacity-50"><Check aria-hidden="true" className="h-3.5 w-3.5" /> Approve</button>}
-                  {(entry.status === "restricted" || entry.student?.restricted) && <button type="button" disabled={Boolean(busyKey)} onClick={() => void postAction({ action: "restore-student", id: entry.student_id }, `student-${entry.student_id}`)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-border bg-background px-3 text-xs font-semibold text-foreground transition hover:bg-muted disabled:opacity-50"><UnlockKeyhole aria-hidden="true" className="h-3.5 w-3.5" /> Restore</button>}
-                  {entry.status !== "restricted" && <button type="button" disabled={Boolean(busyKey)} onClick={() => void postAction({ action: "update-status", type: "student", id: entry.student_id, status: "restricted" }, `student-${entry.student_id}`)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-rose-200/70 px-3 text-xs font-semibold text-rose-700 transition hover:bg-rose-50 disabled:opacity-50"><ShieldAlert aria-hidden="true" className="h-3.5 w-3.5" /> Restrict</button>}
+                <div className="flex flex-col gap-2 border-t border-border/60 pt-3 sm:flex-row sm:justify-end">
+                  {entry.status !== "approved" && !entry.student?.restricted && <button type="button" disabled={Boolean(busyKey)} onClick={() => void postAction({ action: "update-status", type: "student", id: entry.student_id, status: "approved" }, `student-${entry.student_id}`)} className="inline-flex min-h-10 w-full items-center justify-center gap-1.5 rounded-xl bg-emerald-700 px-3 text-xs font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-emerald-800 hover:shadow-md disabled:opacity-50 sm:w-auto"><Check aria-hidden="true" className="h-3.5 w-3.5" /> Approve</button>}
+                  {(entry.status === "restricted" || entry.student?.restricted) && <button type="button" disabled={Boolean(busyKey)} onClick={() => void postAction({ action: "restore-student", id: entry.student_id }, `student-${entry.student_id}`)} className="inline-flex min-h-10 w-full items-center justify-center gap-1.5 rounded-xl border border-border bg-background px-3 text-xs font-semibold text-foreground transition hover:bg-muted disabled:opacity-50 sm:w-auto"><UnlockKeyhole aria-hidden="true" className="h-3.5 w-3.5" /> Restore</button>}
+                  {entry.status !== "restricted" && <button type="button" disabled={Boolean(busyKey)} onClick={() => void postAction({ action: "update-status", type: "student", id: entry.student_id, status: "restricted" }, `student-${entry.student_id}`)} className="inline-flex min-h-10 w-full items-center justify-center gap-1.5 rounded-xl border border-rose-200/70 px-3 text-xs font-semibold text-rose-700 transition hover:bg-rose-50 disabled:opacity-50 sm:w-auto"><ShieldAlert aria-hidden="true" className="h-3.5 w-3.5" /> Restrict</button>}
                 </div>
               </article>
             ))}
