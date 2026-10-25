@@ -669,51 +669,53 @@ export default function TeacherCoursePage() {
               {/* Dropdown */}
               <AnimatePresence>
                 {showLogoutDropdown && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className={`absolute right-0 mt-2 w-64 rounded-xl shadow-lg overflow-hidden z-50 ${dark ? 'bg-[#202c33] text-[#e9edef]' : 'bg-white text-[#111b21]'}`}
-                  >
-                    {!confirmingLogout ? (
-                      <>
-                        <button onClick={() => { setShowMembers(true); closeMenu() }} className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${dark ? 'hover:bg-[#2a3942]' : 'hover:bg-gray-100'}`}>
-                          <Users className="w-4 h-4" /> Class members · {onlineCount} online
-                        </button>
-                        <button onClick={() => setDark((value) => !value)} className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${dark ? 'hover:bg-[#2a3942]' : 'hover:bg-gray-100'}`}>
-                          {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />} Switch to {dark ? 'light' : 'dark'} mode
-                        </button>
-                        <button
-                          onClick={() => setConfirmingLogout(true)}
-                          className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-600 transition-colors ${dark ? 'hover:bg-[#2a3942]' : 'hover:bg-red-50'}`}
-                        >
-                          <LogOut className="w-4 h-4" />
-                          <span>Exit class</span>
-                        </button>
-                      </>
-                    ) : (
-                      // Step 2: confirmation
-                      <div className="p-4">
-                        <p className={`text-sm font-medium mb-3 ${dark ? 'text-[#e9edef]' : 'text-[#111B21]'}`}>
-                          Are you sure you want to sign out and leave this classroom?
-                        </p>
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={handleLogout}
-                            className="flex-1 px-3 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition-colors"
-                          >
-                            Log out
+                  <>
+                    <button type="button" aria-label="Close classroom menu" onClick={closeMenu} className="fixed inset-0 z-40 cursor-default bg-black/20 backdrop-blur-sm" />
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className={`absolute right-0 z-50 mt-2 w-64 overflow-hidden rounded-xl shadow-lg ${dark ? 'bg-[#202c33] text-[#e9edef]' : 'bg-white text-[#111b21]'}`}
+                    >
+                      {!confirmingLogout ? (
+                        <>
+                          <button onClick={() => { setShowMembers(true); closeMenu() }} className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${dark ? 'hover:bg-[#2a3942]' : 'hover:bg-gray-100'}`}>
+                            <Users className="w-4 h-4" /> Class members · {onlineCount} online
+                          </button>
+                          <button onClick={() => setDark((value) => !value)} className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${dark ? 'hover:bg-[#2a3942]' : 'hover:bg-gray-100'}`}>
+                            {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />} Switch to {dark ? 'light' : 'dark'} mode
                           </button>
                           <button
-                            onClick={closeMenu}
-                            className={`flex-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${dark ? 'bg-[#2a3942] text-[#e9edef] hover:bg-[#354650]' : 'bg-gray-100 text-[#111B21] hover:bg-gray-200'}`}
+                            onClick={() => setConfirmingLogout(true)}
+                            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-600 transition-colors ${dark ? 'hover:bg-[#2a3942]' : 'hover:bg-red-50'}`}
                           >
-                            Cancel
+                            <LogOut className="w-4 h-4" />
+                            <span>Exit class</span>
                           </button>
+                        </>
+                      ) : (
+                        <div className="p-4">
+                          <p className={`text-sm font-medium mb-3 ${dark ? 'text-[#e9edef]' : 'text-[#111B21]'}`}>
+                            Are you sure you want to sign out and leave this classroom?
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={handleLogout}
+                              className="flex-1 px-3 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition-colors"
+                            >
+                              Log out
+                            </button>
+                            <button
+                              onClick={closeMenu}
+                              className={`flex-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${dark ? 'bg-[#2a3942] text-[#e9edef] hover:bg-[#354650]' : 'bg-gray-100 text-[#111B21] hover:bg-gray-200'}`}
+                            >
+                              Cancel
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </motion.div>
+                      )}
+                    </motion.div>
+                  </>
                 )}
               </AnimatePresence>
             </div>

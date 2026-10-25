@@ -664,7 +664,7 @@ export default function DashboardPage() {
           <div className="flex flex-1 flex-col min-w-0 min-h-0">
             
             {/* Chat Header */}
-            <div className={`${dark ? 'bg-[#202c33]' : 'bg-[#F0F2F5]'} px-4 py-2.5 flex items-center gap-3 shrink-0 z-10`}>
+            <div className={`${dark ? 'bg-[#202c33]' : 'bg-[#F0F2F5]'} px-4 py-2.5 flex items-center gap-3 shrink-0 z-10 ${showChatMenu ? 'relative z-[70]' : ''}`}>
               <div className={`w-10 h-10 rounded-full ${dark ? 'bg-[#2a3942]' : 'bg-gray-200'} flex items-center justify-center shrink-0`}>
                 {getCourseIcon('w-5 h-5')}
               </div>
@@ -690,8 +690,8 @@ export default function DashboardPage() {
                 </button>
                 {showChatMenu && (
                   <>
-                    <button type="button" aria-label="Close classroom menu" onClick={() => setShowChatMenu(false)} className="fixed inset-0 z-30 cursor-default" />
-                    <div className={`absolute right-0 top-full z-40 mt-2 w-64 overflow-hidden rounded-xl border shadow-xl ${dark ? 'border-[#354650] bg-[#202c33] text-[#e9edef]' : 'border-gray-200 bg-white text-[#111b21]'}`}>
+                    <button type="button" aria-label="Close classroom menu" onClick={() => setShowChatMenu(false)} className="fixed inset-0 z-[60] cursor-default bg-black/15 backdrop-blur-sm" />
+                    <div className={`absolute right-0 top-full z-[80] mt-2 w-64 overflow-hidden rounded-xl border shadow-xl ${dark ? 'border-[#354650] bg-[#202c33] text-[#e9edef]' : 'border-gray-200 bg-white text-[#111b21]'}`}>
                       <p className={`border-b px-4 py-3 text-xs font-semibold ${dark ? 'border-[#354650] text-[#aebac1]' : 'border-gray-100 text-[#667781]'}`}>{studentName}</p>
                       <button type="button" onClick={() => { setShowMembers(true); setShowChatMenu(false) }} className={`flex min-h-12 w-full items-center gap-3 px-4 text-left text-sm ${dark ? 'hover:bg-[#2a3942]' : 'hover:bg-gray-50'}`}>
                         <Users className="h-4 w-4" /> Class members · {onlineCount} online

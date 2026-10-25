@@ -574,8 +574,8 @@ export default function AdminClassroomPage() {
       </div>
       {showClassMenu && (
         <>
-          <button type="button" aria-label="Close classroom menu" onClick={() => setShowClassMenu(false)} className="fixed inset-0 z-30 bg-black/25" />
-          <aside aria-label="Classroom menu" className={`absolute right-0 top-16 z-40 flex h-[calc(100%-4rem)] w-[min(22rem,90vw)] flex-col border-l p-4 shadow-2xl ${palette.panel} ${palette.border}`}>
+          <button type="button" aria-label="Close classroom menu" onClick={() => setShowClassMenu(false)} className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm" />
+          <aside aria-label="Classroom menu" className={`absolute right-0 top-16 z-50 flex h-[calc(100%-4rem)] w-[min(22rem,90vw)] flex-col border-l p-4 shadow-2xl ${palette.panel} ${palette.border}`}>
             <p className="px-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-700">Classroom</p>
             <p className="mt-1 px-2 text-sm font-semibold">{course.title} group</p>
             <button type="button" onClick={() => { setShowMembers(true); setShowClassMenu(false) }} className={`mt-5 flex min-h-12 items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-black/5 ${palette.muted}`}>
