@@ -31,6 +31,7 @@ interface Message {
   replyToMessageId?: string
   replyTo?: { id: string; content: string; sender_name: string }
   editedAt?: string
+  isPinned?: boolean
   reactions?: Array<{ emoji: string; count: number; reacted: boolean }>
 }
 
@@ -361,7 +362,12 @@ export default function DashboardPage() {
       }, (payload) => {
         const updated = payload.new as DbMessage
         setMessages((previous) => previous.map((item) => item.id === updated.id
-          ? { ...item, text: updated.content, editedAt: updated.edited_at ?? undefined }
+          ? {
+            ...item,
+            text: updated.content,
+            editedAt: updated.edited_at ?? undefined,
+            isPinned: updated.is_pinned ?? false,
+          }
           : item))
       })
       .on('postgres_changes', {
@@ -901,9 +907,6 @@ export default function DashboardPage() {
                 <button type="button" onClick={() => fileInputRef.current?.click()} aria-label="Attach a file" className={`p-2 rounded-full ${dark ? 'hover:bg-[#2a3942] text-[#aebac1]' : 'hover:bg-gray-200 text-[#667781]'}`}>
                   <Paperclip className="h-5 w-5" />
                 </button>
-                <button type="button" onClick={() => setShowEmoji((visible) => !visible)} aria-label="Choose emoji" aria-expanded={showEmoji} className={`p-2 rounded-full ${dark ? 'hover:bg-[#2a3942] text-[#aebac1]' : 'hover:bg-gray-200 text-[#667781]'}`}>
-                  <Smile className="h-5 w-5" />
-                </button>
                 <div className={`flex-1 rounded-2xl px-4 py-2 flex items-end ${dark ? 'bg-[#111b21]' : 'bg-white'}`}>
                   <textarea
                     ref={textareaRef}
@@ -920,6 +923,9 @@ export default function DashboardPage() {
                     style={{ minHeight: '21px', maxHeight: '160px' }}
                   />
                 </div>
+                <button type="button" onClick={() => setShowEmoji((visible) => !visible)} aria-label="Open emoji picker" aria-expanded={showEmoji} title="Emoji" className={`rounded-full p-2.5 text-amber-500 transition-colors ${dark ? 'bg-[#2a3942] hover:bg-[#354650]' : 'bg-white hover:bg-amber-50'}`}>
+                  <Smile className="h-5 w-5" />
+                </button>
 
                 {message.trim() || selectedFile ? (
                   <button 

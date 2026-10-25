@@ -72,6 +72,7 @@ interface Message {
   replyToMessageId?: string
   replyTo?: { id: string; content: string; sender_name: string }
   editedAt?: string
+  isPinned?: boolean
   reactions?: Array<{ emoji: string; count: number; reacted: boolean }>
 }
 
@@ -96,6 +97,7 @@ export default function TeacherCoursePage() {
   const [onlineCount, setOnlineCount] = useState(1)
   const [onlineMembers, setOnlineMembers] = useState<Array<{ id: string; name: string; role: string }>>([])
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null)
   const [showMembers, setShowMembers] = useState(false)
   const [isTyping, setIsTyping] = useState(false)
   const [showEmoji, setShowEmoji] = useState(false)
@@ -231,6 +233,23 @@ export default function TeacherCoursePage() {
     }
   }
 
+  const togglePinnedMessage = async (target: Message) => {
+    try {
+      const response = await fetch('/api/messages/pin', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messageId: target.id, isPinned: !target.isPinned }),
+      })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result.error || 'Unable to update the pinned message.')
+      setMessages((previous) => previous.map((item) => item.id === target.id
+        ? { ...item, isPinned: result.data.is_pinned }
+        : item))
+    } catch (pinError) {
+      setError(pinError instanceof Error ? pinError.message : 'Unable to update the pinned message.')
+    }
+  }
+
   // Fetch existing messages from DB + setup realtime subscription
   useEffect(() => {
     const courseSlug = params.course as string
@@ -241,7 +260,14 @@ export default function TeacherCoursePage() {
     const fetchMessages = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser()
-        if (user) setCurrentUserId(user.id)
+        if (user) {
+          setCurrentUserId(user.id)
+          const { data: role, error: roleError } = await supabase.rpc('classroom_user_role', {
+            p_course_slug: courseSlug,
+          })
+          if (roleError) console.error('Could not load classroom role:', roleError)
+          else setCurrentUserRole(typeof role === 'string' ? role : null)
+        }
         const res = await fetch(`/api/messages/get?course=${courseSlug}`)
         if (res.ok) {
           const data = await res.json()
@@ -270,6 +296,11 @@ export default function TeacherCoursePage() {
       const { data: { user }, error: userError } = await supabase.auth.getUser()
       if (userError || !user || !active) return
       setCurrentUserId(user.id)
+      const { data: role, error: roleError } = await supabase.rpc('classroom_user_role', {
+        p_course_slug: courseSlug,
+      })
+      if (roleError) console.error('Could not load classroom role:', roleError)
+      else setCurrentUserRole(typeof role === 'string' ? role : null)
       const { data: memberName, error: memberNameError } = await supabase.rpc('classroom_user_name', {
         p_course_slug: courseSlug,
       })
@@ -340,7 +371,12 @@ export default function TeacherCoursePage() {
       }, (payload) => {
         const updated = payload.new as DbMessage
         setMessages((previous) => previous.map((item) => item.id === updated.id
-          ? { ...item, text: updated.content, editedAt: updated.edited_at ?? undefined }
+          ? {
+            ...item,
+            text: updated.content,
+            editedAt: updated.edited_at ?? undefined,
+            isPinned: updated.is_pinned ?? false,
+          }
           : item))
       })
       .on('postgres_changes', {
@@ -716,6 +752,8 @@ export default function TeacherCoursePage() {
                   onReply={() => beginReply(msg)}
                   onEdit={() => beginEdit(msg)}
                   onDelete={() => void deleteChatMessage(msg)}
+                  canPin={currentUserRole === 'admin' || currentUserRole === 'teacher'}
+                  onTogglePin={() => void togglePinnedMessage(msg)}
                   onReact={(emoji) => void reactToMessage(msg, emoji)}
                 />
               ))}
@@ -769,9 +807,6 @@ export default function TeacherCoursePage() {
             <button type="button" onClick={() => fileInputRef.current?.click()} aria-label="Attach a file" className={`p-2 rounded-full transition-colors shrink-0 ${dark ? 'hover:bg-[#2a3942]' : 'hover:bg-gray-200'}`}>
               <Paperclip className="w-6 h-6 text-[#8696A0]" />
             </button>
-            <button type="button" onClick={() => setShowEmoji((visible) => !visible)} aria-label="Choose emoji" aria-expanded={showEmoji} className={`p-2 rounded-full transition-colors shrink-0 ${dark ? 'hover:bg-[#2a3942]' : 'hover:bg-gray-200'}`}>
-              <Smile className="h-5 w-5 text-[#8696A0]" />
-            </button>
 
             <div className={`flex-1 rounded-2xl px-4 py-2 flex items-end ${dark ? 'bg-[#111b21]' : 'bg-white'}`}>
               <textarea
@@ -789,6 +824,9 @@ export default function TeacherCoursePage() {
                 style={{ minHeight: '21px', maxHeight: '160px' }}
               />
             </div>
+            <button type="button" onClick={() => setShowEmoji((visible) => !visible)} aria-label="Open emoji picker" aria-expanded={showEmoji} title="Emoji" className={`rounded-full p-2.5 text-amber-500 transition-colors shrink-0 ${dark ? 'bg-[#2a3942] hover:bg-[#354650]' : 'bg-white hover:bg-amber-50'}`}>
+              <Smile className="h-5 w-5" />
+            </button>
 
             {message.trim() || selectedFile ? (
               <button 

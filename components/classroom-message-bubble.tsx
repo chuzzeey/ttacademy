@@ -1,7 +1,7 @@
 "use client"
 
 import type { ReactNode } from "react"
-import { Check, CheckCheck, Clock } from "lucide-react"
+import { Check, CheckCheck, Clock, Pin } from "lucide-react"
 import { ClassroomAttachment } from "@/components/classroom-attachment"
 import { ClassroomMessageActions, MessageReactionList } from "@/components/classroom-message-actions"
 
@@ -17,6 +17,7 @@ export type ClassroomBubbleMessage = {
   replyToMessageId?: string
   replyTo?: { id: string; content: string; sender_name: string }
   editedAt?: string
+  isPinned?: boolean
   reactions?: Array<{ emoji: string; count: number; reacted: boolean }>
 }
 
@@ -33,6 +34,8 @@ type ClassroomMessageBubbleProps = {
   onReply: () => void
   onEdit: () => void
   onDelete: () => void
+  canPin?: boolean
+  onTogglePin?: () => void
   onReact: (emoji: string) => void
 }
 
@@ -49,6 +52,8 @@ export function ClassroomMessageBubble({
   onReply,
   onEdit,
   onDelete,
+  canPin = false,
+  onTogglePin,
   onReact,
 }: ClassroomMessageBubbleProps) {
   const canInteract = !isSystem && !message.id.startsWith("temp-")
@@ -79,8 +84,16 @@ export function ClassroomMessageBubble({
               onReply={onReply}
               onEdit={onEdit}
               onDelete={onDelete}
+              canPin={canPin}
+              isPinned={message.isPinned}
+              onTogglePin={onTogglePin}
               onReact={onReact}
             />
+          )}
+          {message.isPinned && (
+            <p className="mb-1 flex items-center gap-1 text-[10px] font-semibold text-amber-600">
+              <Pin className="h-3 w-3" /> Pinned by classroom staff
+            </p>
           )}
           {message.replyTo && (
             <div className={`mb-2 rounded-lg border-l-[3px] px-2.5 py-1.5 ${isMine ? "border-emerald-700/60 bg-black/[0.06]" : dark ? "border-emerald-400/70 bg-black/10" : "border-emerald-700/60 bg-emerald-50"}`}>

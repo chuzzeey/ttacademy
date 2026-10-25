@@ -12,6 +12,7 @@ export type ClassroomMessageRecord = {
   reply_to_message_id?: string | null
   reply_to?: { id: string; content: string; sender_name: string } | null
   edited_at?: string | null
+  is_pinned?: boolean
   reactions?: Array<{ emoji: string; count: number; reacted: boolean }>
 }
 
@@ -41,6 +42,7 @@ export function mapClassroomMessage(
     replyToMessageId: message.reply_to_message_id ?? undefined,
     replyTo: message.reply_to ?? undefined,
     editedAt: message.edited_at ?? undefined,
+    isPinned: message.is_pinned ?? false,
     reactions: message.reactions ?? [],
   }
 }

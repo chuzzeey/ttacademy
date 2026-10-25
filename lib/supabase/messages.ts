@@ -79,7 +79,7 @@ export async function getMessages(course: string) {
   const { supabase, user } = await getClassroomIdentity(course)
   const { data, error } = await supabase
     .from("classroom_messages")
-    .select("id,sender_user_id,content,course_slug,sender_name,sender_role,created_at,attachment_path,attachment_name,attachment_mime_type,reply_to_message_id,edited_at")
+    .select("id,sender_user_id,content,course_slug,sender_name,sender_role,created_at,attachment_path,attachment_name,attachment_mime_type,reply_to_message_id,edited_at,is_pinned")
     .eq("course_slug", course)
     .order("created_at", { ascending: true })
     .limit(250)
@@ -170,6 +170,27 @@ export async function toggleMessageReaction(messageId: string, emoji: string) {
   return { active: true }
 }
 
+export async function setMessagePinned(messageId: string, isPinned: boolean) {
+  const { supabase, user, role, message } = await getClassroomIdentityForMessage(messageId)
+  if (role !== "admin" && role !== "teacher") {
+    throw new Error("Only classroom teachers and admins can pin messages.")
+  }
+
+  const { data, error } = await supabase
+    .from("classroom_messages")
+    .update({
+      is_pinned: isPinned,
+      pinned_at: isPinned ? new Date().toISOString() : null,
+      pinned_by: isPinned ? user.id : null,
+    })
+    .eq("id", messageId)
+    .eq("course_slug", message.course_slug)
+    .select("id,is_pinned,pinned_at,pinned_by")
+    .single()
+  if (error) throw error
+  return data
+}
+
 export async function deleteMessage(messageId: string) {
   const { supabase, user } = await getClassroomIdentityForMessage(messageId, true)
   const { error } = await supabase
@@ -194,6 +215,6 @@ async function getClassroomIdentityForMessage(messageId: string, requireOwner = 
   if (requireOwner && message.sender_user_id !== user.id) {
     throw new Error("You can only change your own classroom messages.")
   }
-  await getClassroomIdentity(message.course_slug)
-  return { supabase, user }
+  const identity = await getClassroomIdentity(message.course_slug)
+  return { supabase, user, role: identity.role, message }
 }
