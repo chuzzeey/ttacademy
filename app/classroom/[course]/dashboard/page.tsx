@@ -4,9 +4,9 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import {
-  Search, MoreVertical, GraduationCap,
+  Menu, PanelLeftClose, PanelLeftOpen, GraduationCap,
   Code, Palette, Globe, Database, PieChart, Brain, Shield, Lock,
-  ArrowLeft, Send, Smile, Megaphone, AlertTriangle, Paperclip, Moon, Sun, Users, X, PanelLeftClose, PanelLeftOpen
+  Send, Smile, Megaphone, AlertTriangle, Paperclip, Moon, Sun, Users, X
 } from 'lucide-react'
 import { getCourseData } from '@/lib/mock-data'
 import { createClient } from '@/lib/supabase/client'
@@ -48,7 +48,6 @@ export default function DashboardPage() {
   const [showLogoutModal, setShowLogoutModal] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [loadingMessages, setLoadingMessages] = useState(true)
-  const [showChatList, setShowChatList] = useState(false)
   const [desktopChatListOpen, setDesktopChatListOpen] = useState(true)
   const [message, setMessage] = useState('')
   const [replyingTo, setReplyingTo] = useState<Message | null>(null)
@@ -66,12 +65,10 @@ export default function DashboardPage() {
   const prevMessagesLengthRef = useRef(0)
   const [studentData, setStudentData] = useState<{ name: string; email: string; avatar: string } | null>(null)
   const isRestrictedRef = useRef(false)
-  const [unreadCount, setUnreadCount] = useState(0)
   const [onlineCount, setOnlineCount] = useState(1)
   const [onlineMembers, setOnlineMembers] = useState<Array<{ id: string; name: string; role: string }>>([])
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [showMembers, setShowMembers] = useState(false)
-  const lastSeenMessageIdRef = useRef<string | null>(null)
   const { dark, setDark } = useClassroomTheme(courseSlug, currentUserId)
 
   // Let longer messages expand while keeping the composer bounded.
@@ -121,43 +118,6 @@ export default function DashboardPage() {
       }
       return part
     })
-  }
-
-  // Load last seen message ID from localStorage on mount
-  useEffect(() => {
-    const stored = localStorage.getItem(`lastSeenMessage_${courseSlug}`)
-    if (stored) {
-      lastSeenMessageIdRef.current = stored
-    }
-  }, [courseSlug])
-
-  // Calculate unread count whenever messages change
-  useEffect(() => {
-    if (!lastSeenMessageIdRef.current || messages.length === 0) {
-      const count = messages.filter(m => m.sender === 'mentor').length
-      setUnreadCount(count)
-      return
-    }
-
-    const lastSeenIndex = messages.findIndex(m => m.id === lastSeenMessageIdRef.current)
-    
-    if (lastSeenIndex === -1) {
-      const count = messages.filter(m => m.sender === 'mentor').length
-      setUnreadCount(count)
-    } else {
-      const unread = messages.slice(lastSeenIndex + 1).filter(m => m.sender === 'mentor').length
-      setUnreadCount(unread)
-    }
-  }, [messages])
-
-  // Save last seen message ID when chat is opened
-  const markMessagesAsRead = () => {
-    if (messages.length > 0) {
-      const lastMessage = messages[messages.length - 1]
-      lastSeenMessageIdRef.current = lastMessage.id
-      localStorage.setItem(`lastSeenMessage_${courseSlug}`, lastMessage.id)
-      setUnreadCount(0)
-    }
   }
 
   // Fetch logged-in student data
@@ -477,13 +437,6 @@ export default function DashboardPage() {
     }
   }
 
-  const handleHelpSupport = () => {
-    const phone = '2348034826276'
-    const text = `Hello, I need help. Name: ${studentName}, Email: ${studentData?.email || 'N/A'}`
-    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank')
-    setShowProfileDropdown(false)
-  }
-
   const refreshChatMessages = async () => {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -699,10 +652,6 @@ export default function DashboardPage() {
     }
   })
 
-  const dummyChats = [
-    { name: `${courseData.title} Classroom`, lastMsg: messages.length > 0 ? messages[messages.length - 1].text : 'No messages yet', time: messages.length > 0 ? formatTime(messages[messages.length - 1].timestamp) : '', unread: unreadCount, active: true },
-  ]
-
   return (
     <div className={`h-dvh min-h-0 flex font-sans antialiased overflow-hidden ${dark ? 'bg-[#111b21] text-[#e9edef]' : 'bg-white text-[#111b21]'}`}
       style={{
@@ -713,75 +662,39 @@ export default function DashboardPage() {
       <div className="flex-1 flex flex-col w-full min-w-0 h-full min-h-0">
         
         <div className="flex flex-1 h-full min-h-0">
-          
-          {/* ===== CHAT LIST ===== */}
-          <div className={`${showChatList ? 'flex' : 'hidden'} ${desktopChatListOpen ? 'md:flex' : 'md:hidden'} flex-col w-full md:w-[380px] lg:w-[400px] xl:w-[420px] border-r ${dark ? 'border-[#2a3942] bg-[#111b21]' : 'border-gray-200 bg-white'} shrink-0`}>
-            
-            <div className={`${dark ? 'bg-[#202c33]' : 'bg-[#F0F2F5]'} px-4 py-3 flex items-center justify-between shrink-0`}>
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full overflow-hidden bg-gray-300 shrink-0">
-                  <Image
-                    src={studentAvatar}
-                    alt={studentName}
-                    width={36}
-                    height={36}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <p className={`text-[16px] font-semibold ${dark ? 'text-[#e9edef]' : 'text-[#111B21]'}`}>{studentName}</p>
-              </div>
-            
-            </div>
-
-            <div className={`${dark ? 'bg-[#111b21]' : 'bg-white'} px-3 py-2 shrink-0`}>
-              <div className={`${dark ? 'bg-[#202c33]' : 'bg-[#F0F2F5]'} rounded-lg flex items-center px-3 py-1.5 gap-3`}>
-                <Search className={`w-4 h-4 ${dark ? 'text-[#8696a0]' : 'text-[#667781]'}`} />
-                <input type="text" placeholder="Search or start new chat" className={`w-full bg-transparent text-sm ${dark ? 'text-[#e9edef]' : 'text-[#111B21]'} placeholder-[#667781] focus:outline-none`} />
-              </div>
-            </div>
-
-            <div className="flex-1 overflow-y-auto">
-              {dummyChats.map((chat) => (
-                <div
-                  key={chat.name}
-                  className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors border-b ${dark ? 'border-[#202c33] hover:bg-[#202c33]' : 'border-gray-100 hover:bg-[#F0F2F5]'} ${chat.active ? dark ? 'bg-[#202c33]' : 'bg-[#F0F2F5]' : ''}`}
-                  onClick={() => { markMessagesAsRead(); setShowChatList(false) }}
-                >
-                  <div className="w-[49px] h-[49px] rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-gray-200">
-                    <span className="text-[#25a889] text-xl font-bold">{courseData.title.charAt(0)}</span>
+          <aside className={`${desktopChatListOpen ? 'md:w-72' : 'md:w-[76px]'} hidden md:flex shrink-0 flex-col border-r transition-[width] duration-200 ${dark ? 'border-[#2a3942] bg-[#111b21]' : 'border-gray-200 bg-white'}`}>
+            <div className={`flex min-h-16 items-center gap-3 border-b px-3 ${dark ? 'border-[#2a3942]' : 'border-gray-200'}`}>
+              {desktopChatListOpen && (
+                <>
+                  <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-gray-200">
+                    <Image src={studentAvatar} alt="" width={40} height={40} className="h-full w-full object-cover" />
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between">
-                      <p className={`text-[16px] font-medium ${dark ? 'text-[#e9edef]' : 'text-[#111B21]'} truncate`}>{chat.name}</p>
-                      <span className="text-[12px] text-[#8696A0] shrink-0 ml-2">{chat.time}</span>
-                    </div>
-                    <div className="flex items-center justify-between mt-0.5">
-                      <p className={`text-[13px] ${dark ? 'text-[#8696a0]' : 'text-[#667781]'} truncate`}>{chat.lastMsg}</p>
-                      {chat.unread > 0 && (
-                        <span className="bg-[#008069] text-white text-[11px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center shrink-0 ml-2">
-                          {chat.unread}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
+                  <p className={`min-w-0 flex-1 truncate text-sm font-semibold ${dark ? 'text-[#e9edef]' : 'text-[#111b21]'}`}>{studentName}</p>
+                </>
+              )}
+              <button
+                type="button"
+                onClick={() => setDesktopChatListOpen((open) => !open)}
+                aria-label={desktopChatListOpen ? 'Collapse chat sidebar' : 'Expand chat sidebar'}
+                title={desktopChatListOpen ? 'Collapse chat sidebar' : 'Expand chat sidebar'}
+                className={`hidden md:flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${dark ? 'text-[#aebac1] hover:bg-[#2a3942]' : 'text-[#667781] hover:bg-gray-100'}`}
+              >
+                {desktopChatListOpen ? <PanelLeftClose className="h-5 w-5" /> : <PanelLeftOpen className="h-5 w-5" />}
+              </button>
             </div>
-          </div>
-
-          {/* ===== CHAT AREA ===== */}
-          <div className="flex-1 flex flex-col min-w-0 min-h-0">
+            <button
+              type="button"
+              title={`${courseData.title} Classroom`}
+              className={`mx-2 mt-3 flex min-h-14 items-center gap-3 rounded-xl px-3 text-left ${desktopChatListOpen ? '' : 'justify-center'} ${dark ? 'bg-[#202c33]' : 'bg-[#f0f2f5]'}`}
+            >
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#008069]/10 text-sm font-bold text-[#008069]">{courseData.title.charAt(0)}</span>
+              {desktopChatListOpen && <span className={`min-w-0 truncate text-sm font-medium ${dark ? 'text-[#e9edef]' : 'text-[#111b21]'}`}>{courseData.title} Classroom</span>}
+            </button>
+          </aside>
+          <div className="flex flex-1 flex-col min-w-0 min-h-0">
             
             {/* Chat Header */}
             <div className={`${dark ? 'bg-[#202c33]' : 'bg-[#F0F2F5]'} px-4 py-2.5 flex items-center gap-3 shrink-0 z-10`}>
-              {!showChatList && (
-                <button
-                  onClick={() => setShowChatList(true)}
-                  className={`md:hidden shrink-0 ${dark ? 'text-[#aebac1] hover:text-white' : 'text-gray-500 hover:text-gray-700'} transition-colors rounded-lg p-1`}
-                >
-                  <ArrowLeft className="w-5 h-5" />
-                </button>
-              )}
               <div className={`w-10 h-10 rounded-full ${dark ? 'bg-[#2a3942]' : 'bg-gray-200'} flex items-center justify-center shrink-0`}>
                 {getCourseIcon('w-5 h-5')}
               </div>
@@ -797,16 +710,6 @@ export default function DashboardPage() {
               <div className="flex items-center gap-1">
                 <button
                   type="button"
-                  onClick={() => setDesktopChatListOpen((open) => !open)}
-                  aria-label={desktopChatListOpen ? 'Collapse chat sidebar' : 'Expand chat sidebar'}
-                  aria-expanded={desktopChatListOpen}
-                  title={desktopChatListOpen ? 'Collapse chat sidebar' : 'Expand chat sidebar'}
-                  className={`hidden md:flex h-10 w-10 items-center justify-center rounded-full ${dark ? 'text-[#aebac1] hover:bg-[#2a3942]' : 'text-[#667781] hover:bg-gray-200'}`}
-                >
-                  {desktopChatListOpen ? <PanelLeftClose className="h-5 w-5" /> : <PanelLeftOpen className="h-5 w-5" />}
-                </button>
-                <button
-                  type="button"
                   onClick={() => setDark((value) => !value)}
                   disabled={!currentUserId}
                   aria-label={`Switch to ${dark ? 'light' : 'dark'} mode`}
@@ -820,22 +723,32 @@ export default function DashboardPage() {
                     onClick={() => setShowProfileDropdown(!showProfileDropdown)}
                     className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${dark ? 'text-[#aebac1] hover:bg-[#2a3942]' : 'text-gray-500 hover:bg-gray-200 hover:text-gray-700'}`}
                   >
-                    <MoreVertical className="w-5 h-5" />
+                    <Menu className="w-5 h-5" />
                   </button>
                   {showProfileDropdown && (
                     <>
-                      <div className="fixed inset-0 z-40 backdrop-blur-sm bg-black/10" onClick={() => setShowProfileDropdown(false)} />
-                      <div className={`absolute right-0 top-11 w-56 ${dark ? 'bg-[#202c33] border-[#2a3942]' : 'bg-white border-gray-200'} border rounded-xl shadow-2xl z-50 overflow-hidden`}>
-                        <div className="py-1">
-                          <button onClick={() => { setShowMembers(true); setShowProfileDropdown(false) }} className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors ${dark ? 'text-[#e9edef] hover:bg-[#2a3942]' : 'text-gray-700 hover:bg-gray-100'}`}><Users className="h-4 w-4" /> Class members · {onlineCount} online</button>
-                          <button onClick={() => setDark((value) => !value)} className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors ${dark ? 'text-[#e9edef] hover:bg-[#2a3942]' : 'text-gray-700 hover:bg-gray-100'}`}>{dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />} Switch to {dark ? 'light' : 'dark'} mode</button>
-                          <button onClick={() => router.push(`/classroom/${courseSlug}/dashboard/profile`)} className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors ${dark ? 'text-[#e9edef] hover:bg-[#2a3942]' : 'text-gray-700 hover:bg-gray-100'}`}>Profile Settings</button>
-                          <button onClick={handleHelpSupport} className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors ${dark ? 'text-[#e9edef] hover:bg-[#2a3942]' : 'text-gray-700 hover:bg-gray-100'}`}>Help & Support</button>
+                      <button type="button" aria-label="Close student menu" onClick={() => setShowProfileDropdown(false)} className="fixed inset-0 z-40 bg-black/35" />
+                      <aside aria-label="Student classroom menu" className={`fixed right-0 top-0 z-50 flex h-dvh w-[min(20rem,88vw)] flex-col border-l shadow-2xl ${dark ? 'border-[#2a3942] bg-[#202c33]' : 'border-gray-200 bg-white'}`}>
+                        <div className={`flex items-center justify-between border-b px-5 py-4 ${dark ? 'border-[#2a3942]' : 'border-gray-200'}`}>
+                          <div className="flex min-w-0 items-center gap-3">
+                            <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-gray-200">
+                              <Image src={studentAvatar} alt="" width={40} height={40} className="h-full w-full object-cover" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className={`truncate text-sm font-semibold ${dark ? 'text-[#e9edef]' : 'text-[#111b21]'}`}>{studentName}</p>
+                              <p className={`text-xs ${dark ? 'text-[#aebac1]' : 'text-[#667781]'}`}>Student</p>
+                            </div>
+                          </div>
+                          <button type="button" aria-label="Close student menu" onClick={() => setShowProfileDropdown(false)} className={`rounded-lg p-2 ${dark ? 'text-[#aebac1] hover:bg-[#2a3942]' : 'text-[#667781] hover:bg-gray-100'}`}><X className="h-4 w-4" /></button>
                         </div>
-                        <div className={`border-t ${dark ? 'border-[#2a3942]' : 'border-gray-200'}`}>
-                          <button onClick={() => { setShowLogoutModal(true); setShowProfileDropdown(false) }} className={`w-full flex items-center gap-3 px-4 py-3 text-sm text-red-500 transition-colors ${dark ? 'hover:bg-[#2a3942]' : 'hover:bg-gray-100'}`}>Exit class</button>
+                        <div className="p-3">
+                          <button onClick={() => { setShowMembers(true); setShowProfileDropdown(false) }} className={`flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-sm ${dark ? 'text-[#e9edef] hover:bg-[#2a3942]' : 'text-gray-700 hover:bg-gray-100'}`}><Users className="h-4 w-4" /> Class members · {onlineCount} online</button>
+                          <button onClick={() => setDark((value) => !value)} className={`flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-sm ${dark ? 'text-[#e9edef] hover:bg-[#2a3942]' : 'text-gray-700 hover:bg-gray-100'}`}>{dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />} Switch to {dark ? 'light' : 'dark'} mode</button>
                         </div>
-                      </div>
+                        <div className={`mt-auto border-t p-3 ${dark ? 'border-[#2a3942]' : 'border-gray-200'}`}>
+                          <button onClick={() => { setShowLogoutModal(true); setShowProfileDropdown(false) }} className={`flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-sm text-red-500 ${dark ? 'hover:bg-[#2a3942]' : 'hover:bg-gray-100'}`}>Exit class</button>
+                        </div>
+                      </aside>
                     </>
                   )}
                 </div>

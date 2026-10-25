@@ -2,7 +2,7 @@
 
 import { ChevronDown, MessageSquareReply, Pencil, Pin, Trash2 } from "lucide-react"
 
-const quickReactions = ["👍", "❤️", "😂", "😮", "😢", "🙏"]
+const quickReactions = ["👍", "😂", "🔥", "🙏"]
 
 type ClassroomMessageActionsProps = {
   open: boolean
