@@ -3,8 +3,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import {
-  GraduationCap,
-  Code, Palette, Globe, Database, PieChart, Brain, Shield, Lock,
   Send, Smile, Megaphone, AlertTriangle, Paperclip, Moon, Sun, Users, X, LogOut, Menu
 } from 'lucide-react'
 import { getCourseData } from '@/lib/mock-data'
@@ -17,6 +15,7 @@ import { announceClassroomJoin, announceClassroomLeave } from '@/lib/classroom-p
 import { toggleClassroomReaction } from '@/lib/classroom-reactions'
 import { useClassroomChatScroll } from '@/lib/hooks/use-classroom-chat-scroll'
 import { ClassroomNewMessagesButton } from '@/components/classroom-new-messages-button'
+import { ADMIN_EMAIL } from '@/lib/supabase/admin-access'
 
 type DbMessage = ClassroomMessageRecord
 
@@ -27,6 +26,7 @@ interface Message {
   status: 'sending' | 'sent' | 'delivered' | 'read'
   sender: 'me' | 'system' | 'mentor' | 'student'
   senderName?: string
+  senderRole?: 'admin' | 'teacher' | 'student'
   attachmentPath?: string
   attachmentName?: string
   attachmentMimeType?: string
@@ -385,34 +385,8 @@ export default function DashboardPage() {
     }
   }, [messages.length])
 
-  const getCourseIcon = (sizeClass: string = 'w-5 h-5') => {
-    const iconMap: Record<string, React.ReactNode> = {
-      'cybersecurity': <Shield className={`${sizeClass} text-[#008069]`} />,
-      'data-science': <Brain className={`${sizeClass} text-[#008069]`} />,
-      'frontend': <Code className={`${sizeClass} text-[#008069]`} />,
-      'backend': <Database className={`${sizeClass} text-[#008069]`} />,
-      'fullstack': <Globe className={`${sizeClass} text-[#008069]`} />,
-      'uiux': <Palette className={`${sizeClass} text-[#008069]`} />,
-      'graphic-design': <Palette className={`${sizeClass} text-[#008069]`} />,
-      'ethical-hacking': <Shield className={`${sizeClass} text-[#008069]`} />,
-    };
-    return iconMap[courseSlug] || <GraduationCap className={`${sizeClass} text-[#008069]`} />;
-  }
-
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-  }
-
-  const formatDateSeparator = (date: Date) => {
-    const now = new Date()
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    const msgDate = new Date(date.getFullYear(), date.getMonth(), date.getDate())
-    const diffDays = Math.floor((today.getTime() - msgDate.getTime()) / (1000 * 60 * 60 * 24))
-    
-    if (diffDays === 0) return 'TODAY'
-    if (diffDays === 1) return 'YESTERDAY'
-    if (diffDays < 7) return date.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase()
-    return date.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase()
   }
 
   const handleLogout = async () => {
@@ -638,19 +612,6 @@ export default function DashboardPage() {
     }
   }
 
-  // Group messages by date
-  const groupedMessages: { date: string; messages: Message[] }[] = []
-  let currentDate = ''
-  messages.forEach(msg => {
-    const dateStr = formatDateSeparator(msg.timestamp)
-    if (dateStr !== currentDate) {
-      currentDate = dateStr
-      groupedMessages.push({ date: dateStr, messages: [msg] })
-    } else {
-      groupedMessages[groupedMessages.length - 1].messages.push(msg)
-    }
-  })
-
   return (
     <div className={`h-dvh min-h-0 flex font-sans antialiased overflow-hidden ${dark ? 'bg-[#111b21] text-[#e9edef]' : 'bg-white text-[#111b21]'}`}
       style={{
@@ -664,19 +625,18 @@ export default function DashboardPage() {
           <div className="flex flex-1 flex-col min-w-0 min-h-0">
             
             {/* Chat Header */}
-            <div className={`${dark ? 'bg-[#202c33]' : 'bg-[#F0F2F5]'} px-4 py-2.5 flex items-center gap-3 shrink-0 z-10 ${showChatMenu ? 'relative z-[70]' : ''}`}>
-              <div className={`w-10 h-10 rounded-full ${dark ? 'bg-[#2a3942]' : 'bg-gray-200'} flex items-center justify-center shrink-0`}>
-                {getCourseIcon('w-5 h-5')}
-              </div>
-              <div className="min-w-0 flex-1">
-                <h1 className={`text-[16px] font-semibold ${dark ? 'text-[#e9edef]' : 'text-[#111B21]'} leading-tight truncate`}>
-                  {courseData.title} Classroom
-                </h1>
-                <p className={`truncate text-[11px] ${dark ? 'text-[#aebac1]' : 'text-[#667781]'}`}>{studentName}</p>
-                <button type="button" onClick={() => setShowMembers(true)} className={`text-left text-[13px] ${dark ? 'text-[#aebac1]' : 'text-[#667781]'} leading-relaxed inline-flex items-center gap-1.5 hover:underline`}>
-                  <span className="w-2 h-2 bg-green-500 rounded-full shrink-0"></span>
-                  Class group · {onlineCount} online · See members
-                </button>
+            <div className={`h-16 px-3 sm:px-5 flex items-center justify-between border-b shrink-0 z-10 ${showChatMenu ? 'relative z-[70]' : ''} ${dark ? 'bg-[#202c33] border-[#2a3942]' : 'bg-white border-slate-200'}`}>
+              <div className="flex min-w-0 items-center gap-3">
+                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${dark ? 'bg-[#005c4b] text-emerald-100' : 'bg-[#d9fdd3] text-emerald-800'}`}>
+                  <Users className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                  <h1 className={`truncate text-sm font-semibold ${dark ? 'text-[#e9edef]' : 'text-slate-900'}`}>{courseData.title} Classroom</h1>
+                  <button type="button" onClick={() => setShowMembers(true)} className={`mt-0.5 flex items-center gap-1.5 text-[11px] ${dark ? 'text-[#aebac1]' : 'text-slate-500'} hover:underline`}>
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    {onlineCount} online · View members
+                  </button>
+                </div>
               </div>
               <div className="relative">
                 <button
@@ -690,24 +650,29 @@ export default function DashboardPage() {
                 </button>
                 {showChatMenu && (
                   <>
-                    <button type="button" aria-label="Close classroom menu" onClick={() => setShowChatMenu(false)} className="fixed inset-0 z-[60] cursor-default bg-black/15 backdrop-blur-sm" />
-                    <div className={`absolute right-0 top-full z-[80] mt-2 w-64 overflow-hidden rounded-xl border shadow-xl ${dark ? 'border-[#354650] bg-[#202c33] text-[#e9edef]' : 'border-gray-200 bg-white text-[#111b21]'}`}>
-                      <p className={`border-b px-4 py-3 text-xs font-semibold ${dark ? 'border-[#354650] text-[#aebac1]' : 'border-gray-100 text-[#667781]'}`}>{studentName}</p>
-                      <button type="button" onClick={() => { setShowMembers(true); setShowChatMenu(false) }} className={`flex min-h-12 w-full items-center gap-3 px-4 text-left text-sm ${dark ? 'hover:bg-[#2a3942]' : 'hover:bg-gray-50'}`}>
-                        <Users className="h-4 w-4" /> Class members · {onlineCount} online
+                    <button type="button" aria-label="Close classroom menu" onClick={() => setShowChatMenu(false)} className="fixed inset-0 z-[60] bg-black/20 backdrop-blur-sm" />
+                    <aside aria-label="Classroom menu" className={`fixed right-0 top-16 z-[70] flex h-[calc(100%-4rem)] w-[min(22rem,90vw)] flex-col border-l p-4 shadow-2xl ${dark ? 'border-[#2a3942] bg-[#202c33] text-[#e9edef]' : 'border-slate-200 bg-white text-slate-900'}`}>
+                      <p className="px-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-700">Classroom</p>
+                      <p className="mt-1 px-2 text-sm font-semibold">{courseData.title} group</p>
+                      <p className={`mt-1 px-2 text-xs ${dark ? 'text-[#aebac1]' : 'text-slate-500'}`}>{studentName}</p>
+                      <button type="button" onClick={() => { setShowMembers(true); setShowChatMenu(false) }} className={`mt-5 flex min-h-12 items-center gap-3 rounded-xl px-3 text-left text-sm ${dark ? 'text-[#aebac1] hover:bg-[#2a3942]' : 'text-slate-500 hover:bg-slate-100'}`}>
+                        <Users className="h-4 w-4" /> Members · {onlineMembers.length} online
                       </button>
                       <button
                         type="button"
                         onClick={() => setDark((value) => !value)}
                         disabled={!currentUserId}
-                        className={`flex min-h-12 w-full items-center gap-3 px-4 text-left text-sm disabled:opacity-50 ${dark ? 'hover:bg-[#2a3942]' : 'hover:bg-gray-50'}`}
+                        className={`flex min-h-12 items-center gap-3 rounded-xl px-3 text-left text-sm disabled:opacity-50 ${dark ? 'text-[#aebac1] hover:bg-[#2a3942]' : 'text-slate-500 hover:bg-slate-100'}`}
                       >
-                        {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />} Switch to {dark ? 'light' : 'dark'} mode
+                        {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                        Switch to {dark ? 'light' : 'dark'} mode
                       </button>
-                      <button type="button" onClick={() => { setShowChatMenu(false); setShowLogoutModal(true) }} className={`flex min-h-12 w-full items-center gap-3 border-t px-4 text-left text-sm text-rose-600 ${dark ? 'border-[#354650] hover:bg-[#2a3942]' : 'border-gray-100 hover:bg-rose-50'}`}>
-                        <LogOut className="h-4 w-4" /> Sign out
-                      </button>
-                    </div>
+                      <div className={`mt-auto border-t pt-3 ${dark ? 'border-[#2a3942]' : 'border-slate-200'}`}>
+                        <button type="button" onClick={() => { setShowChatMenu(false); setShowLogoutModal(true) }} className="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-sm text-rose-600 hover:bg-rose-50">
+                          <LogOut className="h-4 w-4" /> Sign out
+                        </button>
+                      </div>
+                    </aside>
                   </>
                 )}
               </div>
@@ -717,7 +682,7 @@ export default function DashboardPage() {
             <div 
               data-lenis-prevent=""
               ref={chatScrollRef}
-              className="classroom-chat-messages px-3 py-3 sm:px-4"
+              className="classroom-chat-messages space-y-3 px-3 py-4 sm:px-6"
               style={{
                 backgroundColor: dark ? "#0b141a" : "#efeae2",
                 backgroundImage: `url("${dark
@@ -728,8 +693,6 @@ export default function DashboardPage() {
                 backgroundSize: "auto",
               }}
             >
-              <div className="max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto">
-                
                 {/* Loading */}
                 {loadingMessages && (
                   <div className="flex justify-center my-8">
@@ -740,35 +703,26 @@ export default function DashboardPage() {
                   </div>
                 )}
 
-                {/* Grouped Messages */}
-                {!loadingMessages && groupedMessages.map((group) => (
-                  <div key={group.date}>
-                    {/* Date Separator */}
-                    <div className="flex justify-center my-4">
-                      <span className={`${dark ? 'bg-[#182229] text-[#c1cbd1]' : 'bg-[#E1F3FB] text-[#54656F]'} text-[11px] font-medium px-3 py-1 rounded shadow-[0_1px_1px_rgba(0,0,0,0.06)]`}>
-                        {group.date}
-                      </span>
-                    </div>
-
-                    {group.messages.map((msg) => (
-                      <ClassroomMessageBubble
-                        key={msg.id}
-                        message={msg}
-                        isMine={msg.sender === 'me'}
-                        isSystem={msg.sender === 'system'}
-                        senderLabel={msg.sender === 'mentor' ? 'Teacher' : msg.sender === 'student' ? msg.senderName || 'Student' : undefined}
-                        time={formatTime(msg.timestamp)}
-                        content={renderMessageText(msg.text)}
-                        dark={dark}
-                        actionsOpen={openMessageActionsId === msg.id}
-                        onToggleActions={() => setOpenMessageActionsId((current) => current === msg.id ? null : msg.id)}
-                        onReply={() => beginReply(msg)}
-                        onEdit={() => beginEdit(msg)}
-                        onDelete={() => void deleteChatMessage(msg)}
-                        onReact={(emoji) => void reactToMessage(msg, emoji)}
-                      />
-                    ))}
-                  </div>
+                {!loadingMessages && messages.map((msg) => (
+                  <ClassroomMessageBubble
+                    key={msg.id}
+                    message={msg}
+                    isMine={msg.sender === 'me'}
+                    isSystem={msg.sender === 'system'}
+                    senderLabel={msg.sender !== 'me' && msg.sender !== 'system'
+                      ? msg.senderRole === 'admin' ? ADMIN_EMAIL : msg.senderName || 'Class member'
+                      : undefined}
+                    adminStyle
+                    time={formatTime(msg.timestamp)}
+                    content={renderMessageText(msg.text)}
+                    dark={dark}
+                    actionsOpen={openMessageActionsId === msg.id}
+                    onToggleActions={() => setOpenMessageActionsId((current) => current === msg.id ? null : msg.id)}
+                    onReply={() => beginReply(msg)}
+                    onEdit={() => beginEdit(msg)}
+                    onDelete={() => void deleteChatMessage(msg)}
+                    onReact={(emoji) => void reactToMessage(msg, emoji)}
+                  />
                 ))}
 
                 {!loadingMessages && messages.length === 0 && (
@@ -779,16 +733,13 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 )}
-
-                <div className="h-8" />
-              </div>
             </div>
 
             <ClassroomNewMessagesButton count={newMessageCount} dark={dark} onClick={() => scrollToLatest()} />
 
             {/* Message Input Area */}
-            <div className={`${dark ? 'bg-[#202c33]' : 'bg-[#F0F2F5]'} px-3 py-2 sm:px-4 shrink-0 z-10 mb-20`}>
-              {showEmoji && <div className="mb-2"><ClassroomEmojiPicker dark={dark} onSelect={appendEmoji} /></div>}
+            <form onSubmit={(event) => { event.preventDefault(); void handleSendMessage() }} className={`relative shrink-0 border-t p-3 sm:px-6 z-10 ${dark ? 'bg-[#202c33] border-[#2a3942]' : 'bg-white border-slate-200'}`}>
+              {showEmoji && <div className="absolute bottom-[calc(100%+0.5rem)] right-3 z-50 w-[min(22rem,calc(100vw-1.5rem))]"><ClassroomEmojiPicker dark={dark} onSelect={(emoji) => { appendEmoji(emoji); setShowEmoji(false) }} /></div>}
 
               {(replyingTo || editingMessageId) && (
                 <div className={`mb-2 flex items-start gap-3 rounded-xl border-l-4 px-3 py-2 ${dark ? 'border-emerald-400 bg-[#111b21] text-[#e9edef]' : 'border-emerald-700 bg-white text-[#111b21]'}`}>
@@ -806,18 +757,17 @@ export default function DashboardPage() {
                   <button type="button" onClick={() => { setSelectedFile(null); if (fileInputRef.current) fileInputRef.current.value = '' }} className="shrink-0 font-medium text-red-600">Remove</button>
                 </div>
               )}
-              <div className="flex items-end gap-1.5">
+              <div className="flex items-end gap-2">
                 <input
                   ref={fileInputRef}
                   type="file"
                   accept="image/jpeg,image/png,image/webp,application/pdf,text/plain"
-                  className="hidden"
+                  className="sr-only"
                   onChange={(event) => { setSelectedFile(event.target.files?.[0] ?? null); setError('') }}
                 />
-                <button type="button" onClick={() => fileInputRef.current?.click()} aria-label="Attach a file" className={`p-2 rounded-full ${dark ? 'hover:bg-[#2a3942] text-[#aebac1]' : 'hover:bg-gray-200 text-[#667781]'}`}>
+                <button type="button" onClick={() => fileInputRef.current?.click()} aria-label="Attach a file" className={`mb-0.5 rounded-xl p-2 ${dark ? 'text-[#aebac1] hover:bg-[#2a3942]' : 'text-slate-500 hover:bg-slate-100'}`}>
                   <Paperclip className="h-5 w-5" />
                 </button>
-                <div className={`flex-1 rounded-2xl px-4 py-2 flex items-end ${dark ? 'bg-[#111b21]' : 'bg-white'}`}>
                   <textarea
                     ref={textareaRef}
                     value={message}
@@ -827,35 +777,20 @@ export default function DashboardPage() {
                       autoResizeTextarea(e)
                     }}
                     onKeyDown={handleKeyDown}
-                    placeholder="Reply to your mentor..."
+                    placeholder={editingMessageId ? "Edit your message…" : replyingTo ? `Reply to ${replyingTo.senderName || 'class member'}…` : "Message the class…"}
                     rows={1}
-                    className={`w-full text-[16px] ${dark ? 'text-[#e9edef]' : 'text-[#111B21]'} placeholder-[#8696A0] bg-transparent focus:outline-none resize-none overflow-y-auto leading-[21px]`}
-                    style={{ minHeight: '21px', maxHeight: '160px' }}
+                    maxLength={5000}
+                    className={`max-h-32 min-h-11 flex-1 resize-y rounded-2xl border px-4 py-3 text-sm outline-none ${dark ? 'border-[#2a3942] bg-[#202c33] text-[#e9edef]' : 'border-slate-200 bg-white text-slate-900'}`}
                   />
-                </div>
-                <button type="button" onClick={() => setShowEmoji((visible) => !visible)} aria-label="Open emoji picker" aria-expanded={showEmoji} title="Emoji" className={`rounded-full p-2.5 text-amber-500 transition-colors ${dark ? 'bg-[#2a3942] hover:bg-[#354650]' : 'bg-white hover:bg-amber-50'}`}>
+                <button type="button" onClick={() => setShowEmoji((visible) => !visible)} aria-label="Open emoji picker" aria-expanded={showEmoji} title="Emoji" className={`mb-0.5 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-amber-500 ${dark ? 'bg-[#202c33] hover:bg-[#2a3942]' : 'bg-white hover:bg-amber-50'}`}>
                   <Smile className="h-5 w-5" />
                 </button>
-
-                {message.trim() || selectedFile ? (
-                  <button 
-                    onClick={handleSendMessage}
-                    disabled={isSending}
-                    className="p-2 rounded-full bg-[#008069] hover:bg-[#017561] transition-colors shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isSending ? (
-                      <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <Send className="w-6 h-6 text-white" fill="white" />
-                    )}
-                  </button>
-                ) : (
-                  <button className="p-2 rounded-full hover:bg-gray-200 transition-colors shrink-0">
-                    <Send className="w-6 h-6 text-[#8696A0]" />
-                  </button>
-                )}
+                <button type="submit" disabled={isSending || (!message.trim() && !selectedFile)} aria-label="Send message" className="mb-0.5 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-700 text-white hover:bg-emerald-800 disabled:opacity-50">
+                  {isSending ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> : <Send className="h-4 w-4" />}
+                </button>
               </div>
-            </div>
+              <p className={`mt-2 text-[10px] ${dark ? 'text-[#aebac1]' : 'text-slate-500'}`}>{studentName || 'Student'} · Attachments up to 10 MB</p>
+            </form>
 
           </div>
         </div>

@@ -36,6 +36,7 @@ export function mapClassroomMessage(
     sender,
     senderUserId: message.sender_user_id,
     senderName: message.sender_name,
+    senderRole: message.sender_role,
     attachmentPath: message.attachment_path ?? undefined,
     attachmentName: message.attachment_name ?? undefined,
     attachmentMimeType: message.attachment_mime_type ?? undefined,
