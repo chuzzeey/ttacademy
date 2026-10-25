@@ -108,7 +108,7 @@ export default function ClassroomPage() {
   )
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[#f5f7f5] text-slate-950">
+    <main className="relative isolate min-h-screen overflow-x-clip bg-[#f5f7f5] text-slate-950">
       <div aria-hidden="true" className="pointer-events-none absolute -right-36 top-24 h-96 w-96 rounded-full bg-emerald-300/20 blur-3xl" />
       <div aria-hidden="true" className="pointer-events-none absolute -left-40 top-[34rem] h-96 w-96 rounded-full bg-teal-200/25 blur-3xl" />
 
