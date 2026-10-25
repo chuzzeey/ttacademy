@@ -138,7 +138,7 @@ export default function StudentClassroomLoginPage() {
               <form onSubmit={(event) => void verifyCode(event)} className="space-y-4">
                 <div className="flex gap-3 rounded-xl bg-emerald-50 p-3 text-emerald-900">
                   <ShieldCheck aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0" />
-                  <p className="text-xs leading-5">A one-time code was sent to <strong>{maskedEmail}</strong>. It expires in 15 minutes.</p>
+                  <p className="text-xs leading-5">We sent a one-time code to <strong>{maskedEmail}</strong>. It expires in 15 minutes. If you don’t see it, check your spam or junk folder.</p>
                 </div>
                 <div className="space-y-2">
                   <p className="text-sm font-medium text-slate-700">Enter your six-digit code</p>
