@@ -2,20 +2,40 @@
 
 import { useEffect, useState } from "react"
 
-export function useClassroomTheme(courseSlug: string) {
+export function useClassroomTheme(courseSlug: string, userId: string | null) {
   const [dark, setDark] = useState(false)
-  const [loadedCourse, setLoadedCourse] = useState("")
+  const [loadedKey, setLoadedKey] = useState<string | null>(null)
+  const storageKey = userId
+    ? `ttacademy-classroom-${courseSlug}-${userId}-theme`
+    : null
 
   useEffect(() => {
-    setDark(window.localStorage.getItem(`ttacademy-classroom-${courseSlug}-theme`) === "dark")
-    setLoadedCourse(courseSlug)
-  }, [courseSlug])
-
-  useEffect(() => {
-    if (loadedCourse === courseSlug) {
-      window.localStorage.setItem(`ttacademy-classroom-${courseSlug}-theme`, dark ? "dark" : "light")
+    if (!storageKey) {
+      setDark(false)
+      setLoadedKey(null)
+      return
     }
-  }, [courseSlug, dark, loadedCourse])
 
-  return { dark, setDark }
+    setDark(window.localStorage.getItem(storageKey) === "dark")
+    setLoadedKey(storageKey)
+  }, [storageKey])
+
+  useEffect(() => {
+    if (storageKey && loadedKey === storageKey) {
+      window.localStorage.setItem(storageKey, dark ? "dark" : "light")
+    }
+  }, [storageKey, loadedKey, dark])
+
+  useEffect(() => {
+    if (!storageKey) return
+    const syncTheme = (event: StorageEvent) => {
+      if (event.key === storageKey) {
+        setDark(event.newValue === "dark")
+      }
+    }
+    window.addEventListener("storage", syncTheme)
+    return () => window.removeEventListener("storage", syncTheme)
+  }, [storageKey])
+
+  return { dark: Boolean(storageKey && loadedKey === storageKey && dark), setDark }
 }

@@ -81,7 +81,6 @@ export default function TeacherCoursePage() {
   const router = useRouter()
   const course = courseData[params.course as string]
   const courseSlug = params.course as string
-  const { dark, setDark } = useClassroomTheme(courseSlug)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [showLogoutDropdown, setShowLogoutDropdown] = useState(false)
   const [confirmingLogout, setConfirmingLogout] = useState(false)
@@ -98,6 +97,7 @@ export default function TeacherCoursePage() {
   const [onlineMembers, setOnlineMembers] = useState<Array<{ id: string; name: string; role: string }>>([])
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [currentUserRole, setCurrentUserRole] = useState<string | null>(null)
+  const { dark, setDark } = useClassroomTheme(courseSlug, currentUserId)
   const [showMembers, setShowMembers] = useState(false)
   const [isTyping, setIsTyping] = useState(false)
   const [showEmoji, setShowEmoji] = useState(false)

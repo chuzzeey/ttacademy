@@ -41,7 +41,6 @@ export default function DashboardPage() {
   const courseSlug = params?.course as string
   const courseData = getCourseData(courseSlug)
   const dashboard = courseData.dashboard
-  const { dark, setDark } = useClassroomTheme(courseSlug)
 
   const [showProfileDropdown, setShowProfileDropdown] = useState(false)
   const [showLogoutModal, setShowLogoutModal] = useState(false)
@@ -70,6 +69,7 @@ export default function DashboardPage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [showMembers, setShowMembers] = useState(false)
   const lastSeenMessageIdRef = useRef<string | null>(null)
+  const { dark, setDark } = useClassroomTheme(courseSlug, currentUserId)
 
   // Let longer messages expand while keeping the composer bounded.
   const autoResizeTextarea = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
