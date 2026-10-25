@@ -10,6 +10,7 @@ import { ClassroomMessageBubble } from '@/components/classroom-message-bubble'
 import { useClassroomTheme } from '@/lib/hooks/use-classroom-theme'
 import { mapClassroomMessage, type ClassroomMessageRecord } from '@/lib/classroom-chat'
 import { announceClassroomJoin, announceClassroomLeave } from '@/lib/classroom-presence-announcements'
+import { toggleClassroomReaction } from '@/lib/classroom-reactions'
 
 type DbMessage = ClassroomMessageRecord
 
@@ -228,6 +229,9 @@ export default function TeacherCoursePage() {
   }
 
   const reactToMessage = async (target: Message, emoji: string) => {
+    setMessages((previous) => previous.map((item) => item.id === target.id
+      ? { ...item, reactions: toggleClassroomReaction(item.reactions ?? [], emoji) }
+      : item))
     try {
       const response = await fetch('/api/messages/reactions', {
         method: 'POST',
@@ -239,6 +243,11 @@ export default function TeacherCoursePage() {
       await refreshChatMessages()
     } catch (reactionError) {
       setError(reactionError instanceof Error ? reactionError.message : 'Unable to add this reaction.')
+      try {
+        await refreshChatMessages()
+      } catch (refreshError) {
+        console.error('Could not restore classroom reactions:', refreshError)
+      }
     }
   }
 

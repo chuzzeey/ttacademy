@@ -10,6 +10,7 @@ import { ClassroomEmojiPicker } from "@/components/classroom-emoji-picker"
 import { ClassroomMessageActions, MessageReactionList } from "@/components/classroom-message-actions"
 import { useAdminTheme } from "@/app/dashboard/components/dashboard/admin-theme-provider"
 import { announceClassroomJoin, announceClassroomLeave } from "@/lib/classroom-presence-announcements"
+import { toggleClassroomReaction } from "@/lib/classroom-reactions"
 
 type ChatMessage = {
   id: string
@@ -247,6 +248,9 @@ export default function AdminClassroomPage() {
   }
 
   const reactToMessage = async (message: ChatMessage, emoji: string) => {
+    setMessages((current) => current.map((item) => item.id === message.id
+      ? { ...item, reactions: toggleClassroomReaction(item.reactions ?? [], emoji) }
+      : item))
     try {
       const response = await fetch("/api/messages/reactions", {
         method: "POST",
@@ -255,9 +259,13 @@ export default function AdminClassroomPage() {
       })
       const result = await response.json()
       if (!response.ok) throw new Error(result.error || "Unable to update this reaction.")
-      await loadMessages(userId)
     } catch (reactionError) {
       setError(reactionError instanceof Error ? reactionError.message : "Unable to update this reaction.")
+      try {
+        await loadMessages(userId)
+      } catch (refreshError) {
+        console.error("Could not restore classroom reactions:", refreshError)
+      }
     }
   }
 
@@ -464,8 +472,8 @@ export default function AdminClassroomPage() {
             )
           })}
         </div>
-        <form onSubmit={(event) => void send(event)} className={`shrink-0 border-t p-3 sm:px-6 ${palette.panel} ${palette.border}`}>
-          {showEmoji && <div className="mb-2"><ClassroomEmojiPicker dark={dark} onSelect={appendEmoji} /></div>}
+        <form onSubmit={(event) => void send(event)} className={`relative shrink-0 border-t p-3 sm:px-6 ${palette.panel} ${palette.border}`}>
+          {showEmoji && <div className="absolute bottom-[calc(100%+0.5rem)] right-3 z-50 w-[min(22rem,calc(100vw-1.5rem))]"><ClassroomEmojiPicker dark={dark} onSelect={(emoji) => { appendEmoji(emoji); setShowEmoji(false) }} /></div>}
           {(replyingTo || editingMessageId) && <div className={`mb-2 flex items-start gap-3 rounded-xl border-l-4 px-3 py-2 ${dark ? "border-emerald-400 bg-[#111b21]" : "border-emerald-700 bg-white"}`}><div className="min-w-0 flex-1"><p className="text-xs font-semibold text-emerald-700">{editingMessageId ? "Editing your message" : `Replying to ${replyingTo?.sender_name ?? "class member"}`}</p><p className={`mt-0.5 line-clamp-2 text-xs ${palette.muted}`}>{editingMessageId ? "Update your message and save." : replyingTo?.content}</p></div><button type="button" aria-label="Cancel reply or edit" onClick={() => { setReplyingTo(null); setEditingMessageId(null); setDraft("") }} className="rounded-lg p-1"><X className="h-4 w-4" /></button></div>}
           {file && <div className={`mb-2 flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-xs ${palette.bubble}`}><span className="truncate">{file.name}</span><button type="button" onClick={() => { setFile(null); if (fileRef.current) fileRef.current.value = "" }} className="font-medium text-rose-600">Remove</button></div>}
           <div className="flex items-end gap-2">

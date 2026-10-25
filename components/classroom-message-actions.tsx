@@ -63,13 +63,17 @@ export function MessageReactionList({
   onReact: (emoji: string) => void
 }) {
   if (reactions.length === 0) return null
+  const visibleReactions = [...reactions]
+    .sort((left, right) => Number(right.reacted) - Number(left.reacted) || right.count - left.count)
+  const hiddenCount = Math.max(0, visibleReactions.length - 6)
   return (
-    <div className="mt-1 flex flex-wrap gap-1">
-      {reactions.map((reaction) => (
-        <button key={reaction.emoji} type="button" onClick={() => onReact(reaction.emoji)} className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-xs shadow-sm ${reaction.reacted ? dark ? "border-emerald-500 bg-[#12372f]" : "border-emerald-500 bg-emerald-50" : dark ? "border-[#354650] bg-[#202c33]" : "border-gray-200 bg-white"}`}>
+    <div className="mt-1 flex w-full max-w-full flex-wrap gap-1 overflow-hidden">
+      {visibleReactions.slice(0, 6).map((reaction) => (
+        <button key={reaction.emoji} type="button" onClick={() => onReact(reaction.emoji)} className={`inline-flex min-w-0 max-w-full items-center gap-1 rounded-full border px-1.5 py-0.5 text-xs shadow-sm ${reaction.reacted ? dark ? "border-emerald-500 bg-[#12372f]" : "border-emerald-500 bg-emerald-50" : dark ? "border-[#354650] bg-[#202c33]" : "border-gray-200 bg-white"}`}>
           <span>{reaction.emoji}</span><span className={dark ? "text-[#e9edef]" : "text-[#667781]"}>{reaction.count}</span>
         </button>
       ))}
+      {hiddenCount > 0 && <span aria-label={`${hiddenCount} more reaction types`} className={`inline-flex items-center rounded-full border px-1.5 py-0.5 text-[10px] ${dark ? "border-[#354650] bg-[#202c33] text-[#aebac1]" : "border-gray-200 bg-white text-[#667781]"}`}>+{hiddenCount}</span>}
     </div>
   )
 }
