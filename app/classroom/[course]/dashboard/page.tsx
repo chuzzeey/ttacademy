@@ -778,6 +778,16 @@ export default function DashboardPage() {
                 </button>
               </div>
               <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setDark((value) => !value)}
+                  disabled={!currentUserId}
+                  aria-label={`Switch to ${dark ? 'light' : 'dark'} mode`}
+                  title={`Switch to ${dark ? 'light' : 'dark'} mode`}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center transition-all disabled:cursor-wait disabled:opacity-50 ${dark ? 'text-amber-300 hover:bg-[#2a3942]' : 'text-[#667781] hover:bg-gray-200 hover:text-gray-700'}`}
+                >
+                  {dark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                </button>
                 <div className="relative">
                   <button
                     onClick={() => setShowProfileDropdown(!showProfileDropdown)}

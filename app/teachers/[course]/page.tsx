@@ -702,6 +702,16 @@ export default function TeacherCoursePage() {
             </p>
             <p className={`text-xs ${dark ? 'text-[#aebac1]' : 'text-[#667781]'}`}>Class group · {onlineCount} online</p>
           </div>
+          <button
+            type="button"
+            onClick={() => setDark((value) => !value)}
+            disabled={!currentUserId}
+            aria-label={`Switch to ${dark ? 'light' : 'dark'} mode`}
+            title={`Switch to ${dark ? 'light' : 'dark'} mode`}
+            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors disabled:cursor-wait disabled:opacity-50 ${dark ? 'text-amber-300 hover:bg-[#2a3942]' : 'text-[#667781] hover:bg-gray-200 hover:text-gray-700'}`}
+          >
+            {dark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+          </button>
         </div>
 
         {/* Chat Messages */}
