@@ -233,7 +233,7 @@ export default function ClassroomManagementPage() {
               <span className="rounded-lg border border-white/10 bg-black/10 px-3 py-2">{pendingTeachers + pendingStudents} awaiting review</span>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex w-full flex-col items-stretch gap-2.5 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
             <button type="button" onClick={() => setShowEnterModal(true)} className="classroom-hero-primary group inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-white px-4 text-sm font-semibold text-emerald-950 shadow-lg shadow-black/15 transition hover:-translate-y-0.5 hover:bg-emerald-50 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-900">
               <DoorOpen aria-hidden="true" className="h-4 w-4" /> Enter a class
               <ArrowUpRight aria-hidden="true" className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
@@ -308,7 +308,7 @@ export default function ClassroomManagementPage() {
               const locked = roomLocked(course.slug)
               return (
                 <article key={course.slug} className="group flex min-w-0 flex-col rounded-2xl border border-border/60 bg-background p-4 transition duration-200 hover:-translate-y-1 hover:border-emerald-700/30 hover:shadow-lg hover:shadow-emerald-950/[0.06]">
-                  <div className="flex items-start gap-3">
+                  <div className="flex min-w-0 flex-wrap items-start gap-3">
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 ring-1 ring-emerald-900/[0.04] transition duration-200 group-hover:scale-105 group-hover:shadow-sm"><BookOpenCheck aria-hidden="true" className="h-5 w-5" /></span>
                     <div className="min-w-0 flex-1">
                       <p className="mb-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Course workspace</p>
@@ -326,11 +326,11 @@ export default function ClassroomManagementPage() {
                       {locked ? "Locked" : "Open"}
                     </button>
                   </div>
-                  <div className="mt-5 flex items-center justify-between gap-2 border-t border-border/60 pt-3">
-                    <span className="inline-flex items-center gap-1.5 rounded-lg bg-muted/70 px-2.5 py-1.5 text-[11px] font-medium text-muted-foreground"><Users className="h-3.5 w-3.5" />{classStudents.length} {classStudents.length === 1 ? "student" : "students"}</span>
-                    <div className="flex items-center gap-2">
-                      <button type="button" onClick={() => { setTeacherCourse(course.slug); setTeacherEmail(configuredRoom?.teacher_email ?? ""); setTeacherName(configuredRoom?.teacher_display_name ?? ""); setShowTeacherModal(true) }} className="min-h-9 rounded-xl border border-border px-3 text-xs font-semibold transition hover:bg-muted">Teacher email</button>
-                      <button type="button" onClick={() => setSelectedCourse(course)} className="group/launch inline-flex min-h-9 items-center gap-2 rounded-xl bg-emerald-700 px-3 text-xs font-semibold text-white shadow-sm shadow-emerald-950/10 transition hover:-translate-y-0.5 hover:bg-emerald-800 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2">
+                  <div className="mt-5 flex flex-col gap-3 border-t border-border/60 pt-3 sm:flex-row sm:items-center sm:justify-between">
+                    <span className="inline-flex w-fit items-center gap-1.5 rounded-lg bg-muted/70 px-2.5 py-1.5 text-[11px] font-medium text-muted-foreground"><Users className="h-3.5 w-3.5" />{classStudents.length} {classStudents.length === 1 ? "student" : "students"}</span>
+                    <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
+                      <button type="button" onClick={() => { setTeacherCourse(course.slug); setTeacherEmail(configuredRoom?.teacher_email ?? ""); setTeacherName(configuredRoom?.teacher_display_name ?? ""); setShowTeacherModal(true) }} className="min-h-9 rounded-xl border border-border px-2 sm:px-3 text-xs font-semibold transition hover:bg-muted">Teacher email</button>
+                      <button type="button" onClick={() => setSelectedCourse(course)} className="group/launch inline-flex min-h-9 items-center justify-center gap-1.5 rounded-xl bg-emerald-700 px-2 sm:px-3 text-xs font-semibold text-white shadow-sm shadow-emerald-950/10 transition hover:-translate-y-0.5 hover:bg-emerald-800 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2">
                         Open class <ArrowUpRight aria-hidden="true" className="h-3.5 w-3.5 transition-transform group-hover/launch:translate-x-0.5 group-hover/launch:-translate-y-0.5" />
                       </button>
                     </div>
