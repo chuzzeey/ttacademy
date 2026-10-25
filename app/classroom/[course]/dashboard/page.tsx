@@ -6,7 +6,7 @@ import Image from 'next/image'
 import {
   Search, MoreVertical, GraduationCap,
   Code, Palette, Globe, Database, PieChart, Brain, Shield, Lock,
-  ArrowLeft, Send, Check, CheckCheck, Clock, Smile, Megaphone, AlertTriangle, Paperclip, Moon, Sun
+  ArrowLeft, Send, Check, CheckCheck, Clock, Smile, Megaphone, AlertTriangle, Paperclip, Moon, Sun, Users, X
 } from 'lucide-react'
 import { getCourseData } from '@/lib/mock-data'
 import { createClient } from '@/lib/supabase/client'
@@ -65,6 +65,8 @@ export default function DashboardPage() {
   const isRestrictedRef = useRef(false)
   const [unreadCount, setUnreadCount] = useState(0)
   const [onlineCount, setOnlineCount] = useState(1)
+  const [onlineMembers, setOnlineMembers] = useState<Array<{ id: string; name: string; role: string }>>([])
+  const [showMembers, setShowMembers] = useState(false)
   const lastSeenMessageIdRef = useRef<string | null>(null)
 
   // Auto-resize textarea — max 4 lines (~76px)
@@ -278,11 +280,22 @@ export default function DashboardPage() {
     void (async () => {
       const { data: { user }, error: userError } = await supabase.auth.getUser()
       if (userError || !user || !active) return
+      const { data: memberName, error: memberNameError } = await supabase.rpc('classroom_user_name', {
+        p_course_slug: courseSlug,
+      })
+      if (memberNameError) console.error('Could not load classroom member name:', memberNameError)
+      const presenceName = typeof memberName === 'string' ? memberName : studentName
       channel = supabase
       .channel(`classroom:${courseSlug}`, { config: { presence: { key: user.id } } })
       .on('presence', { event: 'sync' }, () => {
         const presence = channel?.presenceState() ?? {}
-        setOnlineCount(Math.max(1, Object.values(presence).reduce((total, users) => total + users.length, 0)))
+        const members = Object.values(presence).flat().map((member) => ({
+          id: member.presence_ref,
+          name: 'name' in member && typeof member.name === 'string' ? member.name : 'Class member',
+          role: 'role' in member && typeof member.role === 'string' ? member.role : 'member',
+        }))
+        setOnlineMembers(members)
+        setOnlineCount(members.length)
       })
       .on(
         'postgres_changes',
@@ -330,7 +343,13 @@ export default function DashboardPage() {
       )
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
-          await channel?.track({ role: 'student', online_at: new Date().toISOString() })
+          await channel?.track({ name: presenceName, role: 'student', online_at: new Date().toISOString() })
+          const response = await fetch('/api/messages/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ course: courseSlug, content: `${presenceName} joined the class.` }),
+          })
+          if (!response.ok) console.error('Could not record student classroom entry:', await response.text())
         }
       })
     })()
@@ -524,15 +543,15 @@ export default function DashboardPage() {
   ]
 
   return (
-    <div className={`h-screen flex font-sans antialiased overflow-hidden ${dark ? 'bg-[#111b21] text-[#e9edef]' : 'bg-white text-[#111b21]'}`}
+    <div className={`h-dvh min-h-0 flex font-sans antialiased overflow-hidden ${dark ? 'bg-[#111b21] text-[#e9edef]' : 'bg-white text-[#111b21]'}`}
       style={{
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
       }}
     >
       {/* ===== MAIN CONTENT AREA ===== */}
-      <div className="flex-1 flex flex-col w-full min-w-0 h-full">
+      <div className="flex-1 flex flex-col w-full min-w-0 h-full min-h-0">
         
-        <div className="flex flex-1 h-full">
+        <div className="flex flex-1 h-full min-h-0">
           
           {/* ===== CHAT LIST ===== */}
           <div className={`${showChatList ? 'flex' : 'hidden'} md:flex flex-col w-full md:w-[380px] lg:w-[400px] xl:w-[420px] border-r ${dark ? 'border-[#2a3942] bg-[#111b21]' : 'border-gray-200 bg-white'} shrink-0`}>
@@ -590,7 +609,7 @@ export default function DashboardPage() {
           </div>
 
           {/* ===== CHAT AREA ===== */}
-          <div className="flex-1 flex flex-col min-w-0">
+          <div className="flex-1 flex flex-col min-w-0 min-h-0">
             
             {/* Chat Header */}
             <div className={`${dark ? 'bg-[#202c33]' : 'bg-[#F0F2F5]'} px-4 py-2.5 flex items-center gap-3 shrink-0 z-10`}>
@@ -609,21 +628,12 @@ export default function DashboardPage() {
                 <h1 className={`text-[16px] font-semibold ${dark ? 'text-[#e9edef]' : 'text-[#111B21]'} leading-tight truncate`}>
                   {courseData.title} Classroom
                 </h1>
-                <p className={`text-[13px] ${dark ? 'text-[#aebac1]' : 'text-[#667781]'} leading-relaxed inline-flex items-center gap-1.5`}>
+                <button type="button" onClick={() => setShowMembers(true)} className={`text-left text-[13px] ${dark ? 'text-[#aebac1]' : 'text-[#667781]'} leading-relaxed inline-flex items-center gap-1.5 hover:underline`}>
                   <span className="w-2 h-2 bg-green-500 rounded-full shrink-0"></span>
-                  Class group · {onlineCount} online
-                </p>
+                  Class group · {onlineCount} online · See members
+                </button>
               </div>
               <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() => setDark((value) => !value)}
-                  aria-label={dark ? "Switch this class to light mode" : "Switch this class to dark mode"}
-                  aria-pressed={dark}
-                  className={`h-10 w-10 rounded-full flex items-center justify-center transition-colors ${dark ? 'text-[#aebac1] hover:bg-[#2a3942]' : 'text-[#54656f] hover:bg-gray-200'}`}
-                >
-                  {dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-                </button>
                 <div className="relative">
                   <button
                     onClick={() => setShowProfileDropdown(!showProfileDropdown)}
@@ -636,11 +646,13 @@ export default function DashboardPage() {
                       <div className="fixed inset-0 z-40 backdrop-blur-sm bg-black/10" onClick={() => setShowProfileDropdown(false)} />
                       <div className={`absolute right-0 top-11 w-56 ${dark ? 'bg-[#202c33] border-[#2a3942]' : 'bg-white border-gray-200'} border rounded-xl shadow-2xl z-50 overflow-hidden`}>
                         <div className="py-1">
+                          <button onClick={() => { setShowMembers(true); setShowProfileDropdown(false) }} className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors ${dark ? 'text-[#e9edef] hover:bg-[#2a3942]' : 'text-gray-700 hover:bg-gray-100'}`}><Users className="h-4 w-4" /> Class members · {onlineCount} online</button>
+                          <button onClick={() => setDark((value) => !value)} className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors ${dark ? 'text-[#e9edef] hover:bg-[#2a3942]' : 'text-gray-700 hover:bg-gray-100'}`}>{dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />} Switch to {dark ? 'light' : 'dark'} mode</button>
                           <button onClick={() => router.push(`/classroom/${courseSlug}/dashboard/profile`)} className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors ${dark ? 'text-[#e9edef] hover:bg-[#2a3942]' : 'text-gray-700 hover:bg-gray-100'}`}>Profile Settings</button>
                           <button onClick={handleHelpSupport} className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors ${dark ? 'text-[#e9edef] hover:bg-[#2a3942]' : 'text-gray-700 hover:bg-gray-100'}`}>Help & Support</button>
                         </div>
                         <div className={`border-t ${dark ? 'border-[#2a3942]' : 'border-gray-200'}`}>
-                          <button onClick={() => { setShowLogoutModal(true); setShowProfileDropdown(false) }} className={`w-full flex items-center gap-3 px-4 py-3 text-sm text-red-500 transition-colors ${dark ? 'hover:bg-[#2a3942]' : 'hover:bg-gray-100'}`}>Logout</button>
+                          <button onClick={() => { setShowLogoutModal(true); setShowProfileDropdown(false) }} className={`w-full flex items-center gap-3 px-4 py-3 text-sm text-red-500 transition-colors ${dark ? 'hover:bg-[#2a3942]' : 'hover:bg-gray-100'}`}>Exit class</button>
                         </div>
                       </div>
                     </>
@@ -651,10 +663,16 @@ export default function DashboardPage() {
 
             {/* Messages Area */}
             <div 
-              className="flex-1 overflow-y-auto px-3 sm:px-4 py-3"
+              data-lenis-prevent=""
+              className="classroom-chat-messages px-3 py-3 sm:px-4"
               style={{
-                backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-                backgroundColor: dark ? '#0b141a' : '#ECE5DD',
+                backgroundColor: dark ? "#0b141a" : "#efeae2",
+                backgroundImage: `url("${dark
+                  ? "https://res.cloudinary.com/djdbcoyot/image/upload/v1792921622/qjc8vemd46bw4dgmntjz.jpg"
+                  : "https://res.cloudinary.com/djdbcoyot/image/upload/v1792921618/drh38kaz0synj4tpxylb.jpg"}")`,
+                backgroundPosition: "center",
+                backgroundRepeat: "repeat",
+                backgroundSize: "auto",
               }}
             >
               <div className="max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto">
@@ -828,6 +846,27 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {showMembers && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-4">
+          <section role="dialog" aria-modal="true" aria-labelledby="student-class-members-title" className={`w-full max-w-md overflow-hidden rounded-2xl shadow-2xl ${dark ? 'bg-[#202c33] text-[#e9edef]' : 'bg-white text-[#111b21]'}`}>
+            <header className={`flex items-center justify-between border-b px-5 py-4 ${dark ? 'border-[#2a3942]' : 'border-gray-200'}`}>
+              <div><h2 id="student-class-members-title" className="font-semibold">{courseData.title} members</h2><p className={`mt-1 text-xs ${dark ? 'text-[#aebac1]' : 'text-[#667781]'}`}>{onlineCount} currently online</p></div>
+              <button type="button" aria-label="Close members" onClick={() => setShowMembers(false)} className="rounded-lg p-2"><X className="h-4 w-4" /></button>
+            </header>
+            <ul className="max-h-[60vh] overflow-y-auto p-2">
+              {onlineMembers.map((member) => (
+                <li key={member.id} className={`flex items-center gap-3 rounded-xl px-3 py-3 ${dark ? 'hover:bg-[#2a3942]' : 'hover:bg-gray-50'}`}>
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#008069]/10 text-sm font-semibold text-[#008069]">{member.name.slice(0, 1).toUpperCase()}</span>
+                  <span className="min-w-0 flex-1"><span className="block truncate text-sm font-medium">{member.name}</span><span className={`text-xs capitalize ${dark ? 'text-[#aebac1]' : 'text-[#667781]'}`}>{member.role}</span></span>
+                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                </li>
+              ))}
+              {onlineMembers.length === 0 && <li className={`px-3 py-8 text-center text-sm ${dark ? 'text-[#aebac1]' : 'text-[#667781]'}`}>No one is online right now.</li>}
+            </ul>
+          </section>
+        </div>
+      )}
+
       {/* ===== LOGOUT MODAL ===== */}
       {showLogoutModal && (
         <>
@@ -840,8 +879,8 @@ export default function DashboardPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                   </svg>
                 </div>
-                <h3 className={`text-[17px] font-bold mb-1 ${dark ? 'text-[#e9edef]' : 'text-gray-900'}`}>Logout?</h3>
-                <p className={`text-[13px] ${dark ? 'text-[#aebac1]' : 'text-gray-500'}`}>Are you sure you want to log out of your account?</p>
+                <h3 className={`text-[17px] font-bold mb-1 ${dark ? 'text-[#e9edef]' : 'text-gray-900'}`}>Exit class?</h3>
+                <p className={`text-[13px] ${dark ? 'text-[#aebac1]' : 'text-gray-500'}`}>Are you sure you want to sign out and leave this classroom?</p>
               </div>
               <div className="px-6 pb-6 flex gap-2">
                 <button
@@ -854,7 +893,7 @@ export default function DashboardPage() {
                   onClick={handleLogout}
                   className="flex-1 py-3 rounded-xl bg-red-500 hover:bg-red-600 text-[14px] text-white font-semibold transition-colors active:scale-[0.98]"
                 >
-                  Logout
+                  Exit class
                 </button>
               </div>
             </div>

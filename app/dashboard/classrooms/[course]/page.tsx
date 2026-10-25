@@ -2,11 +2,11 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { ArrowLeft, LoaderCircle, Moon, Paperclip, Send, Sun, Users } from "lucide-react"
+import { LoaderCircle, LogOut, Menu, Moon, Paperclip, Send, Sun, Users, X } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { COURSE_CATALOG } from "@/lib/course-catalog"
 import { ClassroomAttachment } from "@/components/classroom-attachment"
-import { useClassroomTheme } from "@/lib/hooks/use-classroom-theme"
+import { useAdminTheme } from "@/app/dashboard/components/dashboard/admin-theme-provider"
 
 type ChatMessage = {
   id: string
@@ -19,6 +19,12 @@ type ChatMessage = {
   attachment_name: string | null
   attachment_mime_type: string | null
   created_at: string
+}
+
+type ClassroomMember = {
+  id: string
+  name: string
+  role: string
 }
 
 const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf", "text/plain"])
@@ -43,14 +49,20 @@ export default function AdminClassroomPage() {
   const [userId, setUserId] = useState("")
   const [role, setRole] = useState("")
   const [displayName, setDisplayName] = useState("")
-  const { dark, setDark } = useClassroomTheme(courseSlug)
+  const { theme, toggleTheme } = useAdminTheme()
+  const dark = theme === "dark"
   const [onlineCount, setOnlineCount] = useState(1)
   const [draft, setDraft] = useState("")
   const [file, setFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
   const [error, setError] = useState("")
-  const bottomRef = useRef<HTMLDivElement>(null)
+  const [members, setMembers] = useState<ClassroomMember[]>([])
+  const [showMembers, setShowMembers] = useState(false)
+  const [showClassMenu, setShowClassMenu] = useState(false)
+  const [showSignoutConfirm, setShowSignoutConfirm] = useState(false)
+  const [signingOut, setSigningOut] = useState(false)
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const loadMessages = useCallback(async () => {
@@ -111,7 +123,13 @@ export default function AdminClassroomPage() {
         })
         .on("presence", { event: "sync" }, () => {
           const presence = channel?.presenceState() ?? {}
-          setOnlineCount(Math.max(1, Object.values(presence).reduce((total, users) => total + users.length, 0)))
+          const activeMembers = Object.values(presence).flat().map((member) => ({
+            id: member.presence_ref,
+            name: "name" in member && typeof member.name === "string" ? member.name : "Class member",
+            role: "role" in member && typeof member.role === "string" ? member.role : "member",
+          }))
+          setMembers(activeMembers)
+          setOnlineCount(activeMembers.length)
         })
         .subscribe(async (status) => {
           if (status === "SUBSCRIBED") {
@@ -119,7 +137,7 @@ export default function AdminClassroomPage() {
             const response = await fetch("/api/messages/send", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ course: courseSlug, content: "Admin joined the class." }),
+              body: JSON.stringify({ course: courseSlug, content: `${displayName} joined the class.` }),
             })
             if (!response.ok) console.error("Could not record admin classroom entry:", await response.text())
           }
@@ -137,7 +155,11 @@ export default function AdminClassroomPage() {
   }, [course, courseSlug, loadMessages, router, supabase])
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" })
+    const messagesContainer = messagesContainerRef.current
+    messagesContainer?.scrollTo({
+      top: messagesContainer.scrollHeight,
+      behavior: "smooth",
+    })
   }, [messages])
 
   const send = async (event: FormEvent<HTMLFormElement>) => {
@@ -186,24 +208,56 @@ export default function AdminClassroomPage() {
     }
   }
 
+  const signOut = async () => {
+    setSigningOut(true)
+    setError("")
+    const { error: signOutError } = await supabase.auth.signOut()
+    if (signOutError) {
+      setError("Unable to sign out. Please try again.")
+      setSigningOut(false)
+      return
+    }
+    router.replace("/admin-login")
+  }
+
   if (!course) return null
   const palette = dark
     ? { page: "bg-[#0b141a] text-[#e9edef]", panel: "bg-[#202c33]", border: "border-[#2a3942]", muted: "text-[#aebac1]", bubble: "bg-[#202c33]" }
     : { page: "bg-[#f0f2f5] text-slate-900", panel: "bg-white", border: "border-slate-200", muted: "text-slate-500", bubble: "bg-white" }
 
   return (
-    <main data-classroom-theme={dark ? "dark" : "light"} className={`-mx-3 -mt-[5rem] flex h-[calc(100dvh-4.25rem)] min-h-[520px] flex-col sm:-mx-6 lg:-mx-8 lg:-mt-24 lg:h-[calc(100dvh-6rem)] ${palette.page}`}>
-      <header className={`flex h-16 shrink-0 items-center justify-between border-b px-3 sm:px-6 ${palette.panel} ${palette.border}`}>
+    <main aria-label={`${course.title} Classroom chat, ${onlineCount} online`} data-classroom-theme={dark ? "dark" : "light"} className={`relative flex h-dvh min-h-0 flex-col overflow-hidden ${palette.page}`}>
+      <header className={`z-20 flex h-16 shrink-0 items-center justify-between border-b px-3 sm:px-5 ${palette.panel} ${palette.border}`}>
         <div className="flex min-w-0 items-center gap-3">
-          <button type="button" aria-label="Back to classroom management" onClick={() => router.push("/dashboard/classrooms")} className={`rounded-xl p-2 hover:bg-black/5 ${palette.muted}`}><ArrowLeft className="h-5 w-5" /></button>
-          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${dark ? "bg-[#005c4b] text-emerald-100" : "bg-[#d9fdd3] text-emerald-800"}`}><Users className="h-5 w-5" /></div>
-          <div className="min-w-0"><h1 className="truncate text-sm font-semibold">{course.title} Classroom</h1><p className={`mt-0.5 flex items-center gap-1.5 text-[11px] ${palette.muted}`}><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />Group chat · {onlineCount} online · Admin</p></div>
+          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${dark ? "bg-[#005c4b] text-emerald-100" : "bg-[#d9fdd3] text-emerald-800"}`}><Users aria-hidden="true" className="h-5 w-5" /></div>
+          <div className="min-w-0">
+            <h1 className="truncate text-sm font-semibold">{course.title} Classroom</h1>
+            <button type="button" onClick={() => setShowMembers(true)} className={`mt-0.5 flex items-center gap-1.5 text-[11px] ${palette.muted} hover:underline`}>
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              {onlineCount} online · View members
+            </button>
+          </div>
         </div>
-        <button type="button" onClick={() => setDark((value) => !value)} aria-label={dark ? "Switch this class to light mode" : "Switch this class to dark mode"} aria-pressed={dark} className={`inline-flex shrink-0 items-center gap-2 rounded-full border px-3 py-2 text-xs font-medium transition-colors ${dark ? "border-[#2a3942] bg-[#111b21] text-[#e9edef] hover:bg-[#2a3942]" : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"}`}>{dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}{dark ? "Light mode" : "Dark mode"}</button>
+        <button type="button" onClick={() => setShowClassMenu((open) => !open)} aria-label={showClassMenu ? "Close classroom menu" : "Open classroom menu"} aria-expanded={showClassMenu} className={`inline-flex h-10 w-10 items-center justify-center rounded-full ${palette.muted} hover:bg-black/5`}>
+          {showClassMenu ? <X aria-hidden="true" className="h-5 w-5" /> : <Menu aria-hidden="true" className="h-5 w-5" />}
+        </button>
       </header>
-      <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {error && <p role="alert" className="mx-3 mt-3 rounded-xl bg-rose-50 px-3 py-2 text-xs text-rose-800 sm:mx-6">{error}</p>}
-        <div className="flex-1 space-y-3 overflow-y-auto px-3 py-4 sm:px-6">
+        <div
+          data-lenis-prevent=""
+          ref={messagesContainerRef}
+          className="classroom-chat-messages space-y-3 px-3 py-4 sm:px-6"
+          style={{
+            backgroundColor: dark ? "#0b141a" : "#efeae2",
+            backgroundImage: `url("${dark
+              ? "https://res.cloudinary.com/djdbcoyot/image/upload/v1792921622/qjc8vemd46bw4dgmntjz.jpg"
+              : "https://res.cloudinary.com/djdbcoyot/image/upload/v1792921618/drh38kaz0synj4tpxylb.jpg"}")`,
+            backgroundPosition: "center",
+            backgroundRepeat: "repeat",
+            backgroundSize: "auto",
+          }}
+        >
           {loading ? <div className={`flex h-full items-center justify-center text-sm ${palette.muted}`}><LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> Connecting to class…</div> : messages.length === 0 ? <div className={`flex h-full flex-col items-center justify-center text-center ${palette.muted}`}><Users className="h-8 w-8 opacity-50" /><p className="mt-3 text-sm font-medium">No messages yet</p><p className="mt-1 text-xs">Start the conversation in {course.title}.</p></div> : messages.map((message) => {
             const isMine = message.sender_user_id === userId
             return (
@@ -217,7 +271,6 @@ export default function AdminClassroomPage() {
               </div>
             )
           })}
-          <div ref={bottomRef} />
         </div>
         <form onSubmit={(event) => void send(event)} className={`shrink-0 border-t p-3 sm:px-6 ${palette.panel} ${palette.border}`}>
           {file && <div className={`mb-2 flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-xs ${palette.bubble}`}><span className="truncate">{file.name}</span><button type="button" onClick={() => { setFile(null); if (fileRef.current) fileRef.current.value = "" }} className="font-medium text-rose-600">Remove</button></div>}
@@ -230,6 +283,62 @@ export default function AdminClassroomPage() {
           <p className={`mt-2 text-[10px] ${palette.muted}`}>{displayName || "Administrator"} · Attachments up to 10 MB</p>
         </form>
       </div>
+      {showClassMenu && (
+        <>
+          <button type="button" aria-label="Close classroom menu" onClick={() => setShowClassMenu(false)} className="fixed inset-0 z-30 bg-black/25" />
+          <aside aria-label="Classroom menu" className={`absolute right-0 top-16 z-40 flex h-[calc(100%-4rem)] w-[min(22rem,90vw)] flex-col border-l p-4 shadow-2xl ${palette.panel} ${palette.border}`}>
+            <p className="px-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-700">Classroom</p>
+            <p className="mt-1 px-2 text-sm font-semibold">{course.title} group</p>
+            <button type="button" onClick={() => { setShowMembers(true); setShowClassMenu(false) }} className={`mt-5 flex min-h-12 items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-black/5 ${palette.muted}`}>
+              <Users aria-hidden="true" className="h-4 w-4" /> Members · {members.length} online
+            </button>
+            <button type="button" onClick={toggleTheme} className={`flex min-h-12 items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-black/5 ${palette.muted}`}>
+              {dark ? <Sun aria-hidden="true" className="h-4 w-4" /> : <Moon aria-hidden="true" className="h-4 w-4" />}
+              Switch to {dark ? "light" : "dark"} mode
+            </button>
+            <div className={`mt-auto border-t pt-3 ${palette.border}`}>
+              <button type="button" onClick={() => { setShowClassMenu(false); router.push("/dashboard/classrooms") }} className={`flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-black/5 ${palette.muted}`}>
+                <Users aria-hidden="true" className="h-4 w-4" /> Exit class
+              </button>
+              <button type="button" onClick={() => { setShowClassMenu(false); setShowSignoutConfirm(true) }} className="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-sm text-rose-600 hover:bg-rose-50">
+                <LogOut aria-hidden="true" className="h-4 w-4" /> Sign out
+              </button>
+            </div>
+          </aside>
+        </>
+      )}
+      {showMembers && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowMembers(false) }}>
+          <section role="dialog" aria-modal="true" aria-labelledby="class-members-title" className={`w-full max-w-md overflow-hidden rounded-2xl shadow-2xl ${palette.panel}`}>
+            <div className={`flex items-center justify-between border-b px-5 py-4 ${palette.border}`}>
+              <div><h2 id="class-members-title" className="text-base font-semibold">{course.title} members</h2><p className={`mt-1 text-xs ${palette.muted}`}>{onlineCount} currently online</p></div>
+              <button type="button" onClick={() => setShowMembers(false)} aria-label="Close members" className={`rounded-lg p-2 ${palette.muted}`}><X className="h-4 w-4" /></button>
+            </div>
+            <ul className="max-h-[60dvh] overflow-y-auto p-2">
+              {members.map((member) => (
+                <li key={member.id} className="flex items-center gap-3 rounded-xl px-3 py-3">
+                  <span className={`flex h-9 w-9 items-center justify-center rounded-full ${dark ? "bg-[#005c4b] text-emerald-100" : "bg-[#d9fdd3] text-emerald-800"}`}><Users aria-hidden="true" className="h-4 w-4" /></span>
+                  <span className="min-w-0 flex-1"><span className="block truncate text-sm font-medium">{member.name}</span><span className={`block text-xs capitalize ${palette.muted}`}>{member.role}</span></span>
+                  <span className="h-2 w-2 rounded-full bg-emerald-500" aria-label="Online" />
+                </li>
+              ))}
+              {members.length === 0 && <li className={`px-3 py-8 text-center text-sm ${palette.muted}`}>No one is online right now.</li>}
+            </ul>
+          </section>
+        </div>
+      )}
+      {showSignoutConfirm && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4" role="presentation">
+          <section role="alertdialog" aria-modal="true" aria-labelledby="class-signout-title" className={`w-full max-w-sm rounded-2xl p-5 shadow-2xl ${palette.panel}`}>
+            <h2 id="class-signout-title" className="text-base font-semibold">Sign out of your account?</h2>
+            <p className={`mt-2 text-sm ${palette.muted}`}>You will leave the {course.title} classroom.</p>
+            <div className="mt-5 flex justify-end gap-2">
+              <button type="button" disabled={signingOut} onClick={() => setShowSignoutConfirm(false)} className={`min-h-10 rounded-xl px-4 text-sm ${palette.muted}`}>Cancel</button>
+              <button type="button" disabled={signingOut} onClick={() => void signOut()} className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-rose-600 px-4 text-sm font-semibold text-white disabled:opacity-60">{signingOut && <LoaderCircle className="h-4 w-4 animate-spin" />}Sign out</button>
+            </div>
+          </section>
+        </div>
+      )}
     </main>
   )
 }

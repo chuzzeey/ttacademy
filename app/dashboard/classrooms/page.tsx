@@ -3,7 +3,7 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import {
-  ArrowRight, ArrowUpRight, BadgeCheck, BookOpenCheck, Check, Copy, DoorOpen,
+  ArrowRight, ArrowUpRight, BadgeCheck, BookOpenCheck, Check, DoorOpen,
   GraduationCap, LockKeyhole, LoaderCircle, Plus, ShieldAlert, Sparkles,
   UnlockKeyhole, Users, X,
 } from "lucide-react"
@@ -32,7 +32,7 @@ type Student = {
 }
 type ClassroomData = {
   courses: Course[]
-  rooms: { course_slug: string; is_locked: boolean }[]
+  rooms: { course_slug: string; is_locked: boolean; teacher_email: string | null; teacher_display_name: string | null }[]
   teachers: Teacher[]
   students: Student[]
 }
@@ -54,11 +54,12 @@ export default function ClassroomManagementPage() {
   const [notice, setNotice] = useState("")
   const [busyKey, setBusyKey] = useState("")
   const [showEnterModal, setShowEnterModal] = useState(false)
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null)
+  const [enteringCourse, setEnteringCourse] = useState<Course | null>(null)
   const [showTeacherModal, setShowTeacherModal] = useState(false)
   const [teacherCourse, setTeacherCourse] = useState("")
   const [teacherName, setTeacherName] = useState("")
-  const [credential, setCredential] = useState<{ email: string; password: string; course: string } | null>(null)
-  const [copied, setCopied] = useState(false)
+  const [teacherEmail, setTeacherEmail] = useState("")
 
   const refresh = useCallback(async () => {
     setLoading(true)
@@ -77,11 +78,20 @@ export default function ClassroomManagementPage() {
 
   useEffect(() => { void refresh() }, [refresh])
 
+  useEffect(() => {
+    if (!enteringCourse) return
+    const timer = window.setTimeout(() => {
+      router.push(`/dashboard/classrooms/${enteringCourse.slug}`)
+    }, 900)
+    return () => window.clearTimeout(timer)
+  }, [enteringCourse, router])
+
   const courseTitle = useMemo(
     () => new Map((data?.courses ?? []).map((course) => [course.slug, course.title])),
     [data],
   )
-  const roomLocked = (slug: string) => data?.rooms.find((room) => room.course_slug === slug)?.is_locked ?? false
+  const getRoom = (slug: string) => data?.rooms.find((room) => room.course_slug === slug)
+  const roomLocked = (slug: string) => getRoom(slug)?.is_locked ?? false
 
   const postAction = async (body: Record<string, unknown>, key: string) => {
     setBusyKey(key)
@@ -95,16 +105,8 @@ export default function ClassroomManagementPage() {
       })
       const result = await response.json()
       if (!response.ok) throw new Error(result.error || "Unable to update classroom access.")
-      if (result.temporaryPassword && result.teacher) {
-        setCredential({
-          email: result.teacher.email,
-          password: result.temporaryPassword,
-          course: courseTitle.get(result.teacher.courseSlug) ?? result.teacher.courseSlug,
-        })
-      } else {
-        setNotice(result.message || "Classroom settings updated.")
-        await refresh()
-      }
+      setNotice(result.message || "Classroom settings updated.")
+      await refresh()
       return true
     } catch (actionError) {
       setError(actionError instanceof Error ? actionError.message : "Unable to update classroom access.")
@@ -114,31 +116,20 @@ export default function ClassroomManagementPage() {
     }
   }
 
-  const createTeacher = async (event: FormEvent<HTMLFormElement>) => {
+  const saveTeacherEmail = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    const created = await postAction({
-      action: "create-teacher",
+    const saved = await postAction({
+      action: "set-teacher-email",
       courseSlug: teacherCourse,
+      email: teacherEmail,
       displayName: teacherName,
-    }, "create-teacher")
-    if (created) {
+    }, "set-teacher-email")
+    if (saved) {
       setShowTeacherModal(false)
       setTeacherName("")
+      setTeacherEmail("")
       setTeacherCourse("")
       await refresh()
-    }
-  }
-
-  const copyCredentials = async () => {
-    if (!credential) return
-    try {
-      await navigator.clipboard.writeText(
-        `Class: ${credential.course}\nEmail: ${credential.email}\nTemporary password: ${credential.password}`,
-      )
-      setCopied(true)
-      window.setTimeout(() => setCopied(false), 1800)
-    } catch {
-      setError("Could not copy credentials. Copy them manually before closing this dialog.")
     }
   }
 
@@ -177,7 +168,7 @@ export default function ClassroomManagementPage() {
               <DoorOpen aria-hidden="true" className="h-4 w-4" /> Enter a class
               <ArrowUpRight aria-hidden="true" className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </button>
-            <button type="button" onClick={() => setShowTeacherModal(true)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/[0.08] px-4 text-sm font-semibold text-white shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:border-white/35 hover:bg-white/[0.14] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
+            <button type="button" onClick={() => { setTeacherCourse(""); setTeacherEmail(""); setTeacherName(""); setShowTeacherModal(true) }} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/[0.08] px-4 text-sm font-semibold text-white shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:border-white/35 hover:bg-white/[0.14] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
               <Plus aria-hidden="true" className="h-4 w-4" /> Add teacher
             </button>
             <a href={pendingStudents > 0 ? "#student-approvals" : "#teacher-approvals"} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold text-emerald-100 transition hover:bg-white/[0.08] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
@@ -243,6 +234,7 @@ export default function ClassroomManagementPage() {
             {(data?.courses ?? []).map((course) => {
               const teacher = teachers.find((item) => item.course_slug === course.slug && item.status !== "restricted")
               const classStudents = students.filter((item) => item.course_slug === course.slug)
+              const configuredRoom = getRoom(course.slug)
               const locked = roomLocked(course.slug)
               return (
                 <article key={course.slug} className="group flex min-w-0 flex-col rounded-2xl border border-border/60 bg-background p-4 transition duration-200 hover:-translate-y-1 hover:border-emerald-700/30 hover:shadow-lg hover:shadow-emerald-950/[0.06]">
@@ -251,7 +243,7 @@ export default function ClassroomManagementPage() {
                     <div className="min-w-0 flex-1">
                       <p className="mb-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Course workspace</p>
                       <h3 className="truncate text-sm font-semibold tracking-tight">{course.title}</h3>
-                      <p className="mt-1 truncate text-xs text-muted-foreground">{teacher ? teacher.display_name : "Teacher not assigned"}</p>
+                      <p className="mt-1 truncate text-xs text-muted-foreground">{configuredRoom?.teacher_email || teacher?.email || "Teacher email not configured"}</p>
                     </div>
                     <button
                       type="button"
@@ -266,9 +258,12 @@ export default function ClassroomManagementPage() {
                   </div>
                   <div className="mt-5 flex items-center justify-between gap-2 border-t border-border/60 pt-3">
                     <span className="inline-flex items-center gap-1.5 rounded-lg bg-muted/70 px-2.5 py-1.5 text-[11px] font-medium text-muted-foreground"><Users className="h-3.5 w-3.5" />{classStudents.length} {classStudents.length === 1 ? "student" : "students"}</span>
-                    <button type="button" onClick={() => router.push(`/dashboard/classrooms/${course.slug}`)} className="group/launch inline-flex min-h-9 items-center gap-2 rounded-xl bg-emerald-700 px-3 text-xs font-semibold text-white shadow-sm shadow-emerald-950/10 transition hover:-translate-y-0.5 hover:bg-emerald-800 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2">
-                      Open class <ArrowUpRight aria-hidden="true" className="h-3.5 w-3.5 transition-transform group-hover/launch:translate-x-0.5 group-hover/launch:-translate-y-0.5" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button type="button" onClick={() => { setTeacherCourse(course.slug); setTeacherEmail(configuredRoom?.teacher_email ?? ""); setTeacherName(configuredRoom?.teacher_display_name ?? ""); setShowTeacherModal(true) }} className="min-h-9 rounded-xl border border-border px-3 text-xs font-semibold transition hover:bg-muted">Teacher email</button>
+                      <button type="button" onClick={() => setSelectedCourse(course)} className="group/launch inline-flex min-h-9 items-center gap-2 rounded-xl bg-emerald-700 px-3 text-xs font-semibold text-white shadow-sm shadow-emerald-950/10 transition hover:-translate-y-0.5 hover:bg-emerald-800 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2">
+                        Open class <ArrowUpRight aria-hidden="true" className="h-3.5 w-3.5 transition-transform group-hover/launch:translate-x-0.5 group-hover/launch:-translate-y-0.5" />
+                      </button>
+                    </div>
                   </div>
                 </article>
               )
@@ -341,8 +336,32 @@ export default function ClassroomManagementPage() {
           <section role="dialog" aria-modal="true" aria-labelledby="enter-class-title" className="w-full max-w-lg rounded-2xl bg-background p-5 shadow-2xl sm:p-6">
             <div className="flex items-start justify-between"><div><h2 id="enter-class-title" className="text-base font-semibold">Choose a class</h2><p className="mt-1 text-xs text-muted-foreground">As admin, you can always enter. Locking a class only blocks teachers and students.</p></div><button type="button" onClick={() => setShowEnterModal(false)} aria-label="Close class selection"><X className="h-4 w-4" /></button></div>
             <div className="mt-4 grid max-h-[60vh] gap-2 overflow-y-auto sm:grid-cols-2">
-              {(data?.courses ?? []).map((course) => <button key={course.slug} type="button" onClick={() => router.push(`/dashboard/classrooms/${course.slug}`)} className="flex items-center justify-between rounded-xl border border-border/60 px-3 py-3 text-left text-sm font-medium hover:bg-muted/50">{course.title}<ArrowRight className="h-4 w-4 text-muted-foreground" /></button>)}
+              {(data?.courses ?? []).map((course) => <button key={course.slug} type="button" onClick={() => { setShowEnterModal(false); setSelectedCourse(course) }} className="flex items-center justify-between rounded-xl border border-border/60 px-3 py-3 text-left text-sm font-medium hover:bg-muted/50">{course.title}<ArrowRight className="h-4 w-4 text-muted-foreground" /></button>)}
             </div>
+          </section>
+        </div>
+      )}
+
+      {selectedCourse && (
+        <div className="fixed inset-0 z-[75] flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm" role="presentation">
+          <section role="alertdialog" aria-modal="true" aria-labelledby="confirm-enter-class-title" className="w-full max-w-sm rounded-2xl bg-background p-6 text-center shadow-2xl">
+            {enteringCourse ? (
+              <>
+                <LoaderCircle aria-hidden="true" className="mx-auto h-10 w-10 animate-spin text-emerald-700" />
+                <h2 id="confirm-enter-class-title" className="mt-4 text-lg font-semibold">Welcome to the classroom</h2>
+                <p className="mt-1 text-sm text-muted-foreground">Preparing your {selectedCourse.title} group…</p>
+              </>
+            ) : (
+              <>
+                <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700"><DoorOpen aria-hidden="true" className="h-6 w-6" /></span>
+                <h2 id="confirm-enter-class-title" className="mt-4 text-lg font-semibold">You’re about to enter the classroom</h2>
+                <p className="mt-2 text-sm text-muted-foreground">Enter the <span className="font-semibold text-foreground">{selectedCourse.title}</span> group as an administrator?</p>
+                <div className="mt-6 flex justify-center gap-2">
+                  <button type="button" onClick={() => setSelectedCourse(null)} className="min-h-10 rounded-xl border border-border px-4 text-sm font-medium hover:bg-muted">Not now</button>
+                  <button type="button" onClick={() => setEnteringCourse(selectedCourse)} className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-emerald-700 px-4 text-sm font-semibold text-white hover:bg-emerald-800">Yes, enter</button>
+                </div>
+              </>
+            )}
           </section>
         </div>
       )}
@@ -350,27 +369,14 @@ export default function ClassroomManagementPage() {
       {showTeacherModal && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-sm" role="presentation">
           <section role="dialog" aria-modal="true" aria-labelledby="add-teacher-title" className="w-full max-w-md rounded-2xl bg-background p-5 shadow-2xl sm:p-6">
-            <div className="mb-4 flex items-start justify-between"><div><h2 id="add-teacher-title" className="text-base font-semibold">Assign a teacher</h2><p className="mt-1 text-xs text-muted-foreground">A unique account will be created for the selected course.</p></div><button type="button" onClick={() => setShowTeacherModal(false)} aria-label="Close teacher form"><X className="h-4 w-4" /></button></div>
-            <form onSubmit={(event) => void createTeacher(event)} className="space-y-4">
-              <label className="block space-y-1.5 text-xs font-medium">Teacher display name<input required maxLength={80} value={teacherName} onChange={(event) => setTeacherName(event.target.value)} className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm" /></label>
-              <label className="block space-y-1.5 text-xs font-medium">Course<select required value={teacherCourse} onChange={(event) => setTeacherCourse(event.target.value)} className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm"><option value="">Select a course</option>{(data?.courses ?? []).filter((course) => !teachers.some((teacher) => teacher.course_slug === course.slug && teacher.status !== "restricted")).map((course) => <option key={course.slug} value={course.slug}>{course.title}</option>)}</select></label>
-              <p className="flex gap-2 rounded-xl bg-amber-50 p-3 text-xs leading-5 text-amber-900"><ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" /> No email is sent. The temporary password is displayed once after creation; share it directly and securely with the teacher.</p>
-              <button disabled={busyKey === "create-teacher"} type="submit" className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-50">{busyKey === "create-teacher" && <LoaderCircle className="h-4 w-4 animate-spin" />}Create account for approval</button>
+            <div className="mb-4 flex items-start justify-between"><div><h2 id="add-teacher-title" className="text-base font-semibold">Manage teacher email</h2><p className="mt-1 text-xs text-muted-foreground">Only this email can request a teacher sign-in code for the selected class.</p></div><button type="button" onClick={() => setShowTeacherModal(false)} aria-label="Close teacher form"><X className="h-4 w-4" /></button></div>
+            <form onSubmit={(event) => void saveTeacherEmail(event)} className="space-y-4">
+              <label className="block space-y-1.5 text-xs font-medium">Course<select required value={teacherCourse} onChange={(event) => { const slug = event.target.value; const room = getRoom(slug); setTeacherCourse(slug); setTeacherEmail(room?.teacher_email ?? ""); setTeacherName(room?.teacher_display_name ?? "") }} className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm"><option value="">Select a course</option>{(data?.courses ?? []).map((course) => <option key={course.slug} value={course.slug}>{course.title}</option>)}</select></label>
+              <label className="block space-y-1.5 text-xs font-medium">Teacher email<input type="email" value={teacherEmail} onChange={(event) => setTeacherEmail(event.target.value)} placeholder="teacher@example.com" className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm" /></label>
+              <label className="block space-y-1.5 text-xs font-medium">Display name (optional)<input maxLength={80} value={teacherName} onChange={(event) => setTeacherName(event.target.value)} className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm" /></label>
+              <p className="flex gap-2 rounded-xl bg-amber-50 p-3 text-xs leading-5 text-amber-900"><ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" /> Changing the assigned email immediately restricts the previous teacher. Leave the email blank to remove the assignment.</p>
+              <button disabled={busyKey === "set-teacher-email" || !teacherCourse} type="submit" className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-50">{busyKey === "set-teacher-email" && <LoaderCircle className="h-4 w-4 animate-spin" />}Save teacher email</button>
             </form>
-          </section>
-        </div>
-      )}
-
-      {credential && (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
-          <section role="dialog" aria-modal="true" aria-labelledby="teacher-credentials-title" className="w-full max-w-md rounded-2xl bg-background p-5 shadow-2xl sm:p-6">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700"><Check className="h-6 w-6" /></div>
-            <h2 id="teacher-credentials-title" className="mt-4 text-center text-base font-semibold">Teacher account created</h2>
-            <p className="mt-1 text-center text-xs text-muted-foreground">{credential.course} · Pending approval</p>
-            <dl className="mt-5 space-y-3 rounded-xl bg-muted/40 p-4 text-sm"><div><dt className="text-xs text-muted-foreground">Login email</dt><dd className="mt-1 break-all font-medium">{credential.email}</dd></div><div><dt className="text-xs text-muted-foreground">One-time password</dt><dd className="mt-1 break-all font-mono font-medium">{credential.password}</dd></div></dl>
-            <p className="mt-3 text-xs leading-5 text-amber-800">Copy this now. It will not be available after you close this window. The teacher must set a new password before entering class.</p>
-            <button type="button" onClick={() => void copyCredentials()} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border px-4 py-2.5 text-sm font-semibold hover:bg-muted">{copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}{copied ? "Copied" : "Copy credentials"}</button>
-            <button type="button" onClick={() => setCredential(null)} className="mt-2 w-full rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-800">Done</button>
           </section>
         </div>
       )}

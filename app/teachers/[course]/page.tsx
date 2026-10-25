@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
-import { Shield, BarChart3, Cpu, Globe, ShieldAlert, Palette, Code, Monitor, Server, Globe2, TrendingUp, Cloud, Database, ArrowLeft, Send, Menu, X, GraduationCap, LogOut, Home, BookMarked, User, Settings, Paperclip, Check, CheckCheck, Clock, Megaphone, UserCircle, Moon, Sun } from 'lucide-react'
+import { Shield, BarChart3, Cpu, Globe, ShieldAlert, Palette, Code, Monitor, Server, Globe2, TrendingUp, Cloud, Database, ArrowLeft, Send, Menu, X, GraduationCap, LogOut, Home, BookMarked, User, Settings, Paperclip, Check, CheckCheck, Clock, Megaphone, UserCircle, Moon, Sun, Users } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 import { createClient } from '@/lib/supabase/client'
 import { ClassroomAttachment } from '@/components/classroom-attachment'
@@ -94,6 +94,8 @@ export default function TeacherCoursePage() {
   const [isSending, setIsSending] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [onlineCount, setOnlineCount] = useState(1)
+  const [onlineMembers, setOnlineMembers] = useState<Array<{ id: string; name: string; role: string }>>([])
+  const [showMembers, setShowMembers] = useState(false)
   const [isTyping, setIsTyping] = useState(false)
   const [showEmoji, setShowEmoji] = useState(false)
   const [loadingHistory, setLoadingHistory] = useState(true)
@@ -173,11 +175,26 @@ export default function TeacherCoursePage() {
     void (async () => {
       const { data: { user }, error: userError } = await supabase.auth.getUser()
       if (userError || !user || !active) return
+      const { data: memberName, error: memberNameError } = await supabase.rpc('classroom_user_name', {
+        p_course_slug: courseSlug,
+      })
+      if (memberNameError) console.error('Could not load classroom member name:', memberNameError)
+      const presenceName = typeof memberName === 'string'
+        ? memberName
+        : typeof user.user_metadata?.name === 'string'
+          ? user.user_metadata.name
+          : user.email?.split('@')[0] || 'Teacher'
       channel = supabase
       .channel(`classroom:${courseSlug}`, { config: { presence: { key: user.id } } })
       .on('presence', { event: 'sync' }, () => {
         const presence = channel?.presenceState() ?? {}
-        setOnlineCount(Math.max(1, Object.values(presence).reduce((total, users) => total + users.length, 0)))
+        const members = Object.values(presence).flat().map((member) => ({
+          id: member.presence_ref,
+          name: 'name' in member && typeof member.name === 'string' ? member.name : 'Class member',
+          role: 'role' in member && typeof member.role === 'string' ? member.role : 'member',
+        }))
+        setOnlineMembers(members)
+        setOnlineCount(members.length)
       })
       .on(
         'postgres_changes',
@@ -232,7 +249,13 @@ export default function TeacherCoursePage() {
       )
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
-          await channel?.track({ role: 'teacher', online_at: new Date().toISOString() })
+          await channel?.track({ name: presenceName, role: 'teacher', online_at: new Date().toISOString() })
+          const response = await fetch('/api/messages/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ course: courseSlug, content: `${presenceName} joined the class.` }),
+          })
+          if (!response.ok) console.error('Could not record teacher classroom entry:', await response.text())
         }
       })
     })()
@@ -427,13 +450,13 @@ export default function TeacherCoursePage() {
 
   return (
     <main
-      className={`min-h-screen font-sans ${dark ? 'bg-[#0b141a] text-[#e9edef]' : 'bg-[#f0f2f5] text-[#111b21]'}`}
+      className={`h-dvh min-h-0 flex flex-col overflow-hidden font-sans ${dark ? 'bg-[#0b141a] text-[#e9edef]' : 'bg-[#f0f2f5] text-[#111b21]'}`}
       style={{
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
       }}
     >
       {/* Top Navigation Bar */}
-      <header className={`sticky top-0 z-50 shadow-sm ${dark ? 'bg-[#202c33]' : 'bg-[#008069]'}`}>
+      <header className={`sticky top-0 z-50 shrink-0 shadow-sm ${dark ? 'bg-[#202c33]' : 'bg-[#008069]'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14 sm:h-16 lg:h-20">
             {/* Left side - Back button and Course name */}
@@ -446,21 +469,12 @@ export default function TeacherCoursePage() {
               </button>
               <div>
                 <p className="text-sm sm:text-base font-bold text-white">{course.title}</p>
-                <p className="text-[10px] sm:text-xs text-white/70 hidden sm:block">Class group · {onlineCount} online</p>
+                <button type="button" onClick={() => setShowMembers(true)} className="text-[10px] sm:text-xs text-white/75 hover:text-white">Class group · {onlineCount} online · See members</button>
               </div>
             </div>
 
             {/* Right side - Hamburger menu */}
             <div className="relative flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => setDark((value) => !value)}
-                aria-label={dark ? "Switch this class to light mode" : "Switch this class to dark mode"}
-                aria-pressed={dark}
-                className="p-2 rounded-lg text-white/90 hover:bg-white/10 transition-colors"
-              >
-                {dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-              </button>
               <button
                 onClick={() => {
                   if (showLogoutDropdown) {
@@ -485,19 +499,26 @@ export default function TeacherCoursePage() {
                     className={`absolute right-0 mt-2 w-64 rounded-xl shadow-lg overflow-hidden z-50 ${dark ? 'bg-[#202c33] text-[#e9edef]' : 'bg-white text-[#111b21]'}`}
                   >
                     {!confirmingLogout ? (
-                      // Step 1: menu with Logout option
-                      <button
-                        onClick={() => setConfirmingLogout(true)}
-                        className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-600 transition-colors ${dark ? 'hover:bg-[#2a3942]' : 'hover:bg-red-50'}`}
-                      >
-                        <LogOut className="w-4 h-4" />
-                        <span>Logout</span>
-                      </button>
+                      <>
+                        <button onClick={() => { setShowMembers(true); closeMenu() }} className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${dark ? 'hover:bg-[#2a3942]' : 'hover:bg-gray-100'}`}>
+                          <Users className="w-4 h-4" /> Class members · {onlineCount} online
+                        </button>
+                        <button onClick={() => setDark((value) => !value)} className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${dark ? 'hover:bg-[#2a3942]' : 'hover:bg-gray-100'}`}>
+                          {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />} Switch to {dark ? 'light' : 'dark'} mode
+                        </button>
+                        <button
+                          onClick={() => setConfirmingLogout(true)}
+                          className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-600 transition-colors ${dark ? 'hover:bg-[#2a3942]' : 'hover:bg-red-50'}`}
+                        >
+                          <LogOut className="w-4 h-4" />
+                          <span>Exit class</span>
+                        </button>
+                      </>
                     ) : (
                       // Step 2: confirmation
                       <div className="p-4">
                         <p className={`text-sm font-medium mb-3 ${dark ? 'text-[#e9edef]' : 'text-[#111B21]'}`}>
-                          Are you sure you want to log out?
+                          Are you sure you want to sign out and leave this classroom?
                         </p>
                         <div className="flex items-center gap-2">
                           <button
@@ -524,23 +545,33 @@ export default function TeacherCoursePage() {
       </header>
 
       {/* WhatsApp Chat Container */}
-      <div className="h-[calc(100vh-8rem)] sm:h-[calc(100vh-8rem)] flex flex-col">
+      <div className="flex min-h-0 flex-1 flex-col">
         
         {/* Chat Header */}
         <div className={`border-b px-4 py-2 flex items-center gap-3 shrink-0 z-10 ${dark ? 'bg-[#202c33] border-[#2a3942]' : 'bg-[#F0F2F5] border-gray-200'}`}>
+          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${dark ? 'bg-[#2a3942] text-[#aebac1]' : 'bg-gray-200 text-[#54656f]'}`}>
+            <Users className="h-5 w-5" />
+          </div>
           <div className="min-w-0 flex-1">
             <p className={`font-semibold text-[15px] ${dark ? 'text-[#e9edef]' : 'text-[#111B21]'} truncate leading-tight`}>
-              Live chat
+              {course.title} Classroom
             </p>
+            <p className={`text-xs ${dark ? 'text-[#aebac1]' : 'text-[#667781]'}`}>Class group · {onlineCount} online</p>
           </div>
         </div>
 
         {/* Chat Messages */}
-        <div 
-          className={`flex-1 overflow-y-auto px-3 sm:px-4 py-3 space-y-1 ${dark ? 'bg-[#0b141a]' : ''}`}
+        <div
+          data-lenis-prevent=""
+          className="classroom-chat-messages px-3 py-3 sm:px-4 space-y-1"
           style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-            backgroundColor: dark ? '#0b141a' : '#ECE5DD',
+            backgroundColor: dark ? "#0b141a" : "#efeae2",
+            backgroundImage: `url("${dark
+              ? "https://res.cloudinary.com/djdbcoyot/image/upload/v1792921622/qjc8vemd46bw4dgmntjz.jpg"
+              : "https://res.cloudinary.com/djdbcoyot/image/upload/v1792921618/drh38kaz0synj4tpxylb.jpg"}")`,
+            backgroundPosition: "center",
+            backgroundRepeat: "repeat",
+            backgroundSize: "auto",
           }}
         >
           {/* Loading history */}
@@ -735,6 +766,26 @@ export default function TeacherCoursePage() {
           </div>
         </div>
       </div>
+      {showMembers && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-4">
+          <section role="dialog" aria-modal="true" aria-labelledby="teacher-class-members-title" className={`w-full max-w-md overflow-hidden rounded-2xl shadow-2xl ${dark ? 'bg-[#202c33] text-[#e9edef]' : 'bg-white text-[#111b21]'}`}>
+            <header className={`flex items-center justify-between border-b px-5 py-4 ${dark ? 'border-[#2a3942]' : 'border-gray-200'}`}>
+              <div><h2 id="teacher-class-members-title" className="font-semibold">{course.title} members</h2><p className={`mt-1 text-xs ${dark ? 'text-[#aebac1]' : 'text-[#667781]'}`}>{onlineCount} currently online</p></div>
+              <button type="button" aria-label="Close members" onClick={() => setShowMembers(false)} className="rounded-lg p-2"><X className="h-4 w-4" /></button>
+            </header>
+            <ul className="max-h-[60vh] overflow-y-auto p-2">
+              {onlineMembers.map((member) => (
+                <li key={member.id} className={`flex items-center gap-3 rounded-xl px-3 py-3 ${dark ? 'hover:bg-[#2a3942]' : 'hover:bg-gray-50'}`}>
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#008069]/10 text-sm font-semibold text-[#008069]">{member.name.slice(0, 1).toUpperCase()}</span>
+                  <span className="min-w-0 flex-1"><span className="block truncate text-sm font-medium">{member.name}</span><span className={`text-xs capitalize ${dark ? 'text-[#aebac1]' : 'text-[#667781]'}`}>{member.role}</span></span>
+                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                </li>
+              ))}
+              {onlineMembers.length === 0 && <li className={`px-3 py-8 text-center text-sm ${dark ? 'text-[#aebac1]' : 'text-[#667781]'}`}>No one is online right now.</li>}
+            </ul>
+          </section>
+        </div>
+      )}
     </main>
   )
 }

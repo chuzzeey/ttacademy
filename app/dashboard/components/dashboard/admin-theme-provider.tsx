@@ -1,7 +1,6 @@
 "use client"
 
 import { createContext, useContext, useEffect, useState } from "react"
-import { usePathname } from "next/navigation"
 
 type AdminTheme = "light" | "dark"
 
@@ -11,24 +10,24 @@ const AdminThemeContext = createContext<{
 } | null>(null)
 
 export function AdminThemeProvider({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname()
   const [theme, setTheme] = useState<AdminTheme>("light")
-  const isClassroomRoute = pathname.startsWith("/dashboard/classrooms/")
+  const [themeLoaded, setThemeLoaded] = useState(false)
 
   useEffect(() => {
     const storedTheme = window.localStorage.getItem("ttacademy-admin-theme")
     if (storedTheme === "dark" || storedTheme === "light") setTheme(storedTheme)
+    setThemeLoaded(true)
   }, [])
 
   useEffect(() => {
-    window.localStorage.setItem("ttacademy-admin-theme", theme)
-  }, [theme])
+    if (themeLoaded) window.localStorage.setItem("ttacademy-admin-theme", theme)
+  }, [theme, themeLoaded])
 
   return (
     <AdminThemeContext.Provider
       value={{ theme, toggleTheme: () => setTheme((current) => current === "light" ? "dark" : "light") }}
     >
-      <div className={`admin-theme min-h-screen transition-colors duration-300 ${theme === "dark" && !isClassroomRoute ? "admin-theme-dark" : ""}`}>
+      <div className={`admin-theme min-h-screen transition-colors duration-300 ${theme === "dark" ? "admin-theme-dark" : ""}`}>
         {children}
       </div>
     </AdminThemeContext.Provider>

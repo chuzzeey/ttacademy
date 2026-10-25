@@ -1,4 +1,3 @@
-import { randomBytes } from "node:crypto"
 import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/server-admin"
 import { requireAdmin } from "@/lib/supabase/require-admin"
@@ -13,7 +12,7 @@ export async function GET() {
     const supabase = await createAdminClient()
     const [coursesResult, roomsResult, teachersResult, studentsResult] = await Promise.all([
       supabase.from("classroom_courses").select("slug,title,is_active").eq("is_active", true).order("title"),
-      supabase.from("classroom_rooms").select("course_slug,is_locked"),
+      supabase.from("classroom_rooms").select("course_slug,is_locked,teacher_email,teacher_display_name"),
       supabase.from("classroom_teachers").select("id,course_slug,email,display_name,status,created_at").order("created_at", { ascending: false }),
       supabase.from("classroom_students").select("student_id,course_slug,status,student:students(id,name,email,payment_status,restricted,created_at)").order("created_at", { ascending: false }),
     ])
@@ -42,11 +41,12 @@ export async function POST(request: NextRequest) {
     if (access.response) return access.response
 
     const body = await request.json()
-    if (body.action === "create-teacher") {
-      const courseSlug = typeof body.courseSlug === "string" ? body.courseSlug : ""
+    if (body.action === "set-teacher-email") {
+      const courseSlug = typeof body.courseSlug === "string" ? body.courseSlug.trim() : ""
+      const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : ""
       const displayName = typeof body.displayName === "string" ? body.displayName.trim().slice(0, 80) : ""
-      if (!courseSlug || !displayName) {
-        return NextResponse.json({ error: "Choose a class and enter the teacher’s name." }, { status: 400 })
+      if (!courseSlug || (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) {
+        return NextResponse.json({ error: "Choose a class and enter a valid teacher email." }, { status: 400 })
       }
 
       const supabase = await createAdminClient()
@@ -56,53 +56,37 @@ export async function POST(request: NextRequest) {
         .eq("slug", courseSlug)
         .eq("is_active", true)
         .maybeSingle()
-      if (courseError || !course) {
-        return NextResponse.json({ error: "That class is not available." }, { status: 400 })
-      }
+      if (courseError) throw courseError
+      if (!course) return NextResponse.json({ error: "That class is not available." }, { status: 400 })
 
-      const { data: existingTeacher, error: existingError } = await supabase
-        .from("classroom_teachers")
-        .select("id")
+      const { data: room, error: roomError } = await supabase
+        .from("classroom_rooms")
+        .select("teacher_email")
         .eq("course_slug", courseSlug)
-        .neq("status", "restricted")
         .maybeSingle()
-      if (existingError) throw existingError
-      if (existingTeacher) {
-        return NextResponse.json({ error: "This class already has a teacher assignment. Restrict it before assigning another teacher." }, { status: 409 })
+      if (roomError) throw roomError
+      if (!room) return NextResponse.json({ error: "Classroom settings were not found." }, { status: 404 })
+
+      const oldEmail = room.teacher_email?.trim().toLowerCase()
+      if (oldEmail && oldEmail !== email) {
+        const { error: restrictError } = await supabase.from("classroom_teachers")
+          .update({ status: "restricted", updated_at: new Date().toISOString() })
+          .eq("course_slug", courseSlug)
+          .eq("email", oldEmail)
+        if (restrictError) throw restrictError
       }
 
-      const email = `${courseSlug}.ttacademy@atomic.io`
-      const temporaryPassword = `${randomBytes(18).toString("base64url")}!9a`
-      const { data: authData, error: createUserError } = await supabase.auth.admin.createUser({
-        email,
-        password: temporaryPassword,
-        email_confirm: true,
-        user_metadata: { name: displayName, role: "teacher", must_change_password: true },
-      })
-      if (createUserError || !authData.user) {
-        console.error("Teacher account creation failed:", createUserError)
-        return NextResponse.json({ error: "Unable to create teacher sign-in. Check whether the generated email is already in use." }, { status: 500 })
-      }
-
-      const { error: insertError } = await supabase.from("classroom_teachers").insert({
-        user_id: authData.user.id,
-        course_slug: courseSlug,
-        email,
-        display_name: displayName,
-        status: "pending",
-      })
-      if (insertError) {
-        const { error: cleanupError } = await supabase.auth.admin.deleteUser(authData.user.id)
-        if (cleanupError) console.error("Failed to roll back unassigned teacher account:", cleanupError)
-        console.error("Teacher assignment creation failed:", insertError)
-        return NextResponse.json({ error: "Unable to save teacher assignment." }, { status: 500 })
-      }
-
-      return NextResponse.json({
-        message: "Teacher account created and awaiting approval. Share the password securely; it will not be shown again.",
-        teacher: { email, displayName, courseSlug, status: "pending" },
-        temporaryPassword,
-      }, { status: 201, headers: { "Cache-Control": "no-store" } })
+      const { data, error } = await supabase.from("classroom_rooms")
+        .update({
+          teacher_email: email || null,
+          teacher_display_name: email ? displayName || null : null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("course_slug", courseSlug)
+        .select("course_slug,teacher_email,teacher_display_name")
+        .single()
+      if (error) throw error
+      return NextResponse.json({ data, message: email ? "Teacher sign-in email saved." : "Teacher email removed." })
     }
 
     if (body.action === "update-status") {

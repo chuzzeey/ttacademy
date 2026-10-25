@@ -1,38 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+import { getStudentByEmail } from "@/lib/supabase/students";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email } = body;
+    const requestedEmail = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+    const supabaseAuth = await createClient()
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser()
 
-    if (!email) {
+    if (authError || !user?.email) {
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
+    }
+    const email = user.email.trim().toLowerCase()
+    if (!requestedEmail || requestedEmail !== email) {
       return NextResponse.json(
-        { error: "Email is required" },
-        { status: 400 }
+        { error: "You can only request your own student record." },
+        { status: 403 }
       );
     }
 
-    // Use admin client to query database without authentication
-    const { createAdminClient } = await import('@/lib/supabase/server-admin')
-    const supabase = await createAdminClient()
-
-    // Fetch the complete student record
-    const { data: student, error: fetchError } = await supabase
-      .from('students')
-      .select('*')
-      .eq('email', email.trim().toLowerCase())
-      .single();
-
-    if (fetchError || !student) {
+    const student = await getStudentByEmail(email)
+    if (!student) {
       return NextResponse.json(
         { error: "Student record not found" },
         { status: 404 }
       );
     }
 
-    // Return student data
     return NextResponse.json(
-      { data: student },
+      { data: { id: student.id, name: student.name, email: student.email, avatar: student.avatar ?? null } },
       { status: 200 }
     );
 

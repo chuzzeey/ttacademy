@@ -1,5 +1,44 @@
 @import "tailwindcss";
 
+.classroom-chat-messages {
+  min-height: 0;
+  flex: 1 1 0%;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.classroom-chat-messages::-webkit-scrollbar {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .classroom-chat-messages {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(100 116 139 / 0.55) transparent;
+  }
+
+  .classroom-chat-messages::-webkit-scrollbar {
+    display: block;
+    width: 8px;
+  }
+
+  .classroom-chat-messages::-webkit-scrollbar-thumb {
+    border: 2px solid transparent;
+    border-radius: 9999px;
+    background: rgb(100 116 139 / 0.55);
+    background-clip: content-box;
+  }
+
+  .classroom-chat-messages::-webkit-scrollbar-thumb:hover {
+    background: rgb(71 85 105 / 0.8);
+    background-clip: content-box;
+  }
+}
+
 svg .hero-orbit-sphere {
   transform-box: view-box;
   transform-origin: 1080px 450px;
