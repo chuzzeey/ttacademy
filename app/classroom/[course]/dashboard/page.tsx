@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import {
   GraduationCap,
   Code, Palette, Globe, Database, PieChart, Brain, Shield, Lock,
-  Send, Smile, Megaphone, AlertTriangle, Paperclip, Moon, Sun, Users, X, LogOut
+  Send, Smile, Megaphone, AlertTriangle, Paperclip, Moon, Sun, Users, X, LogOut, Menu
 } from 'lucide-react'
 import { getCourseData } from '@/lib/mock-data'
 import { createClient } from '@/lib/supabase/client'
@@ -46,6 +46,7 @@ export default function DashboardPage() {
   const dashboard = courseData.dashboard
 
   const [showLogoutModal, setShowLogoutModal] = useState(false)
+  const [showChatMenu, setShowChatMenu] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [loadingMessages, setLoadingMessages] = useState(true)
   const [message, setMessage] = useState('')
@@ -677,26 +678,38 @@ export default function DashboardPage() {
                   Class group · {onlineCount} online · See members
                 </button>
               </div>
-              <div className="flex items-center gap-1">
+              <div className="relative">
                 <button
                   type="button"
-                  onClick={() => setDark((value) => !value)}
-                  disabled={!currentUserId}
-                  aria-label={`Switch to ${dark ? 'light' : 'dark'} mode`}
-                  title={`Switch to ${dark ? 'light' : 'dark'} mode`}
-                  className={`w-10 h-10 rounded-full flex items-center justify-center transition-all disabled:cursor-wait disabled:opacity-50 ${dark ? 'text-amber-300 hover:bg-[#2a3942]' : 'text-[#667781] hover:bg-gray-200 hover:text-gray-700'}`}
+                  onClick={() => setShowChatMenu((open) => !open)}
+                  aria-label={showChatMenu ? 'Close classroom menu' : 'Open classroom menu'}
+                  aria-expanded={showChatMenu}
+                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${dark ? 'text-[#aebac1] hover:bg-[#2a3942]' : 'text-[#667781] hover:bg-gray-200'}`}
                 >
-                  {dark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                  {showChatMenu ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setShowLogoutModal(true)}
-                  aria-label="Exit class"
-                  title="Exit class"
-                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${dark ? 'text-rose-300 hover:bg-[#2a3942]' : 'text-rose-600 hover:bg-rose-50'}`}
-                >
-                  <LogOut className="h-5 w-5" />
-                </button>
+                {showChatMenu && (
+                  <>
+                    <button type="button" aria-label="Close classroom menu" onClick={() => setShowChatMenu(false)} className="fixed inset-0 z-30 cursor-default" />
+                    <div className={`absolute right-0 top-full z-40 mt-2 w-64 overflow-hidden rounded-xl border shadow-xl ${dark ? 'border-[#354650] bg-[#202c33] text-[#e9edef]' : 'border-gray-200 bg-white text-[#111b21]'}`}>
+                      <p className={`border-b px-4 py-3 text-xs font-semibold ${dark ? 'border-[#354650] text-[#aebac1]' : 'border-gray-100 text-[#667781]'}`}>{studentName}</p>
+                      <button type="button" onClick={() => { setShowMembers(true); setShowChatMenu(false) }} className={`flex min-h-12 w-full items-center gap-3 px-4 text-left text-sm ${dark ? 'hover:bg-[#2a3942]' : 'hover:bg-gray-50'}`}>
+                        <Users className="h-4 w-4" /> Class members · {onlineCount} online
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDark((value) => !value)}
+                        disabled={!currentUserId}
+                        className={`flex min-h-12 w-full items-center gap-3 px-4 text-left text-sm disabled:opacity-50 ${dark ? 'hover:bg-[#2a3942]' : 'hover:bg-gray-50'}`}
+                      >
+                        {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />} Switch to {dark ? 'light' : 'dark'} mode
+                      </button>
+                      <button type="button" onClick={() => { setShowChatMenu(false); setShowLogoutModal(true) }} className={`flex min-h-12 w-full items-center gap-3 border-t px-4 text-left text-sm text-rose-600 ${dark ? 'border-[#354650] hover:bg-[#2a3942]' : 'border-gray-100 hover:bg-rose-50'}`}>
+                        <LogOut className="h-4 w-4" /> Sign out
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
