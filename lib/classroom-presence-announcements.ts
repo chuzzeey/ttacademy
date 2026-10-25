@@ -18,11 +18,13 @@ async function sendAnnouncement(course: string, content: string) {
 
 export async function announceClassroomJoin(course: string, userId: string, name: string) {
   const key = announcementKey(course, userId)
-  if (window.sessionStorage.getItem(key) === "active") return
+  const status = window.sessionStorage.getItem(key)
+  if (status === "active" || status === "joining" || status === "leaving") return
 
-  window.sessionStorage.setItem(key, "active")
+  window.sessionStorage.setItem(key, "joining")
   try {
     await sendAnnouncement(course, `${name} joined the class.`)
+    window.sessionStorage.setItem(key, "active")
   } catch (error) {
     window.sessionStorage.removeItem(key)
     throw error
@@ -33,6 +35,12 @@ export async function announceClassroomLeave(course: string, userId: string, nam
   const key = announcementKey(course, userId)
   if (window.sessionStorage.getItem(key) !== "active") return
 
-  await sendAnnouncement(course, `${name} left the class.`)
-  window.sessionStorage.removeItem(key)
+  window.sessionStorage.setItem(key, "leaving")
+  try {
+    await sendAnnouncement(course, `${name} left the class.`)
+    window.sessionStorage.setItem(key, "left")
+  } catch (error) {
+    window.sessionStorage.setItem(key, "active")
+    throw error
+  }
 }
