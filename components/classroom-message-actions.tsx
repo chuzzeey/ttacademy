@@ -92,7 +92,7 @@ export function ClassroomMessageActions({
         <ChevronDown className="h-4 w-4" />
       </button>
       {open && (
-        <div ref={menuRef} style={menuPosition ? { position: "fixed", top: menuPosition.top, left: menuPosition.left } : { position: "fixed", top: 0, left: 0, visibility: "hidden" }} className={`z-[100] w-52 overflow-hidden rounded-xl border p-1.5 shadow-xl ${dark ? "border-[#354650] bg-[#202c33] text-[#e9edef]" : "border-gray-200 bg-white text-[#111b21]"}`}>
+        <div ref={menuRef} style={menuPosition ? { position: "fixed", top: menuPosition.top, left: menuPosition.left } : { position: "fixed", top: 0, left: 0, visibility: "hidden" }} className={`z-40 w-52 overflow-hidden rounded-xl border p-1.5 shadow-xl ${dark ? "border-[#354650] bg-[#202c33] text-[#e9edef]" : "border-gray-200 bg-white text-[#111b21]"}`}>
           <div className="flex items-center justify-between gap-0.5 border-b border-current/10 px-1 pb-1.5">
             {quickReactions.map((emoji) => <button key={emoji} type="button" onClick={() => { onReact(emoji); onToggle() }} aria-label={`React ${emoji}`} className={`rounded-md p-1 text-lg transition ${dark ? "hover:bg-[#354650]" : "hover:bg-gray-100"}`}>{emoji}</button>)}
           </div>
