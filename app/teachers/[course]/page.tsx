@@ -9,6 +9,7 @@ import { ClassroomEmojiPicker } from '@/components/classroom-emoji-picker'
 import { ClassroomMessageBubble } from '@/components/classroom-message-bubble'
 import { useClassroomTheme } from '@/lib/hooks/use-classroom-theme'
 import { mapClassroomMessage, type ClassroomMessageRecord } from '@/lib/classroom-chat'
+import { announceClassroomJoin, announceClassroomLeave } from '@/lib/classroom-presence-announcements'
 
 type DbMessage = ClassroomMessageRecord
 
@@ -97,6 +98,7 @@ export default function TeacherCoursePage() {
   const [onlineMembers, setOnlineMembers] = useState<Array<{ id: string; name: string; role: string }>>([])
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [currentUserRole, setCurrentUserRole] = useState<string | null>(null)
+  const [currentUserName, setCurrentUserName] = useState('Teacher')
   const { dark, setDark } = useClassroomTheme(courseSlug, currentUserId)
   const [showMembers, setShowMembers] = useState(false)
   const [isTyping, setIsTyping] = useState(false)
@@ -131,6 +133,13 @@ export default function TeacherCoursePage() {
 
   const handleLogout = async () => {
     try {
+      if (currentUserId) {
+        try {
+          await announceClassroomLeave(courseSlug, currentUserId, currentUserName)
+        } catch (leaveError) {
+          console.error('Could not record teacher classroom exit:', leaveError)
+        }
+      }
       const supabase = createClient()
       await supabase.auth.signOut()
       router.push('/teachers')
@@ -310,6 +319,7 @@ export default function TeacherCoursePage() {
         : typeof user.user_metadata?.name === 'string'
           ? user.user_metadata.name
           : user.email?.split('@')[0] || 'Teacher'
+      setCurrentUserName(presenceName)
       channel = supabase
       .channel(`classroom:${courseSlug}`, { config: { presence: { key: user.id } } })
       .on('presence', { event: 'sync' }, () => {
@@ -397,12 +407,11 @@ export default function TeacherCoursePage() {
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
           await channel?.track({ name: presenceName, role: 'teacher', online_at: new Date().toISOString() })
-          const response = await fetch('/api/messages/send', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ course: courseSlug, content: `${presenceName} joined the class.` }),
-          })
-          if (!response.ok) console.error('Could not record teacher classroom entry:', await response.text())
+          try {
+            await announceClassroomJoin(courseSlug, user.id, presenceName)
+          } catch (announcementError) {
+            console.error('Could not record teacher classroom entry:', announcementError)
+          }
         }
       })
     })()
@@ -606,7 +615,13 @@ export default function TeacherCoursePage() {
             {/* Left side - Back button and Course name */}
             <div className="flex items-center gap-3">
               <button 
-                onClick={() => router.push('/teachers')}
+                onClick={() => {
+                  if (currentUserId) {
+                    void announceClassroomLeave(courseSlug, currentUserId, currentUserName)
+                      .catch((leaveError) => console.error('Could not record teacher classroom exit:', leaveError))
+                  }
+                  router.push('/teachers')
+                }}
                 className="shrink-0 p-2 rounded-lg hover:bg-white/10 transition-colors"
               >
                 <ArrowLeft className="w-5 h-5 text-white" />

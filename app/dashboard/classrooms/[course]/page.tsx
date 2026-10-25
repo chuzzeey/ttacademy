@@ -2,11 +2,14 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { LoaderCircle, LogOut, Menu, Moon, Paperclip, Send, Sun, Users, X } from "lucide-react"
+import { LoaderCircle, LogOut, Menu, Moon, Paperclip, Send, Smile, Sun, Users, X, Pin } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { COURSE_CATALOG } from "@/lib/course-catalog"
 import { ClassroomAttachment } from "@/components/classroom-attachment"
+import { ClassroomEmojiPicker } from "@/components/classroom-emoji-picker"
+import { ClassroomMessageActions, MessageReactionList } from "@/components/classroom-message-actions"
 import { useAdminTheme } from "@/app/dashboard/components/dashboard/admin-theme-provider"
+import { announceClassroomJoin, announceClassroomLeave } from "@/lib/classroom-presence-announcements"
 
 type ChatMessage = {
   id: string
@@ -19,6 +22,13 @@ type ChatMessage = {
   attachment_name: string | null
   attachment_mime_type: string | null
   created_at: string
+  reply_to_message_id?: string | null
+  reply_to?: { id: string; content: string; sender_name: string } | null
+  edited_at?: string | null
+  is_pinned?: boolean
+  pinned_at?: string | null
+  pinned_by?: string | null
+  reactions?: Array<{ emoji: string; count: number; reacted: boolean }>
 }
 
 type ClassroomMember = {
@@ -53,6 +63,10 @@ export default function AdminClassroomPage() {
   const dark = theme === "dark"
   const [onlineCount, setOnlineCount] = useState(1)
   const [draft, setDraft] = useState("")
+  const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null)
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null)
+  const [openMessageActionsId, setOpenMessageActionsId] = useState<string | null>(null)
+  const [showEmoji, setShowEmoji] = useState(false)
   const [file, setFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
@@ -64,16 +78,47 @@ export default function AdminClassroomPage() {
   const [signingOut, setSigningOut] = useState(false)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+  const draftRef = useRef<HTMLTextAreaElement>(null)
 
-  const loadMessages = useCallback(async () => {
+  const loadMessages = useCallback(async (viewerId: string) => {
     const { data, error: queryError } = await supabase
       .from("classroom_messages")
-      .select("id,course_slug,sender_user_id,sender_role,sender_name,content,attachment_path,attachment_name,attachment_mime_type,created_at")
+      .select("id,course_slug,sender_user_id,sender_role,sender_name,content,attachment_path,attachment_name,attachment_mime_type,created_at,reply_to_message_id,edited_at,is_pinned,pinned_at,pinned_by")
       .eq("course_slug", courseSlug)
       .order("created_at", { ascending: true })
       .limit(250)
     if (queryError) throw queryError
-    setMessages(data as ChatMessage[])
+    const messageIds = data.map((message) => message.id)
+    const parentIds = [...new Set(data.map((message) => message.reply_to_message_id).filter((id): id is string => Boolean(id)))]
+    const [reactionResult, parentResult] = await Promise.all([
+      messageIds.length
+        ? supabase.from("classroom_message_reactions").select("message_id,user_id,emoji").in("message_id", messageIds)
+        : Promise.resolve({ data: [], error: null }),
+      parentIds.length
+        ? supabase.from("classroom_messages").select("id,content,sender_name").in("id", parentIds)
+        : Promise.resolve({ data: [], error: null }),
+    ])
+    if (reactionResult.error) throw reactionResult.error
+    if (parentResult.error) throw parentResult.error
+
+    const reactionsByMessage = new Map<string, Array<{ emoji: string; count: number; reacted: boolean }>>()
+    for (const reaction of reactionResult.data ?? []) {
+      const reactions = reactionsByMessage.get(reaction.message_id) ?? []
+      const existing = reactions.find((item) => item.emoji === reaction.emoji)
+      if (existing) {
+        existing.count += 1
+        existing.reacted ||= reaction.user_id === viewerId
+      } else {
+        reactions.push({ emoji: reaction.emoji, count: 1, reacted: reaction.user_id === viewerId })
+      }
+      reactionsByMessage.set(reaction.message_id, reactions)
+    }
+    const parents = new Map((parentResult.data ?? []).map((parent) => [parent.id, parent]))
+    setMessages(data.map((message) => ({
+      ...message,
+      reply_to: message.reply_to_message_id ? parents.get(message.reply_to_message_id) ?? null : null,
+      reactions: reactionsByMessage.get(message.id) ?? [],
+    })) as ChatMessage[])
   }, [courseSlug, supabase])
 
   useEffect(() => {
@@ -103,10 +148,11 @@ export default function AdminClassroomPage() {
       const { data: name, error: nameError } = await supabase.rpc("classroom_user_name", { p_course_slug: courseSlug })
       if (nameError) throw new Error("Could not load the administrator profile.")
       if (!active) return
+      const adminName = typeof name === "string" ? name : user.email ?? "Administrator"
       setUserId(user.id)
       setRole(currentRole)
-      setDisplayName(typeof name === "string" ? name : user.email ?? "Administrator")
-      await loadMessages()
+      setDisplayName(adminName)
+      await loadMessages(user.id)
       if (!active) return
 
       channel = supabase.channel(`classroom:${courseSlug}`, {
@@ -119,7 +165,33 @@ export default function AdminClassroomPage() {
           filter: `course_slug=eq.${courseSlug}`,
         }, (payload) => {
           const incoming = payload.new as ChatMessage
-          setMessages((existing) => existing.some((message) => message.id === incoming.id) ? existing : [...existing, incoming])
+          if (incoming.reply_to_message_id) {
+            void loadMessages(user.id).catch((refreshError) => {
+              console.error("Could not load the new classroom reply:", refreshError)
+            })
+          } else {
+            setMessages((existing) => existing.some((message) => message.id === incoming.id) ? existing : [...existing, incoming])
+          }
+        })
+        .on("postgres_changes", {
+          event: "UPDATE",
+          schema: "public",
+          table: "classroom_messages",
+          filter: `course_slug=eq.${courseSlug}`,
+        }, (payload) => {
+          const updated = payload.new as ChatMessage
+          setMessages((existing) => existing.map((message) => message.id === updated.id
+            ? { ...message, ...updated }
+            : message))
+        })
+        .on("postgres_changes", {
+          event: "*",
+          schema: "public",
+          table: "classroom_message_reactions",
+        }, () => {
+          void loadMessages(user.id).catch((refreshError) => {
+            console.error("Could not refresh classroom reactions:", refreshError)
+          })
         })
         .on("presence", { event: "sync" }, () => {
           const presence = channel?.presenceState() ?? {}
@@ -133,13 +205,12 @@ export default function AdminClassroomPage() {
         })
         .subscribe(async (status) => {
           if (status === "SUBSCRIBED") {
-            await channel?.track({ name: typeof name === "string" ? name : user.email, role: "admin", online_at: new Date().toISOString() })
-            const response = await fetch("/api/messages/send", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ course: courseSlug, content: `${displayName} joined the class.` }),
-            })
-            if (!response.ok) console.error("Could not record admin classroom entry:", await response.text())
+            await channel?.track({ name: adminName, role: "admin", online_at: new Date().toISOString() })
+            try {
+              await announceClassroomJoin(courseSlug, user.id, adminName)
+            } catch (announcementError) {
+              console.error("Could not record admin classroom entry:", announcementError)
+            }
           }
         })
     })().catch((loadError: unknown) => {
@@ -162,11 +233,91 @@ export default function AdminClassroomPage() {
     })
   }, [messages])
 
+  const appendEmoji = (emoji: string) => {
+    const input = draftRef.current
+    const start = input?.selectionStart ?? draft.length
+    const end = input?.selectionEnd ?? draft.length
+    setDraft(`${draft.slice(0, start)}${emoji}${draft.slice(end)}`)
+    requestAnimationFrame(() => {
+      if (!input) return
+      input.focus()
+      const cursor = start + emoji.length
+      input.setSelectionRange(cursor, cursor)
+    })
+  }
+
+  const reactToMessage = async (message: ChatMessage, emoji: string) => {
+    try {
+      const response = await fetch("/api/messages/reactions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messageId: message.id, emoji }),
+      })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result.error || "Unable to update this reaction.")
+      await loadMessages(userId)
+    } catch (reactionError) {
+      setError(reactionError instanceof Error ? reactionError.message : "Unable to update this reaction.")
+    }
+  }
+
+  const togglePinnedMessage = async (message: ChatMessage) => {
+    try {
+      const response = await fetch("/api/messages/pin", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messageId: message.id, isPinned: !message.is_pinned }),
+      })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result.error || "Unable to update the pinned message.")
+      setMessages((existing) => existing.map((item) => item.id === message.id
+        ? { ...item, is_pinned: result.data.is_pinned, pinned_at: result.data.pinned_at, pinned_by: result.data.pinned_by }
+        : item))
+    } catch (pinError) {
+      setError(pinError instanceof Error ? pinError.message : "Unable to update the pinned message.")
+    }
+  }
+
+  const deleteOwnMessage = async (message: ChatMessage) => {
+    if (!window.confirm("Delete this message?")) return
+    try {
+      const response = await fetch("/api/messages/delete", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messageId: message.id }),
+      })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result.error || "Unable to delete this message.")
+      setMessages((existing) => existing.filter((item) => item.id !== message.id))
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : "Unable to delete this message.")
+    }
+  }
+
   const send = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if ((!draft.trim() && !file) || !userId || !role) return
     setSending(true)
     setError("")
+    if (editingMessageId) {
+      try {
+        const response = await fetch("/api/messages/edit", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ messageId: editingMessageId, content: draft }),
+        })
+        const result = await response.json()
+        if (!response.ok) throw new Error(result.error || "Unable to edit this message.")
+        setEditingMessageId(null)
+        setDraft("")
+        await loadMessages(userId)
+      } catch (editError) {
+        setError(editError instanceof Error ? editError.message : "Unable to edit this message.")
+      } finally {
+        setSending(false)
+      }
+      return
+    }
     let attachmentPath: string | undefined
     try {
       if (file) {
@@ -190,13 +341,18 @@ export default function AdminClassroomPage() {
           attachmentPath,
           attachmentName: file?.name,
           attachmentMimeType: file?.type,
+          replyToMessageId: replyingTo?.id,
         }),
       })
       const result = await response.json()
       if (!response.ok) throw new Error(result.error || "Unable to send message.")
       setDraft("")
+      setReplyingTo(null)
       setFile(null)
       if (fileRef.current) fileRef.current.value = ""
+      void loadMessages(userId).catch((refreshError) => {
+        console.error("Could not refresh admin classroom messages:", refreshError)
+      })
     } catch (sendError) {
       setError(sendError instanceof Error ? sendError.message : "Unable to send message.")
       if (attachmentPath) {
@@ -211,6 +367,14 @@ export default function AdminClassroomPage() {
   const signOut = async () => {
     setSigningOut(true)
     setError("")
+    try {
+      if (userId) await announceClassroomLeave(courseSlug, userId, displayName)
+    } catch (leaveError) {
+      console.error("Could not record admin classroom exit:", leaveError)
+      setError("Unable to record leaving the classroom. Please try again.")
+      setSigningOut(false)
+      return
+    }
     const { error: signOutError } = await supabase.auth.signOut()
     if (signOutError) {
       setError("Unable to sign out. Please try again.")
@@ -218,6 +382,18 @@ export default function AdminClassroomPage() {
       return
     }
     router.replace("/admin-login")
+  }
+
+  const leaveClass = async () => {
+    setError("")
+    try {
+      if (userId) await announceClassroomLeave(courseSlug, userId, displayName)
+      setShowClassMenu(false)
+      router.push("/dashboard/classrooms")
+    } catch (leaveError) {
+      console.error("Could not record admin classroom exit:", leaveError)
+      setError("Unable to record leaving the classroom. Please try again.")
+    }
   }
 
   if (!course) return null
@@ -262,22 +438,41 @@ export default function AdminClassroomPage() {
             const isMine = message.sender_user_id === userId
             return (
               <div key={message.id} className={`flex ${isMine ? "justify-end" : "justify-start"}`}>
-                <article className={`max-w-[min(88%,38rem)] rounded-2xl px-3.5 py-2.5 shadow-sm ${palette.bubble} ${isMine ? "rounded-br-md" : "rounded-bl-md"}`}>
+                <article className={`group relative max-w-[min(88%,38rem)] rounded-2xl px-3.5 py-2.5 pr-10 shadow-sm ${palette.bubble} ${isMine ? "rounded-br-md" : "rounded-bl-md"}`}>
+                  <ClassroomMessageActions
+                    open={openMessageActionsId === message.id}
+                    isMine={isMine}
+                    dark={dark}
+                    canPin={role === "admin"}
+                    isPinned={message.is_pinned}
+                    onToggle={() => setOpenMessageActionsId((current) => current === message.id ? null : message.id)}
+                    onReply={() => { setReplyingTo(message); setEditingMessageId(null); setOpenMessageActionsId(null) }}
+                    onEdit={() => { setEditingMessageId(message.id); setReplyingTo(null); setDraft(message.content); setOpenMessageActionsId(null) }}
+                    onDelete={() => { void deleteOwnMessage(message) }}
+                    onTogglePin={() => { void togglePinnedMessage(message) }}
+                    onReact={(emoji) => { void reactToMessage(message, emoji) }}
+                  />
                   {!isMine && <p className="mb-1 text-[11px] font-semibold text-emerald-700">{message.sender_name} <span className={`font-normal capitalize ${palette.muted}`}>· {message.sender_role}</span></p>}
+                  {message.is_pinned && <p className="mb-1 flex items-center gap-1 text-[10px] font-semibold text-amber-600"><Pin className="h-3 w-3" /> Pinned by classroom staff</p>}
+                  {message.reply_to && <div className={`mb-2 rounded-lg border-l-[3px] px-2.5 py-1.5 ${dark ? "border-emerald-400/70 bg-black/10" : "border-emerald-700/60 bg-emerald-50"}`}><p className="truncate text-[11px] font-semibold text-emerald-700">{message.reply_to.sender_name}</p><p className={`line-clamp-2 text-xs ${palette.muted}`}>{message.reply_to.content}</p></div>}
                   {message.content && <p className="whitespace-pre-wrap break-words text-sm leading-5">{linkify(message.content)}</p>}
                   {message.attachment_path && message.attachment_name && message.attachment_mime_type && <ClassroomAttachment path={message.attachment_path} name={message.attachment_name} mimeType={message.attachment_mime_type} />}
-                  <p className={`mt-1 text-right text-[10px] ${palette.muted}`}>{new Intl.DateTimeFormat("en", { hour: "numeric", minute: "2-digit" }).format(new Date(message.created_at))}</p>
+                  <p className={`mt-1 text-right text-[10px] ${palette.muted}`}>{message.edited_at && <span className="mr-1 italic">edited</span>}{new Intl.DateTimeFormat("en", { hour: "numeric", minute: "2-digit" }).format(new Date(message.created_at))}</p>
+                  <MessageReactionList reactions={message.reactions ?? []} dark={dark} onReact={(emoji) => { void reactToMessage(message, emoji) }} />
                 </article>
               </div>
             )
           })}
         </div>
         <form onSubmit={(event) => void send(event)} className={`shrink-0 border-t p-3 sm:px-6 ${palette.panel} ${palette.border}`}>
+          {showEmoji && <div className="mb-2"><ClassroomEmojiPicker dark={dark} onSelect={appendEmoji} /></div>}
+          {(replyingTo || editingMessageId) && <div className={`mb-2 flex items-start gap-3 rounded-xl border-l-4 px-3 py-2 ${dark ? "border-emerald-400 bg-[#111b21]" : "border-emerald-700 bg-white"}`}><div className="min-w-0 flex-1"><p className="text-xs font-semibold text-emerald-700">{editingMessageId ? "Editing your message" : `Replying to ${replyingTo?.sender_name ?? "class member"}`}</p><p className={`mt-0.5 line-clamp-2 text-xs ${palette.muted}`}>{editingMessageId ? "Update your message and save." : replyingTo?.content}</p></div><button type="button" aria-label="Cancel reply or edit" onClick={() => { setReplyingTo(null); setEditingMessageId(null); setDraft("") }} className="rounded-lg p-1"><X className="h-4 w-4" /></button></div>}
           {file && <div className={`mb-2 flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-xs ${palette.bubble}`}><span className="truncate">{file.name}</span><button type="button" onClick={() => { setFile(null); if (fileRef.current) fileRef.current.value = "" }} className="font-medium text-rose-600">Remove</button></div>}
           <div className="flex items-end gap-2">
             <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp,application/pdf,text/plain" className="sr-only" onChange={(event) => setFile(event.target.files?.[0] ?? null)} />
             <button type="button" aria-label="Attach image or file" onClick={() => fileRef.current?.click()} className={`mb-0.5 rounded-xl p-2 ${palette.muted} hover:bg-black/5`}><Paperclip className="h-5 w-5" /></button>
-            <textarea value={draft} onChange={(event) => setDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); event.currentTarget.form?.requestSubmit() } }} rows={1} maxLength={5000} placeholder="Message the class…" className={`max-h-32 min-h-11 flex-1 resize-y rounded-2xl border px-4 py-3 text-sm outline-none ${palette.border} ${palette.panel}`} />
+            <textarea ref={draftRef} value={draft} onChange={(event) => setDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); event.currentTarget.form?.requestSubmit() } }} rows={1} maxLength={5000} placeholder={editingMessageId ? "Edit your message…" : replyingTo ? `Reply to ${replyingTo.sender_name}…` : "Message the class…"} className={`max-h-32 min-h-11 flex-1 resize-y rounded-2xl border px-4 py-3 text-sm outline-none ${palette.border} ${palette.panel}`} />
+            <button type="button" onClick={() => setShowEmoji((open) => !open)} aria-label="Open emoji picker" aria-expanded={showEmoji} title="Emoji" className={`mb-0.5 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-amber-500 ${palette.panel} hover:bg-amber-50`}><Smile className="h-5 w-5" /></button>
             <button type="submit" disabled={sending || (!draft.trim() && !file)} aria-label="Send message" className="mb-0.5 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-700 text-white hover:bg-emerald-800 disabled:opacity-50">{sending ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}</button>
           </div>
           <p className={`mt-2 text-[10px] ${palette.muted}`}>{displayName || "Administrator"} · Attachments up to 10 MB</p>
@@ -297,7 +492,7 @@ export default function AdminClassroomPage() {
               Switch to {dark ? "light" : "dark"} mode
             </button>
             <div className={`mt-auto border-t pt-3 ${palette.border}`}>
-              <button type="button" onClick={() => { setShowClassMenu(false); router.push("/dashboard/classrooms") }} className={`flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-black/5 ${palette.muted}`}>
+              <button type="button" onClick={() => void leaveClass()} className={`flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-black/5 ${palette.muted}`}>
                 <Users aria-hidden="true" className="h-4 w-4" /> Exit class
               </button>
               <button type="button" onClick={() => { setShowClassMenu(false); setShowSignoutConfirm(true) }} className="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-sm text-rose-600 hover:bg-rose-50">

@@ -6,7 +6,7 @@ import Image from 'next/image'
 import {
   Search, MoreVertical, GraduationCap,
   Code, Palette, Globe, Database, PieChart, Brain, Shield, Lock,
-  ArrowLeft, Send, Smile, Megaphone, AlertTriangle, Paperclip, Moon, Sun, Users, X
+  ArrowLeft, Send, Smile, Megaphone, AlertTriangle, Paperclip, Moon, Sun, Users, X, PanelLeftClose, PanelLeftOpen
 } from 'lucide-react'
 import { getCourseData } from '@/lib/mock-data'
 import { createClient } from '@/lib/supabase/client'
@@ -14,6 +14,7 @@ import { ClassroomEmojiPicker } from '@/components/classroom-emoji-picker'
 import { ClassroomMessageBubble } from '@/components/classroom-message-bubble'
 import { useClassroomTheme } from '@/lib/hooks/use-classroom-theme'
 import { mapClassroomMessage, type ClassroomMessageRecord } from '@/lib/classroom-chat'
+import { announceClassroomJoin, announceClassroomLeave } from '@/lib/classroom-presence-announcements'
 
 type DbMessage = ClassroomMessageRecord
 
@@ -47,6 +48,7 @@ export default function DashboardPage() {
   const [messages, setMessages] = useState<Message[]>([])
   const [loadingMessages, setLoadingMessages] = useState(true)
   const [showChatList, setShowChatList] = useState(false)
+  const [desktopChatListOpen, setDesktopChatListOpen] = useState(true)
   const [message, setMessage] = useState('')
   const [replyingTo, setReplyingTo] = useState<Message | null>(null)
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null)
@@ -388,12 +390,11 @@ export default function DashboardPage() {
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
           await channel?.track({ name: presenceName, role: 'student', online_at: new Date().toISOString() })
-          const response = await fetch('/api/messages/send', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ course: courseSlug, content: `${presenceName} joined the class.` }),
-          })
-          if (!response.ok) console.error('Could not record student classroom entry:', await response.text())
+          try {
+            await announceClassroomJoin(courseSlug, user.id, presenceName)
+          } catch (announcementError) {
+            console.error('Could not record student classroom entry:', announcementError)
+          }
         }
       })
     })()
@@ -459,6 +460,13 @@ export default function DashboardPage() {
   const handleLogout = async () => {
     try {
       const supabase = createClient()
+      if (currentUserId) {
+        try {
+          await announceClassroomLeave(courseSlug, currentUserId, studentName)
+        } catch (leaveError) {
+          console.error('Could not record student classroom exit:', leaveError)
+        }
+      }
       await supabase.auth.signOut()
       setShowLogoutModal(false)
       setShowProfileDropdown(false)
@@ -698,7 +706,7 @@ export default function DashboardPage() {
         <div className="flex flex-1 h-full min-h-0">
           
           {/* ===== CHAT LIST ===== */}
-          <div className={`${showChatList ? 'flex' : 'hidden'} md:flex flex-col w-full md:w-[380px] lg:w-[400px] xl:w-[420px] border-r ${dark ? 'border-[#2a3942] bg-[#111b21]' : 'border-gray-200 bg-white'} shrink-0`}>
+          <div className={`${showChatList ? 'flex' : 'hidden'} ${desktopChatListOpen ? 'md:flex' : 'md:hidden'} flex-col w-full md:w-[380px] lg:w-[400px] xl:w-[420px] border-r ${dark ? 'border-[#2a3942] bg-[#111b21]' : 'border-gray-200 bg-white'} shrink-0`}>
             
             <div className={`${dark ? 'bg-[#202c33]' : 'bg-[#F0F2F5]'} px-4 py-3 flex items-center justify-between shrink-0`}>
               <div className="flex items-center gap-3">
@@ -778,6 +786,16 @@ export default function DashboardPage() {
                 </button>
               </div>
               <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setDesktopChatListOpen((open) => !open)}
+                  aria-label={desktopChatListOpen ? 'Collapse chat sidebar' : 'Expand chat sidebar'}
+                  aria-expanded={desktopChatListOpen}
+                  title={desktopChatListOpen ? 'Collapse chat sidebar' : 'Expand chat sidebar'}
+                  className={`hidden md:flex h-10 w-10 items-center justify-center rounded-full ${dark ? 'text-[#aebac1] hover:bg-[#2a3942]' : 'text-[#667781] hover:bg-gray-200'}`}
+                >
+                  {desktopChatListOpen ? <PanelLeftClose className="h-5 w-5" /> : <PanelLeftOpen className="h-5 w-5" />}
+                </button>
                 <button
                   type="button"
                   onClick={() => setDark((value) => !value)}
