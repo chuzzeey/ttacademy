@@ -59,20 +59,27 @@ export default function TeacherPasswordSetupPage() {
     router.replace("/teachers/login")
   }
 
-  if (checking) return <main className="flex min-h-screen items-center justify-center text-sm text-slate-500"><LoaderCircle className="mr-2 h-4 w-4 animate-spin" />Checking teacher account…</main>
+  if (checking) return <main className="flex min-h-screen items-center justify-center bg-[#f5f7f5] text-sm text-slate-500"><LoaderCircle className="mr-2 h-4 w-4 animate-spin text-emerald-800" />Checking teacher account…</main>
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-white via-emerald-50/40 to-white px-4 py-10">
-      <section className="w-full max-w-md rounded-[28px] border border-slate-200/70 bg-white p-6 shadow-xl sm:p-8">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700"><LockKeyhole className="h-5 w-5" /></div>
-        <h1 className="mt-5 text-2xl font-semibold tracking-tight">Set your password</h1>
-        <p className="mt-1 text-sm text-slate-500">Replace the one-time password with a private password before signing in.</p>
-        {error && <p role="alert" className="mt-4 rounded-xl bg-rose-50 px-3 py-2.5 text-xs text-rose-800">{error}</p>}
-        <form onSubmit={(event) => void savePassword(event)} className="mt-6 space-y-4">
-          <label className="block space-y-1.5 text-xs font-medium">New password<input type="password" minLength={12} autoComplete="new-password" required value={password} onChange={(event) => setPassword(event.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" /></label>
-          <label className="block space-y-1.5 text-xs font-medium">Confirm password<input type="password" minLength={12} autoComplete="new-password" required value={confirmation} onChange={(event) => setConfirmation(event.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" /></label>
-          <button disabled={loading} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 py-3 text-sm font-semibold text-white disabled:opacity-60">{loading && <LoaderCircle className="h-4 w-4 animate-spin" />}Save password</button>
-        </form>
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#f5f7f5] px-4 py-10">
+      <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full bg-emerald-300/20 blur-3xl" />
+      <div aria-hidden="true" className="pointer-events-none absolute -bottom-32 -left-24 h-96 w-96 rounded-full bg-teal-200/25 blur-3xl" />
+      <section className="relative w-full max-w-md overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_22px_60px_-30px_rgba(6,78,59,.24)]">
+        <header className="bg-gradient-to-br from-[#092e22] via-[#0f5134] to-[#0a382a] px-6 py-7 text-white sm:px-7">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/15 bg-white/[0.08]"><LockKeyhole aria-hidden="true" className="h-5 w-5" /></div>
+          <p className="mt-5 text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-200">Secure access</p>
+          <h1 className="mt-1 text-xl font-semibold tracking-tight">Set your password</h1>
+          <p className="mt-2 text-sm leading-6 text-emerald-50/75">Replace the one-time password with a private password before signing in.</p>
+        </header>
+        <div className="p-6 sm:p-7">
+          {error && <p role="alert" className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-sm text-rose-800">{error}</p>}
+          <form onSubmit={(event) => void savePassword(event)} className="space-y-4">
+            <label className="block space-y-2 text-sm font-medium text-slate-700">New password<input type="password" minLength={12} autoComplete="new-password" required value={password} onChange={(event) => setPassword(event.target.value)} className="min-h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none transition focus:border-emerald-700 focus:ring-4 focus:ring-emerald-700/10" /></label>
+            <label className="block space-y-2 text-sm font-medium text-slate-700">Confirm password<input type="password" minLength={12} autoComplete="new-password" required value={confirmation} onChange={(event) => setConfirmation(event.target.value)} className="min-h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none transition focus:border-emerald-700 focus:ring-4 focus:ring-emerald-700/10" /></label>
+            <button disabled={loading} className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-emerald-800 px-4 text-sm font-semibold text-white transition hover:bg-emerald-900 disabled:cursor-not-allowed disabled:opacity-60">{loading && <LoaderCircle className="h-4 w-4 animate-spin" />}Save password</button>
+          </form>
+        </div>
       </section>
     </main>
   )

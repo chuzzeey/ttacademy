@@ -4,7 +4,9 @@ import { FormEvent, useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { ArrowLeft, CheckCircle2, GraduationCap, LoaderCircle, MailCheck, ShieldCheck } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 import { COURSE_CATALOG } from "@/lib/course-catalog"
+import { OtpCodeInput } from "@/components/otp-code-input"
 
 export default function StudentClassroomLoginPage() {
   const params = useParams<{ course: string }>()
@@ -83,8 +85,10 @@ export default function StudentClassroomLoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#f0f2f5] px-4 py-8">
-      <section className="w-full max-w-md overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_24px_80px_-35px_rgba(15,23,42,.28)]">
+    <main className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-slate-950 px-4 py-8">
+      <Image src={course.image} alt="" fill priority sizes="100vw" className="pointer-events-none absolute inset-0 -z-10 scale-110 object-cover opacity-55 blur-md" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-br from-slate-950/70 via-emerald-950/45 to-slate-950/75" />
+      <section className="relative w-full max-w-md overflow-hidden rounded-3xl border border-white/50 bg-white/[0.96] shadow-[0_30px_100px_-30px_rgba(2,12,27,.62)] backdrop-blur-2xl">
         <header className="bg-[#075e54] px-6 py-7 text-white">
           <Link href="/classroom" className="inline-flex items-center gap-2 text-xs text-white/75 transition hover:text-white"><ArrowLeft className="h-4 w-4" /> All classrooms</Link>
           <div className="mt-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15"><GraduationCap aria-hidden="true" className="h-6 w-6" /></div>
@@ -136,21 +140,11 @@ export default function StudentClassroomLoginPage() {
                   <ShieldCheck aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0" />
                   <p className="text-xs leading-5">A one-time code was sent to <strong>{maskedEmail}</strong>. It expires in 15 minutes.</p>
                 </div>
-                <label className="block space-y-2 text-sm font-medium text-slate-700">
-                  Six-digit email code
-                  <input
-                    required
-                    inputMode="numeric"
-                    autoComplete="one-time-code"
-                    pattern="[0-9]{6}"
-                    maxLength={6}
-                    value={otp}
-                    onChange={(event) => setOtp(event.target.value.replace(/\D/g, "").slice(0, 6))}
-                    placeholder="000000"
-                    className="min-h-12 w-full rounded-xl border border-slate-200 px-4 text-center font-mono text-lg tracking-[0.4em] outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/15"
-                  />
-                </label>
-                <button disabled={loading} type="submit" className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#008069] px-4 text-sm font-semibold text-white transition hover:bg-[#006d5c] disabled:opacity-60">
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-slate-700">Enter your six-digit code</p>
+                  <OtpCodeInput value={otp} onChange={setOtp} disabled={loading} />
+                </div>
+                <button disabled={loading || otp.length !== 6} type="submit" className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#008069] px-4 text-sm font-semibold text-white transition hover:bg-[#006d5c] disabled:cursor-not-allowed disabled:opacity-60">
                   {loading && <LoaderCircle className="h-4 w-4 animate-spin" />}
                   {loading ? "Verifying…" : "Verify and enter class"}
                 </button>

@@ -2,23 +2,15 @@
 
 import { useParams, useRouter } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
-import { Shield, BarChart3, Cpu, Globe, ShieldAlert, Palette, Code, Monitor, Server, Globe2, TrendingUp, Cloud, Database, ArrowLeft, Send, Menu, X, GraduationCap, LogOut, Home, BookMarked, User, Settings, Paperclip, Check, CheckCheck, Clock, Megaphone, UserCircle, Moon, Sun, Users } from 'lucide-react'
+import { Shield, BarChart3, Cpu, Globe, ShieldAlert, Palette, Code, Monitor, Server, Globe2, TrendingUp, Cloud, Database, ArrowLeft, Send, Menu, X, GraduationCap, LogOut, Home, BookMarked, User, Settings, Paperclip, Megaphone, UserCircle, Moon, Sun, Users, Smile } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 import { createClient } from '@/lib/supabase/client'
-import { ClassroomAttachment } from '@/components/classroom-attachment'
+import { ClassroomEmojiPicker } from '@/components/classroom-emoji-picker'
+import { ClassroomMessageBubble } from '@/components/classroom-message-bubble'
 import { useClassroomTheme } from '@/lib/hooks/use-classroom-theme'
+import { mapClassroomMessage, type ClassroomMessageRecord } from '@/lib/classroom-chat'
 
-interface DbMessage {
-  id: string
-  content: string
-  sender_name: string
-  sender_role: 'admin' | 'teacher' | 'student'
-  course_slug: string
-  created_at: string
-  attachment_path: string | null
-  attachment_name: string | null
-  attachment_mime_type: string | null
-}
+type DbMessage = ClassroomMessageRecord
 
 const courseSlugMap: Record<string, string> = {
   'cybersecurity': 'cybersecurity',
@@ -71,11 +63,16 @@ interface Message {
   text: string
   timestamp: Date
   status: 'sending' | 'sent' | 'delivered' | 'read'
-  sender: 'me' | 'system' | 'student'
+  sender: 'me' | 'system' | 'student' | 'mentor'
   senderName?: string
   attachmentPath?: string
   attachmentName?: string
   attachmentMimeType?: string
+  senderUserId?: string
+  replyToMessageId?: string
+  replyTo?: { id: string; content: string; sender_name: string }
+  editedAt?: string
+  reactions?: Array<{ emoji: string; count: number; reacted: boolean }>
 }
 
 export default function TeacherCoursePage() {
@@ -89,18 +86,21 @@ export default function TeacherCoursePage() {
   const [confirmingLogout, setConfirmingLogout] = useState(false)
 
   const [message, setMessage] = useState('')
+  const [replyingTo, setReplyingTo] = useState<Message | null>(null)
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null)
+  const [openMessageActionsId, setOpenMessageActionsId] = useState<string | null>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [error, setError] = useState('')
   const [isSending, setIsSending] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [onlineCount, setOnlineCount] = useState(1)
   const [onlineMembers, setOnlineMembers] = useState<Array<{ id: string; name: string; role: string }>>([])
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [showMembers, setShowMembers] = useState(false)
   const [isTyping, setIsTyping] = useState(false)
   const [showEmoji, setShowEmoji] = useState(false)
   const [loadingHistory, setLoadingHistory] = useState(true)
   const chatEndRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLTextAreaElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -108,7 +108,23 @@ export default function TeacherCoursePage() {
   const autoResizeTextarea = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const el = e.target
     el.style.height = 'auto'
-    el.style.height = Math.min(el.scrollHeight, 76) + 'px'
+    el.style.height = Math.min(el.scrollHeight, 160) + 'px'
+  }
+
+  const appendEmoji = (emoji: string) => {
+    const input = textareaRef.current
+    const start = input?.selectionStart ?? message.length
+    const end = input?.selectionEnd ?? message.length
+    const next = `${message.slice(0, start)}${emoji}${message.slice(end)}`
+    setMessage(next)
+    requestAnimationFrame(() => {
+      if (!input) return
+      input.style.height = 'auto'
+      input.style.height = `${Math.min(input.scrollHeight, 160)}px`
+      input.focus()
+      const cursor = start + emoji.length
+      input.setSelectionRange(cursor, cursor)
+    })
   }
 
   const handleLogout = async () => {
@@ -127,30 +143,109 @@ export default function TeacherCoursePage() {
     setConfirmingLogout(false)
   }
 
-  const emojis = ['😊', '👍', '🎉', '📚', '💡', '🔥', '✅', '⭐', '💪', '👏', '🎯', '📌', '📢', '💬', '🤝', '🌟']
+  const refreshChatMessages = async () => {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) setCurrentUserId(user.id)
+    const response = await fetch(`/api/messages/get?course=${String(params.course)}`, { cache: 'no-store' })
+    const result = await response.json()
+    if (!response.ok) throw new Error(result.error || 'Unable to refresh classroom messages.')
+    const freshMessages: Message[] = (result.data as DbMessage[]).map((item) => mapClassroomMessage(item, user?.id ?? null, 'teacher'))
+    setMessages((previous) => [...previous.filter((item) => item.sender === 'system'), ...freshMessages])
+  }
+
+  const beginReply = (target: Message) => {
+    setReplyingTo(target)
+    setEditingMessageId(null)
+    setOpenMessageActionsId(null)
+    window.setTimeout(() => textareaRef.current?.focus(), 0)
+  }
+
+  const beginEdit = (target: Message) => {
+    setEditingMessageId(target.id)
+    setReplyingTo(null)
+    setMessage(target.text)
+    setOpenMessageActionsId(null)
+    window.setTimeout(() => {
+      textareaRef.current?.focus()
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto'
+        textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 160)}px`
+      }
+    }, 0)
+  }
+
+  const saveMessageEdit = async () => {
+    if (!editingMessageId) return
+    setIsSending(true)
+    setError('')
+    try {
+      const response = await fetch('/api/messages/edit', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messageId: editingMessageId, content: message }),
+      })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result.error || 'Unable to edit this message.')
+      setMessages((previous) => previous.map((item) => item.id === editingMessageId
+        ? { ...item, text: result.data.content, editedAt: result.data.edited_at }
+        : item))
+      setEditingMessageId(null)
+      setMessage('')
+      if (textareaRef.current) textareaRef.current.style.height = 'auto'
+    } catch (editError) {
+      setError(editError instanceof Error ? editError.message : 'Unable to edit this message.')
+    } finally {
+      setIsSending(false)
+    }
+  }
+
+  const deleteChatMessage = async (target: Message) => {
+    if (!window.confirm('Delete this message?')) return
+    try {
+      const response = await fetch('/api/messages/delete', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messageId: target.id }),
+      })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result.error || 'Unable to delete this message.')
+      setMessages((previous) => previous.filter((item) => item.id !== target.id))
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : 'Unable to delete this message.')
+    }
+  }
+
+  const reactToMessage = async (target: Message, emoji: string) => {
+    try {
+      const response = await fetch('/api/messages/reactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messageId: target.id, emoji }),
+      })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result.error || 'Unable to add this reaction.')
+      await refreshChatMessages()
+    } catch (reactionError) {
+      setError(reactionError instanceof Error ? reactionError.message : 'Unable to add this reaction.')
+    }
+  }
 
   // Fetch existing messages from DB + setup realtime subscription
   useEffect(() => {
     const courseSlug = params.course as string
     if (!courseSlug) return
 
+    const supabase = createClient()
     // Fetch existing messages
     const fetchMessages = async () => {
       try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) setCurrentUserId(user.id)
         const res = await fetch(`/api/messages/get?course=${courseSlug}`)
         if (res.ok) {
           const data = await res.json()
-          const dbMessages: Message[] = (data.data || []).map((msg: DbMessage) => ({
-            id: msg.id,
-            text: msg.content,
-            timestamp: new Date(msg.created_at),
-            status: 'read' as const,
-            sender: msg.sender_role === 'teacher' ? ('me' as const) : ('student' as const),
-            senderName: msg.sender_name,
-            attachmentPath: msg.attachment_path ?? undefined,
-            attachmentName: msg.attachment_name ?? undefined,
-            attachmentMimeType: msg.attachment_mime_type ?? undefined,
-          }))
+          const dbMessages: Message[] = (data.data || []).map((msg: DbMessage) => mapClassroomMessage(msg, user?.id ?? null, 'teacher'))
           
           setMessages(prev => {
             const initial = prev.filter(m => m.sender === 'system')
@@ -169,12 +264,12 @@ export default function TeacherCoursePage() {
     fetchMessages()
 
     // Setup Supabase Realtime subscription for live messages
-    const supabase = createClient()
     let active = true
     let channel: ReturnType<typeof supabase.channel> | null = null
     void (async () => {
       const { data: { user }, error: userError } = await supabase.auth.getUser()
       if (userError || !user || !active) return
+      setCurrentUserId(user.id)
       const { data: memberName, error: memberNameError } = await supabase.rpc('classroom_user_name', {
         p_course_slug: courseSlug,
       })
@@ -232,21 +327,37 @@ export default function TeacherCoursePage() {
               }
             }
 
-            const msg: Message = {
-              id: newMsg.id,
-              text: newMsg.content,
-              timestamp: new Date(newMsg.created_at),
-              status: 'read',
-              sender: newMsg.sender_role === 'teacher' ? 'me' : 'student',
-              senderName: newMsg.sender_name,
-              attachmentPath: newMsg.attachment_path ?? undefined,
-              attachmentName: newMsg.attachment_name ?? undefined,
-              attachmentMimeType: newMsg.attachment_mime_type ?? undefined,
-            }
+            const msg: Message = mapClassroomMessage(newMsg, user.id, 'teacher')
             return [...prev, msg]
           })
         }
       )
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'classroom_messages',
+        filter: `course_slug=eq.${courseSlug}`,
+      }, (payload) => {
+        const updated = payload.new as DbMessage
+        setMessages((previous) => previous.map((item) => item.id === updated.id
+          ? { ...item, text: updated.content, editedAt: updated.edited_at ?? undefined }
+          : item))
+      })
+      .on('postgres_changes', {
+        event: 'DELETE',
+        schema: 'public',
+        table: 'classroom_messages',
+      }, (payload) => {
+        const deletedId = (payload.old as { id?: string }).id
+        if (deletedId) setMessages((previous) => previous.filter((item) => item.id !== deletedId))
+      })
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'classroom_message_reactions',
+      }, () => {
+        void fetchMessages()
+      })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
           await channel?.track({ name: presenceName, role: 'teacher', online_at: new Date().toISOString() })
@@ -288,6 +399,10 @@ export default function TeacherCoursePage() {
   const Icon = course.icon
 
   const handleSendMessage = async () => {
+    if (editingMessageId) {
+      await saveMessageEdit()
+      return
+    }
     if (!message.trim() && !selectedFile) {
       setError('Write a message or choose a file to send.')
       return
@@ -304,10 +419,15 @@ export default function TeacherCoursePage() {
       sender: 'me',
       attachmentName: file?.name,
       attachmentMimeType: file?.type,
+      senderUserId: currentUserId ?? undefined,
+      replyToMessageId: replyingTo?.id,
+      replyTo: replyingTo ? { id: replyingTo.id, content: replyingTo.text, sender_name: replyingTo.senderName ?? 'Class member' } : undefined,
+      reactions: [],
     }
 
     setMessages(prev => [...prev, newMsg])
     setMessage('')
+    setReplyingTo(null)
     setIsSending(true)
 
     // Reset textarea height after sending
@@ -342,6 +462,7 @@ export default function TeacherCoursePage() {
           attachmentPath,
           attachmentName: file?.name,
           attachmentMimeType: file?.type,
+          replyToMessageId: replyingTo?.id,
         }),
       })
       const result = await res.json()
@@ -355,6 +476,8 @@ export default function TeacherCoursePage() {
         timestamp: new Date(savedMessage.created_at),
         status: 'sent',
         senderName: savedMessage.sender_name,
+        senderUserId: savedMessage.sender_user_id,
+        replyToMessageId: savedMessage.reply_to_message_id ?? undefined,
         attachmentPath: savedMessage.attachment_path ?? undefined,
         attachmentName: savedMessage.attachment_name ?? undefined,
         attachmentMimeType: savedMessage.attachment_mime_type ?? undefined,
@@ -402,21 +525,6 @@ export default function TeacherCoursePage() {
       }
       return part
     })
-  }
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'sending':
-        return <Clock className="w-3.5 h-3.5 text-[#667781]" />
-      case 'sent':
-        return <Check className="w-3.5 h-3.5 text-[#667781]" />
-      case 'delivered':
-        return <Check className="w-3.5 h-3.5 text-[#667781]" />
-      case 'read':
-        return <CheckCheck className="w-3.5 h-3.5 text-[#53BDEB]" />
-      default:
-        return <Clock className="w-3.5 h-3.5 text-[#667781]" />
-    }
   }
 
   const formatTime = (date: Date) => {
@@ -594,78 +702,22 @@ export default function TeacherCoursePage() {
               </div>
 
               {group.messages.map((msg) => (
-                <div key={msg.id}>
-                  {msg.sender === 'system' ? (
-                    // System message (left side)
-                    <div className="flex justify-start mb-1 group">
-                      <div 
-                        className="relative max-w-[70%] sm:max-w-[60%] px-3 py-2 shadow-[0_1px_1px_rgba(0,0,0,0.06)] group-hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)] transition-shadow"
-                        style={{ 
-                          backgroundColor: dark ? '#202c33' : '#FFFFFF',
-                          borderRadius: '4px 8px 8px 8px',
-                        }}
-                      >
-                        {msg.text && <p className={`text-[14px] ${dark ? 'text-[#e9edef]' : 'text-[#111B21]'} leading-[19px] break-words whitespace-pre-wrap`}>{renderMessageText(msg.text)}</p>}
-                        {msg.attachmentPath && msg.attachmentName && msg.attachmentMimeType && <ClassroomAttachment path={msg.attachmentPath} name={msg.attachmentName} mimeType={msg.attachmentMimeType} />}
-                        <div className="flex items-center justify-end gap-1 mt-1">
-                          <span className="text-[11px] text-[#8696a0] leading-[13px]">
-                            {formatTime(msg.timestamp)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ) : msg.sender === 'student' ? (
-                    // Student message (left side, white bubble like incoming)
-                    <div className="flex justify-start mb-1 group">
-                      <div className="max-w-[70%] sm:max-w-[60%]">
-                        {/* Student name label */}
-                        <div className="flex items-center gap-2 mb-[2px] ml-[2px]">
-                          <div className="w-[20px] h-[20px] rounded-full bg-[#008069] flex items-center justify-center shrink-0">
-                            <span className="text-white text-[8px] font-bold">{msg.senderName?.charAt(0) || 'S'}</span>
-                          </div>
-                          <span className="text-[11px] font-semibold text-[#25a889]">{msg.senderName || 'Student'}</span>
-                        </div>
-                        <div 
-                          className="relative px-3 py-2 shadow-[0_1px_1px_rgba(0,0,0,0.06)] group-hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)] transition-shadow"
-                          style={{ 
-                            backgroundColor: dark ? '#202c33' : '#FFFFFF',
-                            borderRadius: '4px 8px 8px 8px',
-                          }}
-                        >
-                          {msg.text && <p className={`text-[14px] ${dark ? 'text-[#e9edef]' : 'text-[#111B21]'} leading-[19px] break-words whitespace-pre-wrap`}>{renderMessageText(msg.text)}</p>}
-                          {msg.attachmentPath && msg.attachmentName && msg.attachmentMimeType && <ClassroomAttachment path={msg.attachmentPath} name={msg.attachmentName} mimeType={msg.attachmentMimeType} />}
-                          <div className="flex items-center justify-end gap-1 mt-1">
-                            <span className="text-[11px] text-[#8696a0] leading-[13px]">
-                              {formatTime(msg.timestamp)}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    // My message (right side) - WhatsApp green
-                    <div className="flex justify-end mb-1 group relative">
-                        <div 
-                          className="relative px-3 py-2 shadow-[0_1px_1px_rgba(0,0,0,0.06)] group-hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)] transition-shadow"
-                          style={{ 
-                            backgroundColor: dark ? '#005c4b' : '#D9FDD3',
-                            borderRadius: '8px 4px 8px 8px',
-                          }}
-                        >
-                          {msg.text && <p className={`text-[14px] ${dark ? 'text-[#e9edef]' : 'text-[#111B21]'} leading-[19px] break-words whitespace-pre-wrap`}>{renderMessageText(msg.text)}</p>}
-                          {msg.attachmentPath && msg.attachmentName && msg.attachmentMimeType && <ClassroomAttachment path={msg.attachmentPath} name={msg.attachmentName} mimeType={msg.attachmentMimeType} />}
-                        <div className="flex items-center justify-end gap-0.5 mt-0.5">
-                          <span className="text-[11px] text-[#aebac1] leading-[13px]">
-                            {formatTime(msg.timestamp)}
-                          </span>
-                          <span className="flex items-center">
-                            {getStatusIcon(msg.status)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                <ClassroomMessageBubble
+                  key={msg.id}
+                  message={msg}
+                  isMine={msg.sender === 'me'}
+                  isSystem={msg.sender === 'system'}
+                  senderLabel={msg.sender === 'student' ? msg.senderName || 'Student' : undefined}
+                  time={formatTime(msg.timestamp)}
+                  content={renderMessageText(msg.text)}
+                  dark={dark}
+                  actionsOpen={openMessageActionsId === msg.id}
+                  onToggleActions={() => setOpenMessageActionsId((current) => current === msg.id ? null : msg.id)}
+                  onReply={() => beginReply(msg)}
+                  onEdit={() => beginEdit(msg)}
+                  onDelete={() => void deleteChatMessage(msg)}
+                  onReact={(emoji) => void reactToMessage(msg, emoji)}
+                />
               ))}
             </div>
           ))}
@@ -688,28 +740,17 @@ export default function TeacherCoursePage() {
 
         {/* Message Input Area */}
         <div className={`${dark ? 'bg-[#202c33]' : 'bg-[#F0F2F5]'} px-3 py-2 sm:px-4 shrink-0 z-10`}>
-          <AnimatePresence>
-            {showEmoji && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                className={`overflow-hidden border-b ${dark ? 'border-[#2a3942]' : 'border-gray-200'}`}
-              >
-                <div className={`flex flex-wrap gap-1.5 p-2 ${dark ? 'bg-[#111b21]' : 'bg-white'}`}>
-                  {emojis.map((emoji, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setMessage(prev => prev + emoji)}
-                      className={`w-8 h-8 flex items-center justify-center text-lg rounded transition-colors ${dark ? 'hover:bg-[#2a3942]' : 'hover:bg-gray-100'}`}
-                    >
-                      {emoji}
-                    </button>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {showEmoji && <div className="mb-2"><ClassroomEmojiPicker dark={dark} onSelect={appendEmoji} /></div>}
+
+          {(replyingTo || editingMessageId) && (
+            <div className={`mb-2 flex items-start gap-3 rounded-xl border-l-4 px-3 py-2 ${dark ? 'border-emerald-400 bg-[#111b21] text-[#e9edef]' : 'border-emerald-700 bg-white text-[#111b21]'}`}>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-semibold text-emerald-700">{editingMessageId ? 'Editing message' : `Replying to ${replyingTo?.senderName || 'class member'}`}</p>
+                <p className={`mt-0.5 line-clamp-2 text-xs ${dark ? 'text-[#aebac1]' : 'text-[#667781]'}`}>{editingMessageId ? 'Update your message and save.' : replyingTo?.text}</p>
+              </div>
+              <button type="button" aria-label="Cancel reply or edit" onClick={() => { setReplyingTo(null); setEditingMessageId(null); setMessage(''); if (textareaRef.current) textareaRef.current.style.height = 'auto' }} className="rounded-lg p-1"><X className="h-4 w-4" /></button>
+            </div>
+          )}
 
           {selectedFile && (
             <div className={`mb-2 flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-xs ${dark ? 'bg-[#111b21] text-[#aebac1]' : 'bg-white text-[#667781]'}`}>
@@ -728,8 +769,11 @@ export default function TeacherCoursePage() {
             <button type="button" onClick={() => fileInputRef.current?.click()} aria-label="Attach a file" className={`p-2 rounded-full transition-colors shrink-0 ${dark ? 'hover:bg-[#2a3942]' : 'hover:bg-gray-200'}`}>
               <Paperclip className="w-6 h-6 text-[#8696A0]" />
             </button>
-            
-            <div className={`flex-1 rounded-lg px-4 py-2 flex items-center ${dark ? 'bg-[#111b21]' : 'bg-white'}`}>
+            <button type="button" onClick={() => setShowEmoji((visible) => !visible)} aria-label="Choose emoji" aria-expanded={showEmoji} className={`p-2 rounded-full transition-colors shrink-0 ${dark ? 'hover:bg-[#2a3942]' : 'hover:bg-gray-200'}`}>
+              <Smile className="h-5 w-5 text-[#8696A0]" />
+            </button>
+
+            <div className={`flex-1 rounded-2xl px-4 py-2 flex items-end ${dark ? 'bg-[#111b21]' : 'bg-white'}`}>
               <textarea
                 ref={textareaRef}
                 value={message}
@@ -741,8 +785,8 @@ export default function TeacherCoursePage() {
                 onKeyDown={handleKeyDown}
                 placeholder="Type a message"
                 rows={1}
-                className={`w-full text-[15px] ${dark ? 'text-[#e9edef]' : 'text-[#111B21]'} placeholder-[#8696A0] bg-transparent focus:outline-none resize-none overflow-hidden leading-[19px]`}
-                style={{ minHeight: '19px', maxHeight: '76px' }}
+                className={`w-full text-[15px] ${dark ? 'text-[#e9edef]' : 'text-[#111B21]'} placeholder-[#8696A0] bg-transparent focus:outline-none resize-none overflow-y-auto leading-[21px]`}
+                style={{ minHeight: '21px', maxHeight: '160px' }}
               />
             </div>
 

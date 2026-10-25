@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
 
     const { data: room, error: roomError } = await admin
       .from("classroom_rooms")
-      .select("is_locked,teacher_email")
+      .select("is_locked,teacher_email,teacher_display_name")
       .eq("course_slug", courseSlug)
       .maybeSingle()
     if (roomError) throw roomError
@@ -40,6 +40,8 @@ export async function POST(request: NextRequest) {
     }
 
     let email = ""
+    let recipientName: string | null = null
+    let linkedUserId: string | null = null
     let studentId: string | null = null
     if (loginType === "student") {
       const studentCode = typeof body.studentCode === "string" ? body.studentCode.trim().toUpperCase() : ""
@@ -48,7 +50,7 @@ export async function POST(request: NextRequest) {
       }
       const { data: student, error: studentError } = await admin
         .from("students")
-        .select("id,student_code,email,restricted,payment_status")
+        .select("id,student_code,email,name,restricted,payment_status")
         .eq("student_code", studentCode)
         .maybeSingle()
       if (studentError) throw studentError
@@ -56,7 +58,7 @@ export async function POST(request: NextRequest) {
 
       const { data: membership, error: membershipError } = await admin
         .from("classroom_students")
-        .select("course_slug,status")
+        .select("course_slug,status,auth_user_id")
         .eq("student_id", student.id)
         .maybeSingle()
       if (membershipError) throw membershipError
@@ -87,6 +89,8 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Your payment is not approved for classroom access. Contact the academy administrator." }, { status: 403 })
       }
       email = student.email?.trim().toLowerCase() ?? ""
+      recipientName = student.name?.trim() || null
+      linkedUserId = membership.auth_user_id
       studentId = student.id
     } else {
       email = typeof body.email === "string" ? body.email.trim().toLowerCase() : ""
@@ -105,10 +109,33 @@ export async function POST(request: NextRequest) {
         .maybeSingle()
       if (teacherError) throw teacherError
       if (teacher) return NextResponse.json({ error: "Teacher access to this class has been restricted." }, { status: 403 })
+      const { data: assignedTeacher, error: assignedTeacherError } = await admin
+        .from("classroom_teachers")
+        .select("user_id")
+        .eq("course_slug", courseSlug)
+        .eq("email", email)
+        .neq("status", "restricted")
+        .maybeSingle()
+      if (assignedTeacherError) throw assignedTeacherError
+      recipientName = room.teacher_display_name?.trim() || null
+      linkedUserId = assignedTeacher?.user_id ?? null
     }
 
     if (!email) {
       return NextResponse.json({ error: "No email is on file for this account. Contact the administrator." }, { status: 400 })
+    }
+
+    if (recipientName && linkedUserId) {
+      const { data: authUser, error: authUserError } = await admin.auth.admin.getUserById(linkedUserId)
+      if (authUserError) throw authUserError
+      const { error: metadataError } = await admin.auth.admin.updateUserById(linkedUserId, {
+        user_metadata: {
+          ...authUser.user.user_metadata,
+          name: recipientName,
+          first_name: recipientName.split(/\s+/)[0],
+        },
+      })
+      if (metadataError) throw metadataError
     }
 
     const now = new Date()
@@ -147,7 +174,12 @@ export async function POST(request: NextRequest) {
     const sessionClient = await createClient()
     const { error: otpError } = await sessionClient.auth.signInWithOtp({
       email,
-      options: { shouldCreateUser: true },
+      options: {
+        shouldCreateUser: true,
+        data: recipientName
+          ? { name: recipientName, first_name: recipientName.split(/\s+/)[0] }
+          : {},
+      },
     })
     if (otpError) {
       const { error: challengeCleanupError } = await admin

@@ -5,7 +5,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    const { content, course, attachmentPath, attachmentName, attachmentMimeType } = body;
+    const { content, course, attachmentPath, attachmentName, attachmentMimeType, replyToMessageId } = body;
 
     if (typeof content !== "string" || typeof course !== "string") {
       return NextResponse.json(
@@ -20,6 +20,7 @@ export async function POST(request: NextRequest) {
       attachmentPath: typeof attachmentPath === "string" ? attachmentPath : undefined,
       attachmentName: typeof attachmentName === "string" ? attachmentName : undefined,
       attachmentMimeType: typeof attachmentMimeType === "string" ? attachmentMimeType : undefined,
+      replyToMessageId: typeof replyToMessageId === "string" ? replyToMessageId : undefined,
     });
 
     return NextResponse.json(
@@ -37,7 +38,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       {
-        error: err instanceof Error && ["Authentication required.", "You do not have access to this classroom.", "Write a message or attach a file.", "Messages must be 5,000 characters or fewer.", "The attachment path is invalid for this classroom."].includes(err.message)
+        error: err instanceof Error && ["Authentication required.", "You do not have access to this classroom.", "Write a message or attach a file.", "Messages must be 5,000 characters or fewer.", "The attachment path is invalid for this classroom.", "The message you are replying to is unavailable."].includes(err.message)
           ? err.message
           : "Unable to send the classroom message.",
       },

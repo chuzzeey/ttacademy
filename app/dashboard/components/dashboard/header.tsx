@@ -81,6 +81,8 @@ export function Header() {
   const notificationDialogRef = useRef<HTMLElement>(null)
   const notificationTriggerRef = useRef<HTMLButtonElement>(null)
   const notificationRequestRef = useRef(false)
+  const notificationOpenRef = useRef(notificationOpen)
+  notificationOpenRef.current = notificationOpen
   const drawerCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const notificationStorageKey = user ? `academy-notification-read:${user.id}` : null
   const unreadCount = notifications.filter((item) => !readNotificationIds.includes(item.id)).length
@@ -132,6 +134,24 @@ export function Header() {
     }
   }, [])
 
+  useEffect(() => {
+    if (!user) return
+    const channel = supabase
+      .channel(`admin-notifications:${user.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "students" }, () => {
+        if (notificationOpenRef.current) void loadNotifications()
+      })
+      .subscribe((status, error) => {
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+          console.error("Live admin notification updates unavailable:", error ?? status)
+        }
+      })
+
+    return () => {
+      void supabase.removeChannel(channel)
+    }
+  }, [loadNotifications, supabase, user])
+
   const toggleNotifications = () => {
     const nextOpen = !notificationOpen
     if (nextOpen) setSelectedNotification(null)
@@ -173,7 +193,6 @@ export function Header() {
       setLogoutPhase("success")
       window.setTimeout(() => {
         router.replace("/admin-login")
-        router.refresh()
       }, 1400)
     } catch (error) {
       setLogoutError(error instanceof Error ? error.message : "Unable to end the admin session.")

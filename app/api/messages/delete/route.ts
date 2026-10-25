@@ -6,9 +6,9 @@ export async function DELETE(request: NextRequest) {
     const body = await request.json();
     const { messageId } = body;
 
-    if (!messageId) {
+    if (typeof messageId !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(messageId)) {
       return NextResponse.json(
-        { error: "Message ID is required" },
+        { error: "A valid message ID is required." },
         { status: 400 }
       );
     }
@@ -29,12 +29,15 @@ export async function DELETE(request: NextRequest) {
 
     console.error("Delete message error:", message);
 
+    const status = message === "Authentication required." ? 401
+      : message.includes("own classroom messages") ? 403
+        : message === "This classroom message is unavailable." ? 404 : 500
     return NextResponse.json(
       {
-        error: message,
+        error: status === 500 ? "Unable to delete this message." : message,
       },
       {
-        status: 500,
+        status,
       }
     );
   }

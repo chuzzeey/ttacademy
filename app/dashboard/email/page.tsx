@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { PageHeader } from "../components/dashboard/page-header"
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Button } from "../components/ui/button"
@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "../components/ui/select"
 import { AlertCircle, Mail, Search, Users, X } from "lucide-react"
+import { createClient } from "@/lib/supabase/client"
 
 type Student = {
   id: string
@@ -68,8 +69,8 @@ export default function EmailPage() {
   const [selectedTemplate, setSelectedTemplate] = useState("")
   const [selectedStudentIds, setSelectedStudentIds] = useState<Set<string>>(() => new Set())
 
-  const fetchStudents = async () => {
-    setLoading(true)
+  const fetchStudents = useCallback(async (initialLoad = false) => {
+    if (initialLoad) setLoading(true)
     setLoadError("")
     try {
       const response = await fetch("/api/registrations", { cache: "no-store" })
@@ -85,13 +86,34 @@ export default function EmailPage() {
     } catch (error) {
       setLoadError(error instanceof Error ? error.message : "Unable to load the student directory.")
     } finally {
-      setLoading(false)
+      if (initialLoad) setLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
-    void fetchStudents()
-  }, [])
+    void fetchStudents(true)
+  }, [fetchStudents])
+
+  useEffect(() => {
+    const supabase = createClient()
+    let refreshTimer: number | undefined
+    const channel = supabase
+      .channel("admin-email-student-directory")
+      .on("postgres_changes", { event: "*", schema: "public", table: "students" }, () => {
+        if (refreshTimer) window.clearTimeout(refreshTimer)
+        refreshTimer = window.setTimeout(() => void fetchStudents(), 150)
+      })
+      .subscribe((status, error) => {
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+          console.error("Live student directory updates unavailable:", error ?? status)
+        }
+      })
+
+    return () => {
+      if (refreshTimer) window.clearTimeout(refreshTimer)
+      void supabase.removeChannel(channel)
+    }
+  }, [fetchStudents])
 
   useEffect(() => {
     setCurrentPage(1)

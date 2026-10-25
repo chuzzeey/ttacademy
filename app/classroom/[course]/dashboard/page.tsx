@@ -6,35 +6,32 @@ import Image from 'next/image'
 import {
   Search, MoreVertical, GraduationCap,
   Code, Palette, Globe, Database, PieChart, Brain, Shield, Lock,
-  ArrowLeft, Send, Check, CheckCheck, Clock, Smile, Megaphone, AlertTriangle, Paperclip, Moon, Sun, Users, X
+  ArrowLeft, Send, Smile, Megaphone, AlertTriangle, Paperclip, Moon, Sun, Users, X
 } from 'lucide-react'
 import { getCourseData } from '@/lib/mock-data'
 import { createClient } from '@/lib/supabase/client'
-import { ClassroomAttachment } from '@/components/classroom-attachment'
+import { ClassroomEmojiPicker } from '@/components/classroom-emoji-picker'
+import { ClassroomMessageBubble } from '@/components/classroom-message-bubble'
 import { useClassroomTheme } from '@/lib/hooks/use-classroom-theme'
+import { mapClassroomMessage, type ClassroomMessageRecord } from '@/lib/classroom-chat'
 
-interface DbMessage {
-  id: string
-  content: string
-  sender_name: string
-  sender_role: 'admin' | 'teacher' | 'student'
-  course_slug: string
-  created_at: string
-  attachment_path: string | null
-  attachment_name: string | null
-  attachment_mime_type: string | null
-}
+type DbMessage = ClassroomMessageRecord
 
 interface Message {
   id: string
   text: string
   timestamp: Date
   status: 'sending' | 'sent' | 'delivered' | 'read'
-  sender: 'me' | 'system' | 'mentor'
+  sender: 'me' | 'system' | 'mentor' | 'student'
   senderName?: string
   attachmentPath?: string
   attachmentName?: string
   attachmentMimeType?: string
+  senderUserId?: string
+  replyToMessageId?: string
+  replyTo?: { id: string; content: string; sender_name: string }
+  editedAt?: string
+  reactions?: Array<{ emoji: string; count: number; reacted: boolean }>
 }
 
 export default function DashboardPage() {
@@ -51,6 +48,9 @@ export default function DashboardPage() {
   const [loadingMessages, setLoadingMessages] = useState(true)
   const [showChatList, setShowChatList] = useState(false)
   const [message, setMessage] = useState('')
+  const [replyingTo, setReplyingTo] = useState<Message | null>(null)
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null)
+  const [openMessageActionsId, setOpenMessageActionsId] = useState<string | null>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [error, setError] = useState('')
   const [isSending, setIsSending] = useState(false)
@@ -66,14 +66,31 @@ export default function DashboardPage() {
   const [unreadCount, setUnreadCount] = useState(0)
   const [onlineCount, setOnlineCount] = useState(1)
   const [onlineMembers, setOnlineMembers] = useState<Array<{ id: string; name: string; role: string }>>([])
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [showMembers, setShowMembers] = useState(false)
   const lastSeenMessageIdRef = useRef<string | null>(null)
 
-  // Auto-resize textarea — max 4 lines (~76px)
+  // Let longer messages expand while keeping the composer bounded.
   const autoResizeTextarea = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const el = e.target
     el.style.height = 'auto'
-    el.style.height = Math.min(el.scrollHeight, 76) + 'px'
+    el.style.height = Math.min(el.scrollHeight, 160) + 'px'
+  }
+
+  const appendEmoji = (emoji: string) => {
+    const input = textareaRef.current
+    const start = input?.selectionStart ?? message.length
+    const end = input?.selectionEnd ?? message.length
+    const next = `${message.slice(0, start)}${emoji}${message.slice(end)}`
+    setMessage(next)
+    requestAnimationFrame(() => {
+      if (!input) return
+      input.style.height = 'auto'
+      input.style.height = `${Math.min(input.scrollHeight, 160)}px`
+      input.focus()
+      const cursor = start + emoji.length
+      input.setSelectionRange(cursor, cursor)
+    })
   }
 
   // Auto-link URLs in message text
@@ -139,25 +156,34 @@ export default function DashboardPage() {
     }
   }
 
-  const emojis = ['😊', '👍', '🎉', '📚', '💡', '🔥', '✅', '⭐', '💪', '👏', '🎯', '📌', '📢', '💬', '🤝', '🌟']
-
   // Fetch logged-in student data
   useEffect(() => {
     async function fetchStudent() {
       try {
+        const supabase = createClient()
+        const [{ data: { user } }, { data: memberName, error: memberNameError }] = await Promise.all([
+          supabase.auth.getUser(),
+          supabase.rpc('classroom_user_name', { p_course_slug: courseSlug }),
+        ])
+        if (user) setCurrentUserId(user.id)
+        if (memberNameError) console.error('Could not load student classroom name:', memberNameError)
         const res = await fetch('/api/registrations/me')
         const json = await res.json()
         if (res.ok && json.data) {
           setStudentData({
-            name: json.data.name,
+            name: typeof memberName === 'string' ? memberName : json.data.name,
             email: json.data.email,
             avatar: json.data.avatar || '/placeholder-user.jpg',
           })
+        } else if (typeof memberName === 'string') {
+          setStudentData({ name: memberName, email: user?.email ?? '', avatar: '/placeholder-user.jpg' })
         }
-      } catch (err) { /* silently fall back to mock data */ }
+      } catch (err) {
+        console.error('Failed to load student classroom identity:', err)
+      }
     }
     fetchStudent()
-  }, [])
+  }, [courseSlug])
 
   const studentName = studentData?.name || dashboard.profile.name || 'Student'
   const studentAvatar = studentData?.avatar || dashboard.profile.avatar
@@ -167,14 +193,17 @@ export default function DashboardPage() {
     const supabase = createClient()
     
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_OUT' || !session) {
+      if (event === 'SIGNED_OUT') {
         router.push(`/classroom/${courseSlug}/login`)
       }
     })
     
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) console.error('Could not restore classroom session:', error)
       if (!session) {
         router.push(`/classroom/${courseSlug}/login`)
+      } else {
+        setCurrentUserId(session.user.id)
       }
     })
     
@@ -232,22 +261,15 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!courseSlug) return
 
+    const supabase = createClient()
     const fetchMessages = async () => {
       try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) setCurrentUserId(user.id)
         const res = await fetch(`/api/messages/get?course=${courseSlug}`)
         if (res.ok) {
           const data = await res.json()
-          const dbMessages: Message[] = (data.data || []).map((msg: DbMessage) => ({
-            id: msg.id,
-            text: msg.content,
-            timestamp: new Date(msg.created_at),
-            status: 'read' as const,
-            sender: msg.sender_role === 'admin' || msg.sender_role === 'teacher' ? ('mentor' as const) : ('me' as const),
-            senderName: msg.sender_name,
-            attachmentPath: msg.attachment_path ?? undefined,
-            attachmentName: msg.attachment_name ?? undefined,
-            attachmentMimeType: msg.attachment_mime_type ?? undefined,
-          }))
+          const dbMessages: Message[] = (data.data || []).map((msg: DbMessage) => mapClassroomMessage(msg, user?.id ?? null, 'student'))
           
           const seen = new Set<string>()
           const uniqueDbMessages = dbMessages.filter(msg => {
@@ -274,7 +296,6 @@ export default function DashboardPage() {
 
     fetchMessages()
 
-    const supabase = createClient()
     let active = true
     let channel: ReturnType<typeof supabase.channel> | null = null
     void (async () => {
@@ -284,6 +305,7 @@ export default function DashboardPage() {
         p_course_slug: courseSlug,
       })
       if (memberNameError) console.error('Could not load classroom member name:', memberNameError)
+      setCurrentUserId(user.id)
       const presenceName = typeof memberName === 'string' ? memberName : studentName
       channel = supabase
       .channel(`classroom:${courseSlug}`, { config: { presence: { key: user.id } } })
@@ -313,17 +335,7 @@ export default function DashboardPage() {
             const exists = prev.some(m => m.id === newMsg.id)
             if (exists) return prev
             
-            const msg: Message = {
-              id: newMsg.id,
-              text: newMsg.content,
-              timestamp: new Date(newMsg.created_at),
-              status: 'read',
-              sender: newMsg.sender_role === 'admin' || newMsg.sender_role === 'teacher' ? 'mentor' : 'me',
-              senderName: newMsg.sender_name,
-              attachmentPath: newMsg.attachment_path ?? undefined,
-              attachmentName: newMsg.attachment_name ?? undefined,
-              attachmentMimeType: newMsg.attachment_mime_type ?? undefined,
-            }
+            const msg: Message = mapClassroomMessage(newMsg, user.id, 'student')
             
             const optimisticIndex = prev.findIndex(m => 
               m.sender === (newMsg.sender_role === 'admin' || newMsg.sender_role === 'teacher' ? 'mentor' : 'me') &&
@@ -341,6 +353,32 @@ export default function DashboardPage() {
           })
         }
       )
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'classroom_messages',
+        filter: `course_slug=eq.${courseSlug}`,
+      }, (payload) => {
+        const updated = payload.new as DbMessage
+        setMessages((previous) => previous.map((item) => item.id === updated.id
+          ? { ...item, text: updated.content, editedAt: updated.edited_at ?? undefined }
+          : item))
+      })
+      .on('postgres_changes', {
+        event: 'DELETE',
+        schema: 'public',
+        table: 'classroom_messages',
+      }, (payload) => {
+        const deletedId = (payload.old as { id?: string }).id
+        if (deletedId) setMessages((previous) => previous.filter((item) => item.id !== deletedId))
+      })
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'classroom_message_reactions',
+      }, () => {
+        void fetchMessages()
+      })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
           await channel?.track({ name: presenceName, role: 'student', online_at: new Date().toISOString() })
@@ -431,7 +469,99 @@ export default function DashboardPage() {
     setShowProfileDropdown(false)
   }
 
+  const refreshChatMessages = async () => {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) setCurrentUserId(user.id)
+    const response = await fetch(`/api/messages/get?course=${courseSlug}`, { cache: 'no-store' })
+    const result = await response.json()
+    if (!response.ok) throw new Error(result.error || 'Unable to refresh classroom messages.')
+    const freshMessages: Message[] = (result.data as DbMessage[]).map((item) => mapClassroomMessage(item, user?.id ?? null, 'student'))
+    setMessages((previous) => [...previous.filter((item) => item.sender === 'system'), ...freshMessages])
+  }
+
+  const beginReply = (target: Message) => {
+    setReplyingTo(target)
+    setEditingMessageId(null)
+    setOpenMessageActionsId(null)
+    window.setTimeout(() => textareaRef.current?.focus(), 0)
+  }
+
+  const beginEdit = (target: Message) => {
+    setEditingMessageId(target.id)
+    setReplyingTo(null)
+    setMessage(target.text)
+    setOpenMessageActionsId(null)
+    window.setTimeout(() => {
+      textareaRef.current?.focus()
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto'
+        textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 160)}px`
+      }
+    }, 0)
+  }
+
+  const saveMessageEdit = async () => {
+    if (!editingMessageId) return
+    setIsSending(true)
+    setError('')
+    try {
+      const response = await fetch('/api/messages/edit', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messageId: editingMessageId, content: message }),
+      })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result.error || 'Unable to edit this message.')
+      setMessages((previous) => previous.map((item) => item.id === editingMessageId
+        ? { ...item, text: result.data.content, editedAt: result.data.edited_at }
+        : item))
+      setEditingMessageId(null)
+      setMessage('')
+      if (textareaRef.current) textareaRef.current.style.height = 'auto'
+    } catch (editError) {
+      setError(editError instanceof Error ? editError.message : 'Unable to edit this message.')
+    } finally {
+      setIsSending(false)
+    }
+  }
+
+  const deleteChatMessage = async (target: Message) => {
+    if (!window.confirm('Delete this message?')) return
+    try {
+      const response = await fetch('/api/messages/delete', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messageId: target.id }),
+      })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result.error || 'Unable to delete this message.')
+      setMessages((previous) => previous.filter((item) => item.id !== target.id))
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : 'Unable to delete this message.')
+    }
+  }
+
+  const reactToMessage = async (target: Message, emoji: string) => {
+    try {
+      const response = await fetch('/api/messages/reactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messageId: target.id, emoji }),
+      })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result.error || 'Unable to add this reaction.')
+      await refreshChatMessages()
+    } catch (reactionError) {
+      setError(reactionError instanceof Error ? reactionError.message : 'Unable to add this reaction.')
+    }
+  }
+
   const handleSendMessage = async () => {
+    if (editingMessageId) {
+      await saveMessageEdit()
+      return
+    }
     if (!message.trim() && !selectedFile) {
       setError('Write a message or choose a file to send.')
       return
@@ -450,10 +580,15 @@ export default function DashboardPage() {
       sender: 'me',
       attachmentName: file?.name,
       attachmentMimeType: file?.type,
+      senderUserId: currentUserId ?? undefined,
+      replyToMessageId: replyingTo?.id,
+      replyTo: replyingTo ? { id: replyingTo.id, content: replyingTo.text, sender_name: replyingTo.senderName ?? 'Class member' } : undefined,
+      reactions: [],
     }
 
     setMessages(prev => [...prev, newMsg])
     setMessage('')
+    setReplyingTo(null)
     setIsSending(true)
 
     // Reset textarea height after sending
@@ -488,6 +623,7 @@ export default function DashboardPage() {
           attachmentPath,
           attachmentName: file?.name,
           attachmentMimeType: file?.type,
+          replyToMessageId: replyingTo?.id,
         }),
       })
       const result = await res.json()
@@ -501,6 +637,8 @@ export default function DashboardPage() {
         timestamp: new Date(savedMessage.created_at),
         status: 'sent',
         senderName: savedMessage.sender_name,
+        senderUserId: savedMessage.sender_user_id,
+        replyToMessageId: savedMessage.reply_to_message_id ?? undefined,
         attachmentPath: savedMessage.attachment_path ?? undefined,
         attachmentName: savedMessage.attachment_name ?? undefined,
         attachmentMimeType: savedMessage.attachment_mime_type ?? undefined,
@@ -698,62 +836,22 @@ export default function DashboardPage() {
                     </div>
 
                     {group.messages.map((msg) => (
-                      <div key={msg.id}>
-                        {msg.sender === 'system' ? (
-                          <div className="flex justify-start mb-1 group">
-                            <div 
-                              className="relative max-w-[70%] sm:max-w-[60%] px-3 py-2 shadow-[0_1px_1px_rgba(0,0,0,0.06)]"
-                              style={{ backgroundColor: dark ? '#202c33' : '#FFFFFF', borderRadius: '4px 8px 8px 8px' }}
-                            >
-                              {msg.text && <p className={`text-[14px] ${dark ? 'text-[#e9edef]' : 'text-[#111B21]'} leading-[19px] break-words whitespace-pre-wrap`}>{renderMessageText(msg.text)}</p>}
-                              {msg.attachmentPath && msg.attachmentName && msg.attachmentMimeType && <ClassroomAttachment path={msg.attachmentPath} name={msg.attachmentName} mimeType={msg.attachmentMimeType} />}
-                              <div className="flex items-center justify-end gap-1 mt-1">
-                                <span className="text-[11px] text-[#8696a0]">{formatTime(msg.timestamp)}</span>
-                              </div>
-                            </div>
-                          </div>
-                        ) : msg.sender === 'mentor' ? (
-                          <div className="flex justify-start mb-1 group">
-                            <div className="max-w-[70%] sm:max-w-[60%]">
-                              <div className="flex items-center gap-2 mb-[2px] ml-[2px]">
-                                <div className="w-[20px] h-[20px] rounded-full bg-[#008069] flex items-center justify-center shrink-0">
-                                  <span className="text-white text-[8px] font-bold">M</span>
-                                </div>
-                                <span className="text-[11px] font-semibold text-[#25a889]">Mentor</span>
-                              </div>
-                              <div 
-                                className="relative px-3 py-2 shadow-[0_1px_1px_rgba(0,0,0,0.06)] group-hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)] transition-shadow"
-                                style={{ backgroundColor: dark ? '#202c33' : '#FFFFFF', borderRadius: '4px 8px 8px 8px' }}
-                              >
-                                {msg.text && <p className={`text-[14px] ${dark ? 'text-[#e9edef]' : 'text-[#111B21]'} leading-[19px] break-words whitespace-pre-wrap`}>{renderMessageText(msg.text)}</p>}
-                                {msg.attachmentPath && msg.attachmentName && msg.attachmentMimeType && <ClassroomAttachment path={msg.attachmentPath} name={msg.attachmentName} mimeType={msg.attachmentMimeType} />}
-                                <div className="flex items-center justify-end gap-1 mt-1">
-                                  <span className="text-[11px] text-[#8696a0]">{formatTime(msg.timestamp)}</span>
-                                  <svg viewBox="0 0 16 11" className="w-[14px] h-[10px]">
-                                    <path d="M2 5.5L4.5 8L9 3.5" stroke="#53BDEB" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-                                    <path d="M6 5.5L8.5 8L13 3.5" stroke="#53BDEB" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-                                  </svg>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="flex justify-end mb-1 group relative">
-                            <div 
-                              className="relative max-w-[70%] sm:max-w-[60%] px-3 py-2 shadow-[0_1px_1px_rgba(0,0,0,0.06)] group-hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)] transition-shadow"
-                              style={{ backgroundColor: dark ? '#005c4b' : '#D9FDD3', borderRadius: '8px 4px 8px 8px' }}
-                            >
-                              <p className={`text-[14px] ${dark ? 'text-[#e9edef]' : 'text-[#111B21]'} leading-[19px] break-words whitespace-pre-wrap`}>{renderMessageText(msg.text)}</p>
-                              <div className="flex items-center justify-end gap-0.5 mt-0.5">
-                                <span className="text-[11px] text-[#aebac1]">{formatTime(msg.timestamp)}</span>
-                                {msg.status === 'sending' && <Clock className="w-3.5 h-3.5 text-[#8696a0]" />}
-                                {(msg.status === 'sent' || msg.status === 'delivered') && <Check className="w-3.5 h-3.5 text-[#8696a0]" />}
-                                {msg.status === 'read' && <CheckCheck className="w-3.5 h-3.5 text-[#53BDEB]" />}
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
+                      <ClassroomMessageBubble
+                        key={msg.id}
+                        message={msg}
+                        isMine={msg.sender === 'me'}
+                        isSystem={msg.sender === 'system'}
+                        senderLabel={msg.sender === 'mentor' ? 'Teacher' : msg.sender === 'student' ? msg.senderName || 'Student' : undefined}
+                        time={formatTime(msg.timestamp)}
+                        content={renderMessageText(msg.text)}
+                        dark={dark}
+                        actionsOpen={openMessageActionsId === msg.id}
+                        onToggleActions={() => setOpenMessageActionsId((current) => current === msg.id ? null : msg.id)}
+                        onReply={() => beginReply(msg)}
+                        onEdit={() => beginEdit(msg)}
+                        onDelete={() => void deleteChatMessage(msg)}
+                        onReact={(emoji) => void reactToMessage(msg, emoji)}
+                      />
                     ))}
                   </div>
                 ))}
@@ -774,19 +872,17 @@ export default function DashboardPage() {
 
             {/* Message Input Area */}
             <div className={`${dark ? 'bg-[#202c33]' : 'bg-[#F0F2F5]'} px-3 py-2 sm:px-4 shrink-0 z-10 mb-20`}>
-              <div className={`overflow-hidden transition-all duration-200 ${showEmoji ? 'max-h-28 mb-2' : 'max-h-0'}`}>
-                <div className={`flex flex-wrap gap-1.5 p-2 rounded-lg ${dark ? 'bg-[#111b21]' : 'bg-white'}`}>
-                  {emojis.map((emoji, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setMessage(prev => prev + emoji)}
-                      className={`w-8 h-8 flex items-center justify-center text-lg rounded transition-colors ${dark ? 'hover:bg-[#2a3942]' : 'hover:bg-gray-100'}`}
-                    >
-                      {emoji}
-                    </button>
-                  ))}
+              {showEmoji && <div className="mb-2"><ClassroomEmojiPicker dark={dark} onSelect={appendEmoji} /></div>}
+
+              {(replyingTo || editingMessageId) && (
+                <div className={`mb-2 flex items-start gap-3 rounded-xl border-l-4 px-3 py-2 ${dark ? 'border-emerald-400 bg-[#111b21] text-[#e9edef]' : 'border-emerald-700 bg-white text-[#111b21]'}`}>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-semibold text-emerald-700">{editingMessageId ? 'Editing message' : `Replying to ${replyingTo?.senderName || 'class member'}`}</p>
+                    <p className={`mt-0.5 line-clamp-2 text-xs ${dark ? 'text-[#aebac1]' : 'text-[#667781]'}`}>{editingMessageId ? 'Update your message and save.' : replyingTo?.text}</p>
+                  </div>
+                  <button type="button" aria-label="Cancel reply or edit" onClick={() => { setReplyingTo(null); setEditingMessageId(null); setMessage(''); if (textareaRef.current) textareaRef.current.style.height = 'auto' }} className="rounded-lg p-1"><X className="h-4 w-4" /></button>
                 </div>
-              </div>
+              )}
 
               {selectedFile && (
                 <div className={`mb-2 flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-xs ${dark ? 'bg-[#111b21] text-[#aebac1]' : 'bg-white text-[#667781]'}`}>
@@ -805,7 +901,10 @@ export default function DashboardPage() {
                 <button type="button" onClick={() => fileInputRef.current?.click()} aria-label="Attach a file" className={`p-2 rounded-full ${dark ? 'hover:bg-[#2a3942] text-[#aebac1]' : 'hover:bg-gray-200 text-[#667781]'}`}>
                   <Paperclip className="h-5 w-5" />
                 </button>
-                <div className={`flex-1 rounded-lg px-4 py-2 flex items-center ${dark ? 'bg-[#111b21]' : 'bg-white'}`}>
+                <button type="button" onClick={() => setShowEmoji((visible) => !visible)} aria-label="Choose emoji" aria-expanded={showEmoji} className={`p-2 rounded-full ${dark ? 'hover:bg-[#2a3942] text-[#aebac1]' : 'hover:bg-gray-200 text-[#667781]'}`}>
+                  <Smile className="h-5 w-5" />
+                </button>
+                <div className={`flex-1 rounded-2xl px-4 py-2 flex items-end ${dark ? 'bg-[#111b21]' : 'bg-white'}`}>
                   <textarea
                     ref={textareaRef}
                     value={message}
@@ -817,8 +916,8 @@ export default function DashboardPage() {
                     onKeyDown={handleKeyDown}
                     placeholder="Reply to your mentor..."
                     rows={1}
-                    className={`w-full text-[16px] ${dark ? 'text-[#e9edef]' : 'text-[#111B21]'} placeholder-[#8696A0] bg-transparent focus:outline-none resize-none overflow-hidden leading-[19px]`}
-                    style={{ minHeight: '19px', maxHeight: '76px' }}
+                    className={`w-full text-[16px] ${dark ? 'text-[#e9edef]' : 'text-[#111B21]'} placeholder-[#8696A0] bg-transparent focus:outline-none resize-none overflow-y-auto leading-[21px]`}
+                    style={{ minHeight: '21px', maxHeight: '160px' }}
                   />
                 </div>
 

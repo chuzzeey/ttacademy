@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
+import { createClient } from "@/lib/supabase/client"
 import { formatRegistrationDate } from "@/lib/format-registration-date"
 import {
   Activity,
@@ -220,9 +221,7 @@ export default function DashboardPage() {
     const controller = new AbortController()
 
     async function loadAnalytics() {
-      setIsLoading(true)
       setError("")
-      setData(null)
       try {
         const response = await fetch(`/api/admin/analytics?period=${period}`, {
           cache: "no-store",
@@ -244,6 +243,27 @@ export default function DashboardPage() {
     void loadAnalytics()
     return () => controller.abort()
   }, [period, retryKey])
+
+  useEffect(() => {
+    const supabase = createClient()
+    let refreshTimer: number | undefined
+    const channel = supabase
+      .channel("admin-dashboard-live-analytics")
+      .on("postgres_changes", { event: "*", schema: "public", table: "students" }, () => {
+        if (refreshTimer) window.clearTimeout(refreshTimer)
+        refreshTimer = window.setTimeout(() => setRetryKey((key) => key + 1), 150)
+      })
+      .subscribe((status, error) => {
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+          console.error("Live dashboard analytics updates unavailable:", error ?? status)
+        }
+      })
+
+    return () => {
+      if (refreshTimer) window.clearTimeout(refreshTimer)
+      void supabase.removeChannel(channel)
+    }
+  }, [])
 
   const paidCount = useMemo(
     () => data?.paymentStatuses.find(({ label }) => label === "Fully Paid")?.count ?? 0,

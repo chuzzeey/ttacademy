@@ -4,9 +4,10 @@ import { FormEvent, useCallback, useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import {
   ArrowRight, ArrowUpRight, BadgeCheck, BookOpenCheck, Check, DoorOpen,
-  GraduationCap, LockKeyhole, LoaderCircle, Plus, ShieldAlert, Sparkles,
+  GraduationCap, LockKeyhole, LoaderCircle, Plus, ShieldAlert,
   UnlockKeyhole, Users, X,
 } from "lucide-react"
+import { createClient } from "@/lib/supabase/client"
 
 type Course = { slug: string; title: string; is_active: boolean }
 type Teacher = {
@@ -48,6 +49,7 @@ function StatusBadge({ status }: { status: string }) {
 
 export default function ClassroomManagementPage() {
   const router = useRouter()
+  const supabase = useMemo(() => createClient(), [])
   const [data, setData] = useState<ClassroomData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
@@ -61,22 +63,58 @@ export default function ClassroomManagementPage() {
   const [teacherName, setTeacherName] = useState("")
   const [teacherEmail, setTeacherEmail] = useState("")
 
-  const refresh = useCallback(async () => {
-    setLoading(true)
-    setError("")
+  const loadClassrooms = useCallback(async (initialLoad = false) => {
+    if (initialLoad) setLoading(true)
     try {
       const response = await fetch("/api/admin/classrooms", { cache: "no-store" })
       const result = await response.json()
       if (!response.ok) throw new Error(result.error || "Unable to load classroom management.")
       setData(result as ClassroomData)
+      setError("")
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : "Unable to load classroom management.")
     } finally {
-      setLoading(false)
+      if (initialLoad) setLoading(false)
     }
   }, [])
 
-  useEffect(() => { void refresh() }, [refresh])
+  useEffect(() => { void loadClassrooms(true) }, [loadClassrooms])
+
+  useEffect(() => {
+    let refreshTimer: number | undefined
+    const channel = supabase
+      .channel("admin-classroom-management")
+      .on("postgres_changes", { event: "*", schema: "public", table: "classroom_courses" }, () => {
+        if (refreshTimer) window.clearTimeout(refreshTimer)
+        refreshTimer = window.setTimeout(() => void loadClassrooms(), 150)
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "classroom_rooms" }, () => {
+        if (refreshTimer) window.clearTimeout(refreshTimer)
+        refreshTimer = window.setTimeout(() => void loadClassrooms(), 150)
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "classroom_teachers" }, () => {
+        if (refreshTimer) window.clearTimeout(refreshTimer)
+        refreshTimer = window.setTimeout(() => void loadClassrooms(), 150)
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "classroom_students" }, () => {
+        if (refreshTimer) window.clearTimeout(refreshTimer)
+        refreshTimer = window.setTimeout(() => void loadClassrooms(), 150)
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "students" }, () => {
+        if (refreshTimer) window.clearTimeout(refreshTimer)
+        refreshTimer = window.setTimeout(() => void loadClassrooms(), 150)
+      })
+      .subscribe((status, error) => {
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+          console.error("Live classroom management updates unavailable:", error ?? status)
+        }
+      })
+
+    return () => {
+      if (refreshTimer) window.clearTimeout(refreshTimer)
+      void supabase.removeChannel(channel)
+    }
+  }, [loadClassrooms, supabase])
 
   useEffect(() => {
     if (!enteringCourse) return
@@ -106,7 +144,41 @@ export default function ClassroomManagementPage() {
       const result = await response.json()
       if (!response.ok) throw new Error(result.error || "Unable to update classroom access.")
       setNotice(result.message || "Classroom settings updated.")
-      await refresh()
+      setData((current) => {
+        if (!current) return current
+        if (body.action === "set-lock" && result.data) {
+          return { ...current, rooms: current.rooms.map((room) => room.course_slug === result.data.course_slug
+            ? { ...room, is_locked: result.data.is_locked }
+            : room) }
+        }
+        if (body.action === "set-teacher-email" && result.data) {
+          return { ...current, rooms: current.rooms.map((room) => room.course_slug === result.data.course_slug
+            ? { ...room, ...result.data }
+            : room) }
+        }
+        if (body.action === "update-status" && result.data) {
+          if (body.type === "teacher") {
+            return { ...current, teachers: current.teachers.map((teacher) => teacher.id === result.data.id
+              ? { ...teacher, status: result.data.status }
+              : teacher) }
+          }
+          return { ...current, students: current.students.map((entry) => entry.student_id === result.data.studentId
+            ? {
+                ...entry,
+                status: result.data.status,
+                student: entry.student
+                  ? { ...entry.student, restricted: result.data.status === "restricted" }
+                  : entry.student,
+              }
+            : entry) }
+        }
+        if (body.action === "restore-student" && result.data) {
+          return { ...current, students: current.students.map((entry) => entry.student_id === result.data.studentId
+            ? { ...entry, status: "pending", student: entry.student ? { ...entry.student, restricted: false } : entry.student }
+            : entry) }
+        }
+        return current
+      })
       return true
     } catch (actionError) {
       setError(actionError instanceof Error ? actionError.message : "Unable to update classroom access.")
@@ -129,7 +201,6 @@ export default function ClassroomManagementPage() {
       setTeacherName("")
       setTeacherEmail("")
       setTeacherCourse("")
-      await refresh()
     }
   }
 
@@ -147,7 +218,6 @@ export default function ClassroomManagementPage() {
         <div className="relative flex flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-2xl">
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.08] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-100">
-              <Sparkles aria-hidden="true" className="h-3.5 w-3.5 text-emerald-300" />
               Academy operations
               <span className="ml-1 flex items-center gap-1.5 border-l border-white/20 pl-2.5 normal-case tracking-normal text-white/70">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-300 shadow-[0_0_10px_rgba(110,231,183,0.9)]" />

@@ -1,16 +1,14 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowRight, Search } from 'lucide-react'
+import { ArrowRight, BookOpen, Search, X } from 'lucide-react'
 import { useState } from 'react'
 
 interface Course {
   id: string
   title: string
-  duration: string
   description: string
-  lessons: string
   image: string
 }
 
@@ -18,119 +16,90 @@ const courses: Course[] = [
   {
     id: 'cybersecurity',
     title: 'Cybersecurity',
-    duration: '3 Months',
     description: 'Learn to protect systems, networks, and data from digital attacks and security breaches.',
-    lessons: '40 Lessons',
     image: '/cybersecurity_course.jpeg'
   },
   {
     id: 'data-science',
     title: 'Data Science',
-    duration: '4 Months', 
     description: 'Analyze complex data, build predictive models, and extract insights from large datasets.',
-    lessons: '35 Lessons',
     image: '/data_science_course.jpeg'
   },
   {
     id: 'ai-automation',
     title: 'AI Automation',
-    duration: '4 Months',
     description: 'Build intelligent automated systems using machine learning and advanced AI techniques.',
-    lessons: '42 Lessons',
     image: '/ai_course.jpeg'
   },
   {
     id: 'computer-networking',
     title: 'Computer Networking',
-    duration: '2 Months',
     description: 'Master network protocols, infrastructure, and system connectivity fundamentals.',
-    lessons: '30 Lessons',
     image: '/neti.jpeg'
   },
   {
     id: 'ethical-hacking',
     title: 'Ethical Hacking',
-    duration: '3 Months',
     description: 'Learn penetration testing and security assessment to protect systems from vulnerabilities.',
-    lessons: '38 Lessons',
     image: '/ethical_hack.jpeg'
   },
   {
     id: 'graphic-design',
     title: 'Graphic Design',
-    duration: '2 Months',
     description: 'Create stunning visual content using industry-standard design tools and principles.',
-    lessons: '28 Lessons',
     image: '/graphic_design_course.jpeg'
   },
   {
     id: 'uiux-design',
     title: 'UI/UX Design',
-    duration: '3 Months',
     description: 'Design beautiful and intuitive user interfaces with modern design principles.',
-    lessons: '32 Lessons',
     image: '/uiux_course.jpeg'
   },
   {
     id: 'full-stack-development',
     title: 'Full Stack Development',
-    duration: '4 Months',
     description: 'Master both frontend and backend development to build complete web applications.',
-    lessons: '40 Lessons',
     image: '/fullstack_course.jpeg'
   },
   {
     id: 'frontend-development',
     title: 'Frontend Development',
-    duration: '2 Months',
     description: 'Build responsive and interactive user interfaces with modern frontend technologies.',
-    lessons: '35 Lessons',
     image: '/frontend_course.jpeg'
   },
   {
     id: 'backend-development',
     title: 'Backend Development',
-    duration: '2 Months',
     description: 'Develop robust server-side applications and APIs with modern backend technologies.',
-    lessons: '36 Lessons',
     image: '/backend_course.jpeg'
   },
   {
     id: 'web-development',
     title: 'Web Development',
-    duration: '3 Months',
     description: 'Learn fundamental web technologies to build modern websites and web applications.',
-    lessons: '30 Lessons',
     image: '/webi.jpeg'
   },
   {
     id: 'digital-marketing',
     title: 'Digital Marketing',
-    duration: '2 Months',
     description: 'Master digital marketing strategies including SEO, social media, and online advertising.',
-    lessons: '25 Lessons',
     image: '/digital_marketing_couse.jpeg'
   },
   {
     id: 'cloud-computing',
     title: 'Cloud Computing',
-    duration: '3 Months',
     description: 'Learn cloud architecture, deployment, and management using major cloud platforms.',
-    lessons: '38 Lessons',
     image: '/cloud_course.jpeg'
   },
   {
     id: 'data-analysis',
     title: 'Data Analysis',
-    duration: '3 Months',
     description: 'Master data analysis techniques to interpret complex datasets and drive business decisions.',
-    lessons: '32 Lessons',
     image: '/data_science_course.jpeg'
   }
 ]
 
 export default function ClassroomPage() {
-  const router = useRouter()
   const [searchTerm, setSearchTerm] = useState('')
 
   const filteredCourses = courses.filter(course => 
@@ -139,101 +108,113 @@ export default function ClassroomPage() {
   )
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-white via-red-50/30 to-white">
-      {/* Decorative Elements */}
-      <div className="absolute top-20 right-0 w-96 h-96 bg-gradient-to-bl from-[#ef4444]/10 to-transparent rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-40 left-20 w-64 h-64 bg-gradient-to-tr from-[#991b1b]/8 to-transparent rounded-full blur-3xl pointer-events-none" />
+    <main className="min-h-screen overflow-hidden bg-[#f5f7f5] text-slate-950">
+      <div aria-hidden="true" className="pointer-events-none absolute -right-36 top-24 h-96 w-96 rounded-full bg-emerald-300/20 blur-3xl" />
+      <div aria-hidden="true" className="pointer-events-none absolute -left-40 top-[34rem] h-96 w-96 rounded-full bg-teal-200/25 blur-3xl" />
 
-      {/* Header */}
-      <div className="relative overflow-hidden">
-        <div className="max-w-full mx-auto px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 py-12 sm:py-16">
-          <div className="text-center space-y-5 md:space-y-6">
-            <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm border border-[#ef4444]/20 rounded-full px-4 py-1.5">
-              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-              <span className="text-xs font-semibold text-red-500 tracking-wide">Start Learning Today</span>
+      <section className="relative isolate overflow-hidden bg-gradient-to-br from-[#092e22] via-[#0f5134] to-[#0a382a] text-white">
+        <div aria-hidden="true" className="pointer-events-none absolute -right-20 -top-32 h-[30rem] w-[30rem] rounded-full border border-white/[0.08]" />
+        <div aria-hidden="true" className="pointer-events-none absolute -right-2 top-10 h-[22rem] w-[22rem] rounded-full border border-white/[0.08]" />
+        <div className="relative mx-auto max-w-7xl px-5 pb-12 pt-7 sm:px-8 sm:pb-16 sm:pt-9 lg:px-10 lg:pb-20">
+          <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold tracking-wide text-emerald-50/90 transition hover:text-white">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-white/[0.08]">
+              <BookOpen aria-hidden="true" className="h-4 w-4" />
+            </span>
+            Tech Trailblazer Academy
+          </Link>
+
+          <div className="mt-14 md:mt-20">
+            <div className="max-w-3xl">
+              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-emerald-100/15 bg-white/[0.08] px-3.5 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-100">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+                Student learning portal
+              </div>
+              <h1 className="text-4xl font-semibold leading-[1.06] tracking-tight sm:text-5xl md:text-6xl">
+                Your next chapter
+                <span className="block text-emerald-200">starts in class.</span>
+              </h1>
+              <p className="mt-5 max-w-xl text-sm leading-6 text-emerald-50/75 sm:text-base sm:leading-7">
+                Choose your learning group to meet your class and continue building skills that move you forward.
+              </p>
             </div>
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-gray-900 leading-[1.02] tracking-tight">
-              Pick Your{' '}
-              <span className="bg-gradient-to-r from-red-500 to-red-600/80 bg-clip-text text-transparent">
-                Classroom
-              </span>
-            </h1>
-            <p className="text-base sm:text-lg md:text-xl text-gray-500 max-w-xl mx-auto leading-relaxed">
-              Select a course below to start your learning journey.
-            </p>
+
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Search Bar */}
-      <div className="max-w-full mx-auto px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 py-6">
-        <div className="relative max-w-xl mx-auto">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-5 w-5 text-gray-400" />
+      <section className="relative mx-auto max-w-7xl px-5 pb-16 pt-8 sm:px-8 sm:pb-20 sm:pt-10 lg:px-10">
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-800">Find your group</p>
+            <h2 className="mt-1.5 text-2xl font-semibold tracking-tight sm:text-3xl">Explore classrooms</h2>
+            <p className="mt-1.5 text-sm text-slate-500">Choose a class to continue to your secure student sign-in.</p>
           </div>
-          <input
-            type="text"
-            placeholder="Search for a class..."
-            className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-full bg-white/80 backdrop-blur-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500/50"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+          <label className="relative block w-full sm:max-w-xs">
+            <span className="sr-only">Search classrooms</span>
+            <Search aria-hidden="true" className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input
+              type="search"
+              placeholder="Search classrooms"
+              className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-10 text-sm shadow-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-700 focus:ring-4 focus:ring-emerald-700/10"
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+            />
+            {searchTerm && (
+              <button type="button" onClick={() => setSearchTerm('')} aria-label="Clear search" className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700">
+                <X aria-hidden="true" className="h-4 w-4" />
+              </button>
+            )}
+          </label>
         </div>
-      </div>
 
-      {/* Course Grid */}
-      <div className="max-w-full mx-auto px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 py-6 pb-16">
+        <div className="mb-4 flex items-center justify-between border-b border-slate-200 pb-3 text-xs text-slate-500">
+          <span>{filteredCourses.length} {filteredCourses.length === 1 ? 'classroom' : 'classrooms'}</span>
+          {searchTerm && <span>Results for “{searchTerm}”</span>}
+        </div>
+
         {filteredCourses.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500">No courses found matching your search</p>
+          <div className="rounded-2xl border border-dashed border-slate-300 bg-white/75 px-5 py-16 text-center">
+            <Search aria-hidden="true" className="mx-auto h-7 w-7 text-slate-400" />
+            <p className="mt-3 font-semibold text-slate-800">No classrooms found</p>
+            <p className="mt-1 text-sm text-slate-500">Try a different course name or search term.</p>
+            <button type="button" onClick={() => setSearchTerm('')} className="mt-4 rounded-lg px-3 py-2 text-sm font-semibold text-emerald-800 transition hover:bg-emerald-50">Clear search</button>
           </div>
         ) : (
-         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6 lg:pl-2 lg:pr-2 lg:pt-12 lg:pb-12  2xl:px-45">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredCourses.map((course) => (
-              <div
+              <Link
                 key={course.id}
-                onClick={() => router.push(`/classroom/${course.id}/login`)}
-                className="group bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col hover:-translate-y-1"
+                href={`/classroom/${course.id}/login`}
+                className="group flex min-w-0 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_2px_12px_-6px_rgba(15,23,42,.12)] transition duration-300 hover:-translate-y-1 hover:border-emerald-700/25 hover:shadow-[0_22px_50px_-24px_rgba(6,78,59,.28)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-700/20"
               >
-                {/* Course Image */}
-                <div className="relative h-28 sm:h-36 md:h-44 overflow-hidden">
+                <div className="relative aspect-[16/10] overflow-hidden bg-emerald-950">
                   <Image
                     src={course.image}
-                    alt={course.title}
+                    alt=""
                     fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
-                    sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                    className="object-cover transition duration-700 group-hover:scale-105"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-                  <div className="absolute top-3 right-3">
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-white/90 backdrop-blur-sm text-gray-800 shadow-sm">
-                      {course.duration}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#071f17]/75 via-transparent to-black/10" />
+                  <span className="absolute bottom-3 left-4 right-4 text-[11px] font-medium uppercase tracking-[0.14em] text-white/80">
+                    Classroom
+                  </span>
+                </div>
+                <div className="flex flex-1 flex-col p-4 sm:p-5">
+                  <h3 className="text-base font-semibold tracking-tight text-slate-900 transition-colors group-hover:text-emerald-800">{course.title}</h3>
+                  <p className="mt-2 flex-1 text-xs leading-5 text-slate-500 sm:text-sm sm:leading-6">{course.description}</p>
+                  <div className="mt-5 flex items-center justify-end border-t border-slate-100 pt-3.5">
+                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-800">
+                      Enter class
+                      <ArrowRight aria-hidden="true" className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
                     </span>
                   </div>
                 </div>
-
-                {/* Content */}
-                <div className="p-3 sm:p-5 flex-1 flex flex-col">
-                  <h3 className="text-sm sm:text-base lg:text-lg font-bold text-gray-900">
-                    {course.title}
-                  </h3>
-                  
-                  <p className="mt-1 text-xs sm:text-sm text-gray-500 leading-relaxed flex-1 line-clamp-2 sm:line-clamp-none">
-                    {course.description}
-                  </p>
-
-                  <div className="mt-2 sm:mt-4 pt-2 sm:pt-3 border-t border-gray-100">
-                    <button className="w-full flex items-center justify-center gap-1 text-xs sm:text-sm font-semibold text-red-500 hover:text-red-600 transition-colors cursor-pointer">
-                      Enter Classroom
-                      <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 group-hover:translate-x-0.5 transition-transform" />
-                    </button>
-                  </div>
-                </div>
-              </div>
+              </Link>
             ))}
           </div>
         )}
-      </div>
+      </section>
     </main>
   )
 }

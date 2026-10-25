@@ -1,10 +1,30 @@
-import { createClient } from '@/lib/supabase/server'
+import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { ADMIN_EMAIL } from '@/lib/supabase/admin-access'
 
 export async function middleware(request: NextRequest) {
-  const supabase = await createClient()
+  let response = NextResponse.next({ request })
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+          response = NextResponse.next({ request })
+          cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options))
+        },
+      },
+    },
+  )
+  const withAuthCookies = (result: NextResponse) => {
+    response.cookies.getAll().forEach((cookie) => result.cookies.set(cookie))
+    return result
+  }
   const pathname = request.nextUrl.pathname
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError) console.error('Session verification failed:', authError)
@@ -33,7 +53,7 @@ export async function middleware(request: NextRequest) {
 
     if (error) {
       console.error('Admin profile lookup failed:', error)
-      return NextResponse.json({ error: 'Unable to verify admin access' }, { status: 500 })
+      return withAuthCookies(NextResponse.json({ error: 'Unable to verify admin access' }, { status: 500 }))
     }
 
     isAdmin = Boolean(profile)
@@ -42,18 +62,18 @@ export async function middleware(request: NextRequest) {
   if (isProtectedPath && !user) {
     const loginUrl = new URL('/admin-login', request.url)
     loginUrl.searchParams.set('redirect', request.nextUrl.pathname)
-    return NextResponse.redirect(loginUrl)
+    return withAuthCookies(NextResponse.redirect(loginUrl))
   }
 
   if ((isProtectedPath || isLoginPath) && user && !isAdmin) {
     const { error } = await supabase.auth.signOut()
     if (error) console.error('Failed to sign out unauthorized user:', error)
 
-    if (isLoginPath) return NextResponse.next()
+    if (isLoginPath) return withAuthCookies(NextResponse.next())
 
     const loginUrl = new URL('/admin-login', request.url)
     loginUrl.searchParams.set('error', 'unauthorized')
-    return NextResponse.redirect(loginUrl)
+    return withAuthCookies(NextResponse.redirect(loginUrl))
   }
 
   if ((isTeacherClassPath || isStudentClassPath) && !user) {
@@ -62,12 +82,12 @@ export async function middleware(request: NextRequest) {
       request.url,
     )
     loginUrl.searchParams.set('redirect', pathname)
-    return NextResponse.redirect(loginUrl)
+    return withAuthCookies(NextResponse.redirect(loginUrl))
   }
 
   if ((isTeacherClassPath || isStudentClassPath) && user) {
     if (isTeacherClassPath && user.user_metadata?.must_change_password === true) {
-      return NextResponse.redirect(new URL('/teachers/setup-password', request.url))
+      return withAuthCookies(NextResponse.redirect(new URL('/teachers/setup-password', request.url)))
     }
 
     const { data: role, error } = await supabase.rpc('classroom_user_role', {
@@ -75,7 +95,7 @@ export async function middleware(request: NextRequest) {
     })
     if (error) {
       console.error('Classroom access verification failed:', error)
-      return NextResponse.json({ error: 'Unable to verify classroom access' }, { status: 503 })
+      return withAuthCookies(NextResponse.json({ error: 'Unable to verify classroom access' }, { status: 503 }))
     }
 
     const expectedRole = isTeacherClassPath ? 'teacher' : 'student'
@@ -85,7 +105,7 @@ export async function middleware(request: NextRequest) {
         request.url,
       )
       loginUrl.searchParams.set('error', 'access')
-      return NextResponse.redirect(loginUrl)
+      return withAuthCookies(NextResponse.redirect(loginUrl))
     }
   }
 
@@ -96,10 +116,10 @@ export async function middleware(request: NextRequest) {
       && redirectUrl.origin === request.nextUrl.origin
       ? redirectUrl
       : new URL('/dashboard', request.url)
-    return NextResponse.redirect(safeRedirectUrl)
+    return withAuthCookies(NextResponse.redirect(safeRedirectUrl))
   }
 
-  return NextResponse.next()
+  return withAuthCookies(response)
 }
 
 export const config = {
