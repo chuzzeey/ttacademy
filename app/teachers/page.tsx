@@ -4,130 +4,9 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { ArrowRight, BookOpen, Search, X } from 'lucide-react'
 import { useState } from 'react'
+import { COURSE_CATALOG } from '@/lib/course-catalog'
 
-interface Course {
-  id: string
-  title: string
-  description: string
-  duration: string
-  lessons: string
-  image: string
-}
-
-const courses: Course[] = [
-  {
-    id: 'cybersecurity',
-    title: 'Cybersecurity',
-    description: 'Teach ethical hacking, network security, and cyber defense strategies',
-    duration: '3 Months',
-    lessons: '40 Lessons',
-    image: '/cybersecurity_course.jpeg'
-  },
-  {
-    id: 'data-science',
-    title: 'Data Science',
-    description: 'Teach data analysis, ML models, and insight-driven decision making',
-    duration: '4 Months',
-    lessons: '35 Lessons',
-    image: '/data_science_course.jpeg'
-  },
-  {
-    id: 'ai-automation',
-    title: 'AI Automation',
-    description: 'Teach AI-powered workflow automation and intelligent solutions',
-    duration: '4 Months',
-    lessons: '42 Lessons',
-    image: '/ai_course.jpeg'
-  },
-  {
-    id: 'computer-networking',
-    title: 'Computer Networking',
-    description: 'Teach network infrastructure, protocols, and system connectivity',
-    duration: '2 Months',
-    lessons: '30 Lessons',
-    image: '/neti.jpeg'
-  },
-  {
-    id: 'ethical-hacking',
-    title: 'Ethical Hacking',
-    description: 'Teach penetration testing and vulnerability assessment techniques',
-    duration: '3 Months',
-    lessons: '38 Lessons',
-    image: '/ethical_hack.jpeg'
-  },
-  {
-    id: 'graphic-design',
-    title: 'Graphic Design',
-    description: 'Teach visual design, branding, and creative software',
-    duration: '2 Months',
-    lessons: '28 Lessons',
-    image: '/graphic_design_course.jpeg'
-  },
-  {
-    id: 'uiux-design',
-    title: 'UI/UX Design',
-    description: 'Teach intuitive interface design and user experience principles',
-    duration: '3 Months',
-    lessons: '32 Lessons',
-    image: '/uiux_course.jpeg'
-  },
-  {
-    id: 'full-stack-development',
-    title: 'Full Stack Development',
-    description: 'Teach complete web application development from frontend to backend',
-    duration: '4 Months',
-    lessons: '40 Lessons',
-    image: '/fullstack_course.jpeg'
-  },
-  {
-    id: 'frontend-development',
-    title: 'Frontend Development',
-    description: 'Teach modern frontend frameworks and UI building',
-    duration: '2 Months',
-    lessons: '35 Lessons',
-    image: '/frontend_course.jpeg'
-  },
-  {
-    id: 'backend-development',
-    title: 'Backend Development',
-    description: 'Teach server-side applications and API development',
-    duration: '2 Months',
-    lessons: '36 Lessons',
-    image: '/backend_course.jpeg'
-  },
-  {
-    id: 'web-development',
-    title: 'Web Development',
-    description: 'Teach fundamentals of building modern websites and web apps',
-    duration: '3 Months',
-    lessons: '30 Lessons',
-    image: '/webi.jpeg'
-  },
-  {
-    id: 'digital-marketing',
-    title: 'Digital Marketing',
-    description: 'Teach SEO, social media, and online marketing strategies',
-    duration: '2 Months',
-    lessons: '25 Lessons',
-    image: '/digital_marketing_couse.jpeg'
-  },
-  {
-    id: 'cloud-computing',
-    title: 'Cloud Computing',
-    description: 'Teach cloud infrastructure deployment and management',
-    duration: '3 Months',
-    lessons: '38 Lessons',
-    image: '/cloud_course.jpeg'
-  },
-  {
-    id: 'data-analysis',
-    title: 'Data Analysis',
-    description: 'Teach data processing, visualization, and business intelligence',
-    duration: '3 Months',
-    lessons: '32 Lessons',
-    image: '/data_science_course.jpeg'
-  }
-]
+const courses = COURSE_CATALOG
 
 export default function TeachersPage() {
   const [searchTerm, setSearchTerm] = useState('')
@@ -204,8 +83,8 @@ export default function TeachersPage() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredCourses.map((course) => (
               <Link
-                key={course.id}
-                href={`/teachers/login/${course.id}`}
+                key={course.slug}
+                href={`/teachers/login/${course.slug}`}
                 className="group flex min-w-0 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_2px_12px_-6px_rgba(15,23,42,.12)] transition duration-300 hover:-translate-y-1 hover:border-emerald-700/25 hover:shadow-[0_22px_50px_-24px_rgba(6,78,59,.28)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-700/20"
               >
                 <div className="relative aspect-[16/10] overflow-hidden bg-emerald-950">

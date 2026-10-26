@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "../components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
-import { AlertCircle, Check, Clock3, Copy, Mail, Search, Send, Users, X } from "lucide-react"
+import { AlertCircle, Check, Clock3, Copy, LoaderCircle, Mail, Search, Send, Users, X } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { academyEmailAccent, emailTemplates, ensurePersonalization, renderEmailText } from "@/lib/email/templates"
 import { createEmailHtml } from "@/lib/email/render-html"
@@ -46,6 +46,29 @@ type EmailLog = {
   created_at: string
 }
 
+type EmailSendProgress = {
+  completed: number
+  total: number
+  sent: number
+  failed: number
+}
+
+type EmailSendResult = {
+  studentId: string
+  status: "sent" | "failed"
+  error?: string
+}
+
+type EmailSendEvent =
+  | ({ type: "progress" } & EmailSendProgress)
+  | {
+      type: "complete"
+      sent: number
+      failed: number
+      results: EmailSendResult[]
+      error?: string
+    }
+
 const initialTemplate = emailTemplates[0]
 const previewStudent = { name: "Amina Okafor", studentCode: "TTA-48291M", course: "Web Development" }
 const itemsPerPage = 10
@@ -74,6 +97,7 @@ export default function EmailPage() {
   const [replyTo, setReplyTo] = useState("")
   const [smtpReady, setSmtpReady] = useState(false)
   const [sending, setSending] = useState(false)
+  const [sendProgress, setSendProgress] = useState<EmailSendProgress>({ completed: 0, total: 0, sent: 0, failed: 0 })
   const [sendMessage, setSendMessage] = useState("")
   const [sendError, setSendError] = useState("")
   const [copiedStudentId, setCopiedStudentId] = useState("")
@@ -152,6 +176,15 @@ export default function EmailPage() {
   }, [fetchEmailHistory])
 
   useEffect(() => {
+    if (!sending) return
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    return () => {
+      document.body.style.overflow = previousOverflow
+    }
+  }, [sending])
+
+  useEffect(() => {
     const supabase = createClient()
     let refreshTimer: number | undefined
     const channel = supabase
@@ -225,7 +258,9 @@ export default function EmailPage() {
 
   const sendEmail = async () => {
     if (!selectedTemplate || selectedStudentIds.size === 0 || sending) return
+    const recipientCount = selectedStudentIds.size
     setSending(true)
+    setSendProgress({ completed: 0, total: recipientCount, sent: 0, failed: 0 })
     setSendMessage("")
     setSendError("")
     try {
@@ -241,21 +276,62 @@ export default function EmailPage() {
           studentIds: [...selectedStudentIds],
         }),
       })
-      const result = await response.json()
-      if (!response.ok && response.status !== 207) {
+      const contentType = response.headers.get("content-type") || ""
+      if (!response.ok && !contentType.includes("application/x-ndjson")) {
+        const result = await response.json()
         throw new Error(result.error || "Unable to send email.")
       }
-      const sentIds = new Set<string>(
-        (result.results ?? [])
-          .filter((item: { status: string }) => item.status === "sent")
-          .map((item: { studentId: string }) => item.studentId),
+      if (!contentType.includes("application/x-ndjson") || !response.body) {
+        throw new Error("The email service did not return delivery progress. Refresh the page and try again.")
+      }
+
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ""
+      let finalResult: Extract<EmailSendEvent, { type: "complete" }> | undefined
+      const processLine = (line: string) => {
+        if (!line.trim()) return
+        const event = JSON.parse(line) as EmailSendEvent
+        if (event.type === "progress") {
+          setSendProgress({
+            completed: event.completed,
+            total: event.total,
+            sent: event.sent,
+            failed: event.failed,
+          })
+        } else {
+          finalResult = event
+          setSendProgress({
+            completed: event.results.length,
+            total: recipientCount,
+            sent: event.sent,
+            failed: event.failed,
+          })
+        }
+      }
+      while (true) {
+        const { done, value } = await reader.read()
+        buffer += decoder.decode(value, { stream: !done })
+        const lines = buffer.split("\n")
+        buffer = lines.pop() || ""
+        lines.forEach(processLine)
+        if (done) break
+      }
+      if (buffer.trim()) processLine(buffer)
+      if (!finalResult) {
+        throw new Error("The connection ended before email delivery finished. Check email history before retrying.")
+      }
+      const result = finalResult
+      const sentIds = new Set(
+        result.results.filter((item) => item.status === "sent").map((item) => item.studentId),
       )
       setSelectedStudentIds((current) => new Set([...current].filter((id) => !sentIds.has(id))))
       setSendMessage(`${result.sent} email${result.sent === 1 ? "" : "s"} sent${result.failed ? `; ${result.failed} failed` : ""}.`)
       if (result.failed) {
-        const firstFailure = result.results?.find((item: { status: string }) => item.status === "failed")
+        const firstFailure = result.results.find((item) => item.status === "failed")
         if (firstFailure?.error) setSendError(firstFailure.error)
       }
+      if (result.error) setSendError(result.error)
       await fetchEmailHistory()
     } catch (error) {
       setSendError(error instanceof Error ? error.message : "Unable to send email.")
@@ -676,6 +752,44 @@ export default function EmailPage() {
       </Card>
         </TabsContent>
       </Tabs>
+      {sending && (
+        <div
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          <div className="w-full max-w-sm rounded-2xl bg-background p-6 text-center shadow-2xl sm:p-8">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50">
+              <LoaderCircle aria-hidden="true" className="h-9 w-9 animate-spin text-emerald-700" />
+            </div>
+            <p className="mt-5 text-lg font-semibold text-foreground">
+              Sending {sendProgress.total === 1 ? "email" : "emails"}
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {sendProgress.completed} of {sendProgress.total} processed
+            </p>
+            <div
+              className="mt-5 h-2 overflow-hidden rounded-full bg-muted"
+              role="progressbar"
+              aria-label="Email delivery progress"
+              aria-valuemin={0}
+              aria-valuemax={sendProgress.total}
+              aria-valuenow={sendProgress.completed}
+            >
+              <div
+                className="h-full rounded-full bg-emerald-600 transition-[width] duration-300"
+                style={{ width: `${sendProgress.total ? (sendProgress.completed / sendProgress.total) * 100 : 0}%` }}
+              />
+            </div>
+            <p className="mt-4 text-xs text-muted-foreground">
+              {sendProgress.sent} sent
+              {sendProgress.failed > 0 && ` · ${sendProgress.failed} failed`}
+              {sendProgress.total > 1 && " · Sending securely to each learner"}
+            </p>
+          </div>
+        </div>
+      )}
     </>
   )
 }

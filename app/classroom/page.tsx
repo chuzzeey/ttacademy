@@ -4,100 +4,9 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { ArrowRight, BookOpen, Search, X } from 'lucide-react'
 import { useState } from 'react'
+import { COURSE_CATALOG } from '@/lib/course-catalog'
 
-interface Course {
-  id: string
-  title: string
-  description: string
-  image: string
-}
-
-const courses: Course[] = [
-  {
-    id: 'cybersecurity',
-    title: 'Cybersecurity',
-    description: 'Learn to protect systems, networks, and data from digital attacks and security breaches.',
-    image: '/cybersecurity_course.jpeg'
-  },
-  {
-    id: 'data-science',
-    title: 'Data Science',
-    description: 'Analyze complex data, build predictive models, and extract insights from large datasets.',
-    image: '/data_science_course.jpeg'
-  },
-  {
-    id: 'ai-automation',
-    title: 'AI Automation',
-    description: 'Build intelligent automated systems using machine learning and advanced AI techniques.',
-    image: '/ai_course.jpeg'
-  },
-  {
-    id: 'computer-networking',
-    title: 'Computer Networking',
-    description: 'Master network protocols, infrastructure, and system connectivity fundamentals.',
-    image: '/neti.jpeg'
-  },
-  {
-    id: 'ethical-hacking',
-    title: 'Ethical Hacking',
-    description: 'Learn penetration testing and security assessment to protect systems from vulnerabilities.',
-    image: '/ethical_hack.jpeg'
-  },
-  {
-    id: 'graphic-design',
-    title: 'Graphic Design',
-    description: 'Create stunning visual content using industry-standard design tools and principles.',
-    image: '/graphic_design_course.jpeg'
-  },
-  {
-    id: 'uiux-design',
-    title: 'UI/UX Design',
-    description: 'Design beautiful and intuitive user interfaces with modern design principles.',
-    image: '/uiux_course.jpeg'
-  },
-  {
-    id: 'full-stack-development',
-    title: 'Full Stack Development',
-    description: 'Master both frontend and backend development to build complete web applications.',
-    image: '/fullstack_course.jpeg'
-  },
-  {
-    id: 'frontend-development',
-    title: 'Frontend Development',
-    description: 'Build responsive and interactive user interfaces with modern frontend technologies.',
-    image: '/frontend_course.jpeg'
-  },
-  {
-    id: 'backend-development',
-    title: 'Backend Development',
-    description: 'Develop robust server-side applications and APIs with modern backend technologies.',
-    image: '/backend_course.jpeg'
-  },
-  {
-    id: 'web-development',
-    title: 'Web Development',
-    description: 'Learn fundamental web technologies to build modern websites and web applications.',
-    image: '/webi.jpeg'
-  },
-  {
-    id: 'digital-marketing',
-    title: 'Digital Marketing',
-    description: 'Master digital marketing strategies including SEO, social media, and online advertising.',
-    image: '/digital_marketing_couse.jpeg'
-  },
-  {
-    id: 'cloud-computing',
-    title: 'Cloud Computing',
-    description: 'Learn cloud architecture, deployment, and management using major cloud platforms.',
-    image: '/cloud_course.jpeg'
-  },
-  {
-    id: 'data-analysis',
-    title: 'Data Analysis',
-    description: 'Master data analysis techniques to interpret complex datasets and drive business decisions.',
-    image: '/data_science_course.jpeg'
-  }
-]
+const courses = COURSE_CATALOG
 
 export default function ClassroomPage() {
   const [searchTerm, setSearchTerm] = useState('')
@@ -183,8 +92,8 @@ export default function ClassroomPage() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredCourses.map((course) => (
               <Link
-                key={course.id}
-                href={`/classroom/${course.id}/login`}
+                key={course.slug}
+                href={`/classroom/${course.slug}/login`}
                 className="group flex min-w-0 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_2px_12px_-6px_rgba(15,23,42,.12)] transition duration-300 hover:-translate-y-1 hover:border-emerald-700/25 hover:shadow-[0_22px_50px_-24px_rgba(6,78,59,.28)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-700/20"
               >
                 <div className="relative aspect-[16/10] overflow-hidden bg-emerald-950">

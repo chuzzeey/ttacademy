@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
 
     const contentLength = Number(request.headers.get("content-length") || 0)
     if (contentLength > MAX_FILE_SIZE + 64 * 1024) {
-      return NextResponse.json({ error: "Choose an image smaller than 5 MB." }, { status: 413 })
+      return NextResponse.json({ error: "Choose an image that is 5 MB or smaller." }, { status: 413 })
     }
 
     const formData = await request.formData()
@@ -51,40 +51,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Choose a JPG, PNG, or WebP image." }, { status: 400 })
     }
     if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json({ error: "Choose an image smaller than 5 MB." }, { status: 413 })
+      return NextResponse.json({ error: "Choose an image that is 5 MB or smaller." }, { status: 413 })
     }
 
     const adminClient = await createAdminClient()
     const storage = adminClient.storage
-    const { data: buckets, error: listError } = await storage.listBuckets()
-    if (listError) {
-      console.error("Admin avatar storage lookup failed:", listError)
-      return NextResponse.json({ error: "Unable to prepare profile photo storage" }, { status: 500 })
-    }
-
-    const bucket = buckets.find(({ id }) => id === BUCKET)
-    if (!bucket) {
-      const { error: createError } = await storage.createBucket(BUCKET, {
-        public: true,
-        fileSizeLimit: MAX_FILE_SIZE,
-        allowedMimeTypes: [...ALLOWED_TYPES],
-      })
-      if (createError) {
-        console.error("Admin avatar bucket creation failed:", createError)
-        return NextResponse.json({ error: "Unable to prepare profile photo storage" }, { status: 500 })
-      }
-    } else if (!bucket.public) {
-      const { error: updateError } = await storage.updateBucket(BUCKET, {
-        public: true,
-        fileSizeLimit: MAX_FILE_SIZE,
-        allowedMimeTypes: [...ALLOWED_TYPES],
-      })
-      if (updateError) {
-        console.error("Admin avatar bucket configuration failed:", updateError)
-        return NextResponse.json({ error: "Unable to prepare profile photo storage" }, { status: 500 })
-      }
-    }
-
     const path = `${user.id}/profile-${Date.now()}.${file.type === "image/jpeg" ? "jpg" : file.type.split("/")[1]}`
     const { error: uploadError } = await storage.from(BUCKET).upload(
       path,
@@ -93,6 +64,11 @@ export async function POST(request: NextRequest) {
     )
     if (uploadError) {
       console.error("Admin avatar upload failed:", uploadError)
+      if (/bucket not found|does not exist/i.test(uploadError.message)) {
+        return NextResponse.json({
+          error: "Profile photo storage is not set up. Apply migration 20261026160000_admin_avatar_storage.sql, then try again.",
+        }, { status: 503 })
+      }
       return NextResponse.json({ error: "Unable to upload profile photo" }, { status: 500 })
     }
 

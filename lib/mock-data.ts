@@ -1,3 +1,5 @@
+import { COURSE_CATALOG } from './course-catalog'
+
 export interface CourseMetadata {
   slug: string
   title: string
@@ -1493,7 +1495,11 @@ function generateGenericCourse(slug: string): CourseMetadata {
 }
 
 export function getCourseData(slug: string): CourseMetadata {
-  return courseDataMap[slug] || generateGenericCourse(slug)
+  const catalogCourse = COURSE_CATALOG.find((course) => course.slug === slug)
+  const course = courseDataMap[slug] || generateGenericCourse(slug)
+  return catalogCourse
+    ? { ...course, title: catalogCourse.title, description: catalogCourse.description, icon: catalogCourse.image, banner: catalogCourse.image }
+    : course
 }
 
 export function getCourseTitle(slug: string): string {

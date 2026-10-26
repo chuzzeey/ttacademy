@@ -16,13 +16,9 @@ import {
   DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu"
 import { createClient } from "@/lib/supabase/client"
+import { COURSE_CATALOG } from "@/lib/course-catalog"
 
-const COURSES = [
-  "Cybersecurity", "Data Science", "AI Automation", "Computer Networking",
-  "Ethical Hacking", "Graphic Design", "UI/UX Design", "Full Stack Development",
-  "Frontend Development", "Backend Development", "Web Development",
-  "Digital Marketing", "Cloud Computing", "Data Analysis",
-]
+const COURSES = COURSE_CATALOG.map(({ title }) => title)
 
 const PAYMENT_STATUSES = [
   { value: "all", label: "All Payments" },

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/server-admin"
 import { requireAdmin } from "@/lib/supabase/require-admin"
+import { COURSE_CATALOG } from "@/lib/course-catalog"
 
 const statuses = new Set(["pending", "approved", "restricted"])
 
@@ -23,8 +24,12 @@ export async function GET() {
       return NextResponse.json({ error: "Unable to load classroom management data" }, { status: 500 })
     }
 
+    if (!coursesResult.data) throw new Error("Classroom courses query returned no data")
+    const activeCourseSlugs = new Set(coursesResult.data.map(({ slug }) => slug))
     return NextResponse.json({
-      courses: coursesResult.data,
+      courses: COURSE_CATALOG
+        .filter(({ slug }) => activeCourseSlugs.has(slug))
+        .map(({ slug, title }) => ({ slug, title, is_active: true })),
       rooms: roomsResult.data,
       teachers: teachersResult.data,
       students: studentsResult.data,

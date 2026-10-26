@@ -19,22 +19,7 @@ import {
 } from 'lucide-react'
 import { COURSE_CATALOG } from '@/lib/course-catalog'
 
-const APPLICATION_COURSE_SLUGS = [
-    'cybersecurity',
-    'uiux-design',
-    'cloud-computing',
-    'web-development',
-    'data-analysis',
-    'ai-video-creation',
-    'ai-automation',
-    'ai-agent-development',
-    'backend-development',
-    'frontend-development',
-    'ethical-hacking',
-    'graphic-design-branding',
-]
-
-const applicationCourses = COURSE_CATALOG.filter(({ slug }) => APPLICATION_COURSE_SLUGS.includes(slug))
+const applicationCourses = COURSE_CATALOG
 
 const courseIcons: Record<string, LucideIcon> = {
     cybersecurity: ShieldCheck,
