@@ -53,6 +53,8 @@ type EmailSendProgress = {
   failed: number
 }
 
+type EmailSendOutcome = "sending" | "success" | "partial" | "failed"
+
 type EmailSendResult = {
   studentId: string
   status: "sent" | "failed"
@@ -60,6 +62,10 @@ type EmailSendResult = {
 }
 
 type EmailSendEvent =
+  | {
+      type: "stage"
+      stage: string
+    }
   | ({ type: "progress" } & EmailSendProgress)
   | {
       type: "complete"
@@ -97,6 +103,8 @@ export default function EmailPage() {
   const [replyTo, setReplyTo] = useState("")
   const [smtpReady, setSmtpReady] = useState(false)
   const [sending, setSending] = useState(false)
+  const [sendOutcome, setSendOutcome] = useState<EmailSendOutcome>("sending")
+  const [sendStage, setSendStage] = useState("Preparing your email…")
   const [sendProgress, setSendProgress] = useState<EmailSendProgress>({ completed: 0, total: 0, sent: 0, failed: 0 })
   const [sendMessage, setSendMessage] = useState("")
   const [sendError, setSendError] = useState("")
@@ -260,6 +268,8 @@ export default function EmailPage() {
     if (!selectedTemplate || selectedStudentIds.size === 0 || sending) return
     const recipientCount = selectedStudentIds.size
     setSending(true)
+    setSendOutcome("sending")
+    setSendStage("Preparing your email…")
     setSendProgress({ completed: 0, total: recipientCount, sent: 0, failed: 0 })
     setSendMessage("")
     setSendError("")
@@ -292,7 +302,9 @@ export default function EmailPage() {
       const processLine = (line: string) => {
         if (!line.trim()) return
         const event = JSON.parse(line) as EmailSendEvent
-        if (event.type === "progress") {
+        if (event.type === "stage") {
+          setSendStage(event.stage)
+        } else if (event.type === "progress") {
           setSendProgress({
             completed: event.completed,
             total: event.total,
@@ -326,16 +338,27 @@ export default function EmailPage() {
         result.results.filter((item) => item.status === "sent").map((item) => item.studentId),
       )
       setSelectedStudentIds((current) => new Set([...current].filter((id) => !sentIds.has(id))))
-      setSendMessage(`${result.sent} email${result.sent === 1 ? "" : "s"} sent${result.failed ? `; ${result.failed} failed` : ""}.`)
+      if (result.results.length > 0 || !result.error) {
+        setSendMessage(`${result.sent} email${result.sent === 1 ? "" : "s"} sent${result.failed ? `; ${result.failed} failed` : ""}.`)
+      }
+      setSendOutcome(
+        result.failed === 0 && !result.error
+          ? "success"
+          : result.sent > 0
+            ? "partial"
+            : "failed",
+      )
       if (result.failed) {
         const firstFailure = result.results.find((item) => item.status === "failed")
         if (firstFailure?.error) setSendError(firstFailure.error)
       }
       if (result.error) setSendError(result.error)
-      await fetchEmailHistory()
+      void fetchEmailHistory()
     } catch (error) {
       setSendError(error instanceof Error ? error.message : "Unable to send email.")
+      setSendOutcome("failed")
     } finally {
+      await new Promise((resolve) => window.setTimeout(resolve, 3500))
       setSending(false)
     }
   }
@@ -760,33 +783,65 @@ export default function EmailPage() {
           aria-atomic="true"
         >
           <div className="w-full max-w-sm rounded-2xl bg-background p-6 text-center shadow-2xl sm:p-8">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50">
-              <LoaderCircle aria-hidden="true" className="h-9 w-9 animate-spin text-emerald-700" />
-            </div>
-            <p className="mt-5 text-lg font-semibold text-foreground">
-              Sending {sendProgress.total === 1 ? "email" : "emails"}
-            </p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {sendProgress.completed} of {sendProgress.total} processed
-            </p>
-            <div
-              className="mt-5 h-2 overflow-hidden rounded-full bg-muted"
-              role="progressbar"
-              aria-label="Email delivery progress"
-              aria-valuemin={0}
-              aria-valuemax={sendProgress.total}
-              aria-valuenow={sendProgress.completed}
-            >
-              <div
-                className="h-full rounded-full bg-emerald-600 transition-[width] duration-300"
-                style={{ width: `${sendProgress.total ? (sendProgress.completed / sendProgress.total) * 100 : 0}%` }}
-              />
-            </div>
-            <p className="mt-4 text-xs text-muted-foreground">
-              {sendProgress.sent} sent
-              {sendProgress.failed > 0 && ` · ${sendProgress.failed} failed`}
-              {sendProgress.total > 1 && " · Sending securely to each learner"}
-            </p>
+            {sendOutcome === "sending" ? (
+              <>
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50">
+                  <LoaderCircle aria-hidden="true" className="h-9 w-9 animate-spin text-emerald-700" />
+                </div>
+                <p className="mt-5 text-lg font-semibold text-foreground">{sendStage}</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {sendProgress.completed} of {sendProgress.total} processed
+                </p>
+                <div
+                  className="mt-5 h-2 overflow-hidden rounded-full bg-muted"
+                  role="progressbar"
+                  aria-label="Email delivery progress"
+                  aria-valuemin={0}
+                  aria-valuemax={sendProgress.total}
+                  aria-valuenow={sendProgress.completed}
+                >
+                  <div
+                    className="h-full rounded-full bg-emerald-600 transition-[width] duration-300"
+                    style={{ width: `${sendProgress.total ? (sendProgress.completed / sendProgress.total) * 100 : 0}%` }}
+                  />
+                </div>
+                <p className="mt-4 text-xs text-muted-foreground">
+                  {sendProgress.sent} sent
+                  {sendProgress.failed > 0 && ` · ${sendProgress.failed} failed`}
+                  {sendProgress.total > 1 && " · Sending securely to each learner"}
+                </p>
+              </>
+            ) : (
+              <>
+                <div className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full ${
+                  sendOutcome === "success"
+                    ? "bg-emerald-50 text-emerald-700"
+                    : sendOutcome === "partial"
+                      ? "bg-amber-50 text-amber-700"
+                      : "bg-red-50 text-red-700"
+                }`}>
+                  {sendOutcome === "success" ? (
+                    <Check aria-hidden="true" className="h-9 w-9" strokeWidth={3} />
+                  ) : sendOutcome === "partial" ? (
+                    <AlertCircle aria-hidden="true" className="h-9 w-9" />
+                  ) : (
+                    <X aria-hidden="true" className="h-9 w-9" strokeWidth={3} />
+                  )}
+                </div>
+                <p className="mt-5 text-lg font-semibold text-foreground">
+                  {sendOutcome === "success"
+                    ? "Email sent successfully"
+                    : sendOutcome === "partial"
+                      ? "Sending completed with some failures"
+                      : "Email sending failed"}
+                </p>
+                {sendMessage && <p className="mt-1 text-sm text-muted-foreground">{sendMessage}</p>}
+                {sendError && <p className="mt-3 text-sm text-red-700">{sendError}</p>}
+                <p className="mt-4 text-xs text-muted-foreground">
+                  {sendProgress.sent} sent · {sendProgress.failed} failed
+                </p>
+              </>
+            )}
           </div>
         </div>
       )}

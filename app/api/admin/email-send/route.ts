@@ -49,15 +49,6 @@ export async function POST(request: NextRequest) {
     }
 
     transport = createSmtpTransport()
-    let pdfImages: EmailPdfImages
-    try {
-      pdfImages = await loadEmailPdfImages()
-    } catch (error) {
-      console.error("Email PDF artwork loading failed:", error)
-      return NextResponse.json({
-        error: "Unable to prepare the branded PDF attachment. Check the academy logo and banner image URLs, then try again.",
-      }, { status: 503 })
-    }
     const supabase = await createAdminClient()
     const { data: students, error: studentsError } = await supabase
       .from("students")
@@ -87,6 +78,7 @@ export async function POST(request: NextRequest) {
         let sent = 0
         let failed = 0
         let fatalError = ""
+        let pdfImages: EmailPdfImages
         const emit = (event: Record<string, unknown>) => {
           if (!streamCancelled) controller.enqueue(encoder.encode(`${JSON.stringify(event)}\n`))
         }
@@ -181,10 +173,28 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        emit({ type: "progress", completed, total: students.length, sent, failed })
-        void Promise.all(
-          Array.from({ length: Math.min(5, students.length) }, () => worker()),
-        ).then(() => {
+        void (async () => {
+          emit({ type: "stage", stage: "Preparing branded emails…" })
+          try {
+            pdfImages = await loadEmailPdfImages()
+          } catch (error) {
+            console.error("Email PDF artwork loading failed:", error)
+            emit({
+              type: "complete",
+              sent,
+              failed,
+              results,
+              error: "Unable to prepare the branded PDF attachment. Check the academy logo and banner image URLs, then try again.",
+            })
+            if (!streamCancelled) controller.close()
+            transport?.transport.close()
+            return
+          }
+          emit({ type: "stage", stage: "Sending emails…" })
+          emit({ type: "progress", completed, total: students.length, sent, failed })
+          await Promise.all(
+            Array.from({ length: Math.min(5, students.length) }, () => worker()),
+          )
           emit({
             type: "complete",
             sent,
@@ -194,7 +204,7 @@ export async function POST(request: NextRequest) {
           })
           if (!streamCancelled) controller.close()
           transport?.transport.close()
-        }).catch((error: unknown) => {
+        })().catch((error: unknown) => {
           console.error("Email delivery stream failed:", error)
           emit({ type: "complete", sent, failed, results, error: "Email delivery stopped unexpectedly." })
           if (!streamCancelled) controller.close()

@@ -17,6 +17,8 @@ export type EmailPdfImages = {
   banner: PdfImage
 }
 
+let emailPdfImagesPromise: Promise<EmailPdfImages> | undefined
+
 async function loadImage(url: string): Promise<PdfImage> {
   const response = await fetch(url)
   if (!response.ok) {
@@ -40,11 +42,19 @@ async function loadImage(url: string): Promise<PdfImage> {
 }
 
 export async function loadEmailPdfImages(): Promise<EmailPdfImages> {
-  const [logo, banner] = await Promise.all([
-    loadImage(academyLogoUrl),
-    loadImage(academyEmailBannerUrl),
-  ])
-  return { logo, banner }
+  if (!emailPdfImagesPromise) {
+    emailPdfImagesPromise = Promise.all([
+      loadImage(academyLogoUrl),
+      loadImage(academyEmailBannerUrl),
+    ]).then(([logo, banner]) => ({ logo, banner }))
+  }
+
+  try {
+    return await emailPdfImagesPromise
+  } catch (error) {
+    emailPdfImagesPromise = undefined
+    throw error
+  }
 }
 
 export function createEmailPdf(
