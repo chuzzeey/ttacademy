@@ -170,6 +170,52 @@ html {
   background-color: #1a2720 !important;
 }
 
+.admin-theme-dark .email-preview-light {
+  color-scheme: light;
+  background-color: #fafafa !important;
+  color: #1e293b !important;
+}
+
+.admin-theme-dark .email-preview-light .bg-white {
+  background-color: #ffffff !important;
+}
+
+.admin-theme-dark .email-preview-light .bg-\[\#f7faf8\] {
+  background-color: #f7faf8 !important;
+}
+
+.admin-theme-dark .email-preview-light .text-emerald-800 {
+  color: #166534 !important;
+}
+
+.admin-theme-dark .email-preview-light .bg-emerald-50 {
+  background-color: #ecfdf5 !important;
+}
+
+.admin-theme-dark .email-preview-light .text-white {
+  color: #ffffff !important;
+}
+
+.admin-theme-dark .email-preview-light .text-slate-950 {
+  color: #020617 !important;
+}
+
+.admin-theme-dark .email-preview-light .text-slate-800 {
+  color: #1e293b !important;
+}
+
+.admin-theme-dark .email-preview-light .text-slate-700 {
+  color: #334155 !important;
+}
+
+.admin-theme-dark .email-preview-light .text-slate-600 {
+  color: #475569 !important;
+}
+
+.admin-theme-dark .email-preview-light .text-slate-500 {
+  color: #64748b !important;
+}
+
 .admin-theme-dark [class~="bg-white/35"],
 .admin-theme-dark [class~="bg-white/45"],
 .admin-theme-dark [class~="bg-white/55"],

@@ -13,7 +13,7 @@ export function DashboardFrame({ children }: { children: React.ReactNode }) {
       {!isClassroomRoute && <Header />}
       <main className={isClassroomRoute
         ? "min-h-screen min-w-0"
-        : "mx-auto min-w-0 w-full max-w-[1600px] px-3 pb-10 pt-[5rem] sm:px-6 lg:ml-[17rem] lg:w-[calc(100%-17rem)] lg:px-8 lg:pt-24"}
+        : "mx-auto min-w-0 w-full max-w-[1600px] px-3 pb-8 pt-[5rem] sm:px-6 sm:pb-10 lg:ml-[17rem] lg:w-[calc(100%-17rem)] lg:px-8 lg:pt-24"}
       >
         {children}
       </main>
