@@ -1,3 +1,5 @@
+import { socialLinks } from "@/lib/social-links"
+
 export type EmailTemplate = {
   id: string
   name: string
@@ -16,14 +18,21 @@ export const emailTemplates: EmailTemplate[] = [
     name: "Welcome email",
     description: "Welcome a learner and share what to expect next.",
     subject: "Welcome to Tech Trailblazer Academy!",
-    body: "Hi {{name}},\n\nYour journey in {{course}} at TECH TRAILBLAZER ACADEMY is about to begin, and we're excited to have you on board!\n\nYour student ID is included below for easy reference:\nStudent ID: {{student_id}}\n\nHere's what you can look forward to during your learning journey:\n• Beginner-Friendly Learning: Start from the fundamentals and build your skills step by step, with no prior experience required.\n• Flexible Online Classes: Attend live interactive sessions or learn at your own pace with high-quality recorded lessons. Classes run 3–4 days a week, with regular assessments throughout your 4-month program (or 3 months, depending on your chosen course).\n• Student Community & Networking: Connect with fellow students, mentors, and alumni through our vibrant community channels, networking events, and student hangouts.\n• Assessments & Personalized Feedback: Measure your progress through quizzes, assignments, and constructive feedback from experienced mentors.\n• Capstone Project: Put your knowledge into practice by working on a real-world project that strengthens your portfolio and demonstrates your skills to employers.\n• Career & Job Placement Support: Receive personalized guidance with your CV, LinkedIn profile, portfolio, and interview preparation, and gain access to internship and job opportunities.\n• Alumni Network: Join a growing community of graduates who continue to learn, collaborate, and thrive in various tech industries.\n\nStart date: 20 January 2027\nEnd date: 20 May 2027\n\nIf you haven't already completed your application fee payment, use the button below to secure your spot for the program.\n{{korapay_payment_link}}\n\nAt TECH TRAILBLAZER ACADEMY, you're not just enrolling in a course; you're joining a community dedicated to helping you build in-demand skills, grow your professional network, and launch a successful career in tech.\n\nWe look forward to welcoming you!",
+    body: "Hi {{name}},\n\nYour journey to becoming a *{{course}}* at *TECH TRAILBLAZER ACADEMY* is about to begin, and we're excited to have you on board!\n\nHere are your enrollment details:\n• Student ID: {{student_id}}\n• Course: *{{course}}*\n• Tuition Fee: *N50,000*\n• Discounted Fee: ~N476,000~\n• Tuition Balance: *N50,000*\n• Start Date: *January 20, 2027*\n• End Date: *May 20, 2027*\n• Duration: *4 months*\n• Schedule: *4 days a week*\n• Delivery Mode: *Online* (live classes or self-paced recordings)\n\nIf you haven’t already, please complete your tuition fee payment of N50,000 to confirm your scholarship and reserve your place.\n{{korapay_payment_link}}\n\nWe’re excited to welcome you to TECH TRAILBLAZER ACADEMY and support you throughout your learning journey!\n{{whatsapp_community_link}}",
   },
   {
     id: "payment-confirmation",
     name: "Payment confirmation",
     description: "Confirm a learner's payment and enrollment status.",
     subject: "Payment confirmation - Tech Trailblazer Academy",
-    body: "We’re pleased to confirm that your payment for Tech Trailblazer Academy has been received and recorded. Thank you for completing this step in your enrollment. We appreciate your trust in our team and look forward to supporting you throughout your course.\n\nEnrollment reference:\nCourse: {{course}}\nStudent ID: {{student_id}}\n\nPlease retain this email as confirmation for your records. Our team will share any relevant course access information and upcoming updates with you through your registered email address. If you believe this confirmation was sent in error or have a question about your enrollment, please reply to this message so we can assist.\n\nThank you once again. We look forward to having you with us.",
+    body: "Hi {{name}},\n\nWe are pleased to inform you that we have received your payment (N50,000 only) toward becoming a *{{course}}* student at Tech Trailblazer Academy.\n\nYour spot has been confirmed and reserved. We are thrilled to have you join us! We will share your onboarding details, schedule, and next steps shortly.\n\nFollow us:\n{{social_links}}\n\nIf you have any questions in the meantime, feel free to reply to this email or leave us a message on WhatsApp: +234 803 482 6276 (https://wa.me/2348034826276).\n\nBest regards,\nTech Trailblazer Academy Team",
+  },
+  {
+    id: "payment-proof-rejection",
+    name: "Payment proof update",
+    description: "Let a learner know their payment proof needs another look.",
+    subject: "Action needed: please resubmit your payment proof",
+    body: "Hi {{name}},\n\nThank you for sending your payment proof for *{{course}}*. We were unable to confirm the payment from the image provided.\n\nReview note: {{reason}}\n\nPlease check that your receipt image is clear and shows the payment details, then submit a new proof from our website. If you believe this was sent in error, reply to this email and our team will be happy to help.\n\nBest regards,\nTech Trailblazer Academy Team",
   },
   {
     id: "payment-reminder",
@@ -72,6 +81,7 @@ export function renderEmailText(
     .replaceAll("{{name}}", student.name)
     .replaceAll("{{student_id}}", student.studentCode)
     .replaceAll("{{course}}", student.course)
+    .replaceAll("{{social_links}}", socialLinks.map(({ name, handle, href }) => `${name}: ${handle} — ${href}`).join("\n"))
 }
 
 export type EmailBodyBlock =

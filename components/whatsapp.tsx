@@ -6,7 +6,7 @@ const WhatsAppButton = () => {
       href="https://whatsapp.com/channel/0029Vb7yD0fBA1f1GHOHqJ2l"
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex items-center justify-center px-6 py-3.5 bg-green-500 text-white font-semibold rounded-full shadow-lg hover:shadow-xl hover:shadow-green-500/25 transition-all duration-300 transform hover:-translate-y-0.5"
+      className="inline-flex items-center justify-center rounded-full bg-[#25D366] px-6 py-3.5 font-semibold text-white shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#20bd5a] hover:shadow-xl hover:shadow-[#25D366]/25"
     >
       <svg
         className="w-5 h-5 mr-2"

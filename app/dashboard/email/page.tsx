@@ -20,6 +20,8 @@ import { AlertCircle, Check, Clock3, Copy, LoaderCircle, Mail, Search, Send, Use
 import { createClient } from "@/lib/supabase/client"
 import { academyEmailAccent, emailTemplates, ensurePersonalization, renderEmailText } from "@/lib/email/templates"
 import { createEmailHtml } from "@/lib/email/render-html"
+import { EmailComposer } from "@/components/email-composer"
+import { formatEmailBulletLines, formatEmailPaymentButton, formatEmailSocialLinks, formatEmailWhatsAppCommunityLink, plainTextFromEmailHtml, plainTextToEmailHtml, sanitizeEmailHtml } from "@/lib/email/sanitize"
 
 type Student = {
   id: string
@@ -54,6 +56,11 @@ type EmailSendProgress = {
 }
 
 type EmailSendOutcome = "sending" | "success" | "partial" | "failed"
+type TemplateWithHtml = (typeof emailTemplates)[number] & {
+  bodyHtml?: string
+  bannerHeadline?: string
+  bannerSubtitle?: string
+}
 
 type EmailSendResult = {
   studentId: string
@@ -76,7 +83,7 @@ type EmailSendEvent =
     }
 
 const initialTemplate = emailTemplates[0]
-const previewStudent = { name: "Amina Okafor", studentCode: "TTA-48291M", course: "Web Development" }
+const previewStudent = { name: "Amah Precious", studentCode: "TTB 457837", course: "cybersecurity" }
 const itemsPerPage = 10
 
 export default function EmailPage() {
@@ -86,9 +93,11 @@ export default function EmailPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedTemplate, setSelectedTemplate] = useState(initialTemplate.id)
+  const [templateCatalog, setTemplateCatalog] = useState<TemplateWithHtml[]>(emailTemplates)
   const [activeTab, setActiveTab] = useState("compose")
   const [subject, setSubject] = useState(initialTemplate.subject)
   const [messageBody, setMessageBody] = useState(initialTemplate.body)
+  const [messageBodyHtml, setMessageBodyHtml] = useState(() => plainTextToEmailHtml(initialTemplate.body))
   const [bannerHeadline, setBannerHeadline] = useState(initialTemplate.name)
   const [bannerSubtitle, setBannerSubtitle] = useState(initialTemplate.description)
   const [previewName, setPreviewName] = useState(previewStudent.name)
@@ -110,6 +119,7 @@ export default function EmailPage() {
   const [sendError, setSendError] = useState("")
   const [copiedStudentId, setCopiedStudentId] = useState("")
   const [copyError, setCopyError] = useState("")
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "failed">("idle")
 
   const copyStudentId = async (studentId: string) => {
     try {
@@ -184,6 +194,36 @@ export default function EmailPage() {
   }, [fetchEmailHistory])
 
   useEffect(() => {
+    void fetch("/api/admin/email-templates", { cache: "no-store" })
+      .then(async (response) => {
+        const result = await response.json()
+        if (!response.ok || !Array.isArray(result.data)) throw new Error(result.error || "Unable to load saved templates.")
+        setTemplateCatalog((current) => current.map((template) => {
+          const saved = result.data.find((item: { id?: string }) => item.id === template.id)
+          const bodyHtml = formatEmailSocialLinks(formatEmailWhatsAppCommunityLink(formatEmailPaymentButton(formatEmailBulletLines(sanitizeEmailHtml(saved?.body_html || "")))))
+          return saved ? {
+            ...template,
+            subject: saved.subject,
+            body: plainTextFromEmailHtml(bodyHtml),
+            bodyHtml,
+            bannerHeadline: saved.banner_headline || template.name,
+            bannerSubtitle: saved.banner_subtitle || template.description,
+          } : template
+        }))
+        const saved = result.data.find((item: { id?: string }) => item.id === selectedTemplate)
+        if (saved) {
+          setSubject(saved.subject)
+          setBannerHeadline(saved.banner_headline || saved.name)
+          setBannerSubtitle(saved.banner_subtitle || saved.description)
+          const bodyHtml = formatEmailSocialLinks(formatEmailWhatsAppCommunityLink(formatEmailPaymentButton(formatEmailBulletLines(sanitizeEmailHtml(saved.body_html)))))
+          setMessageBody(plainTextFromEmailHtml(bodyHtml))
+          setMessageBodyHtml(bodyHtml)
+        }
+      })
+      .catch((error) => console.error("Saved email template loading failed:", error))
+  }, [selectedTemplate])
+
+  useEffect(() => {
     if (!sending) return
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = "hidden"
@@ -229,7 +269,7 @@ export default function EmailPage() {
 
   const totalPages = Math.ceil(filteredStudents.length / itemsPerPage)
   const pageStudents = filteredStudents.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-  const selectedTemplateDetails = emailTemplates.find(({ id }) => id === selectedTemplate)
+  const selectedTemplateDetails = templateCatalog.find(({ id }) => id === selectedTemplate)
   const selectedPreviewStudent = students.find((student) => selectedStudentIds.has(student.id))
   const previewText = renderEmailText(ensurePersonalization(messageBody), {
     ...previewStudent,
@@ -245,6 +285,7 @@ export default function EmailPage() {
       bannerSubtitle: bannerSubtitle || "An update from the Tech Trailblazer Academy team.",
     },
     selectedPreviewStudent?.course || previewStudent.course,
+    messageBodyHtml,
   )
   const sentCount = emailHistory.filter(({ status }) => status === "sent").length
   const failedCount = emailHistory.filter(({ status }) => status === "failed").length
@@ -253,15 +294,43 @@ export default function EmailPage() {
     pageStudents.length > 0 && pageStudents.every(({ id }) => selectedStudentIds.has(id))
 
   const changeTemplate = (templateId: string) => {
-    const template = emailTemplates.find(({ id }) => id === templateId)
+    const template = templateCatalog.find(({ id }) => id === templateId)
     if (!template) return
     setSelectedTemplate(template.id)
     setSubject(template.subject)
     setMessageBody(template.body)
-    setBannerHeadline(template.name)
-    setBannerSubtitle(template.description)
+    setMessageBodyHtml("bodyHtml" in template && template.bodyHtml ? template.bodyHtml : plainTextToEmailHtml(template.body))
+    setBannerHeadline(template.bannerHeadline || template.name)
+    setBannerSubtitle(template.bannerSubtitle || template.description)
     setSendMessage("")
     setSendError("")
+  }
+
+  const saveTemplate = async () => {
+    setSaveState("saving")
+    try {
+      const response = await fetch("/api/admin/email-templates", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: selectedTemplate,
+          subject,
+          bodyHtml: sanitizeEmailHtml(messageBodyHtml),
+          bannerHeadline,
+          bannerSubtitle,
+        }),
+      })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result.error || "Unable to save template.")
+      setMessageBody(plainTextFromEmailHtml(messageBodyHtml))
+      setTemplateCatalog((current) => current.map((template) => template.id === selectedTemplate
+        ? { ...template, subject, body: plainTextFromEmailHtml(messageBodyHtml), bodyHtml: messageBodyHtml, bannerHeadline, bannerSubtitle }
+        : template))
+      setSaveState("saved")
+    } catch (error) {
+      console.error("Email template save failed:", error)
+      setSaveState("failed")
+    }
   }
 
   const sendEmail = async () => {
@@ -281,6 +350,7 @@ export default function EmailPage() {
           templateId: selectedTemplate,
           subject,
           body: ensurePersonalization(messageBody),
+          bodyHtml: messageBodyHtml,
           bannerHeadline,
           bannerSubtitle,
           studentIds: [...selectedStudentIds],
@@ -460,7 +530,7 @@ export default function EmailPage() {
                   <SelectValue placeholder="Select an email type" />
                 </SelectTrigger>
                 <SelectContent>
-                  {emailTemplates.map((emailType) => (
+                  {templateCatalog.map((emailType) => (
                     <SelectItem key={emailType.id} value={emailType.id}>
                       {emailType.name}
                     </SelectItem>
@@ -475,13 +545,36 @@ export default function EmailPage() {
               <span>{selectedTemplateDetails.description}</span>
             </div>
           )}
-          <div className="mt-2 grid gap-3 sm:mt-4 sm:gap-5">
-            <div className="space-y-2 sm:space-y-3">
+          <div className="mt-2 grid gap-5 sm:mt-4 sm:gap-6 xl:grid-cols-2 xl:items-start">
+            <section aria-label="Email editor" className="min-w-0 space-y-3">
+              <div className="grid gap-3 rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
+                <div className="grid gap-3">
+                  <div>
+                    <Label htmlFor="email-title" className="text-xs">Email title</Label>
+                    <Input id="email-title" value={bannerHeadline} maxLength={100} onChange={(event) => { setBannerHeadline(event.target.value); setSaveState("idle") }} className="mt-1 h-10 bg-white text-sm" />
+                  </div>
+                  <div>
+                    <Label htmlFor="email-subtitle" className="text-xs">Email subtitle</Label>
+                    <Input id="email-subtitle" value={bannerSubtitle} maxLength={180} onChange={(event) => { setBannerSubtitle(event.target.value); setSaveState("idle") }} className="mt-1 h-10 bg-white text-sm" />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="subject" className="text-xs">Subject</Label>
+                  <Input id="subject" value={subject} onChange={(event) => { setSubject(event.target.value); setSaveState("idle") }} className="mt-1 h-10 bg-white text-sm" />
+                </div>
+                <EmailComposer value={messageBodyHtml} onChange={(html) => { setMessageBodyHtml(html); setMessageBody(plainTextFromEmailHtml(html)); setSaveState("idle") }} />
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <span className="text-xs text-slate-500">{saveState === "saving" ? "Saving changes…" : saveState === "saved" ? "Changes saved" : saveState === "failed" ? "Save failed — your edits are still here." : "Unsaved changes"}</span>
+                  <Button type="button" onClick={() => void saveTemplate()} disabled={saveState === "saving"} className="rounded-xl">{saveState === "saving" ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}Save changes</Button>
+                </div>
+              </div>
+            </section>
+            <section aria-label="Live email preview" className="min-w-0 space-y-3">
               <div className="space-y-1 sm:space-y-2">
                 <Label htmlFor="preview-name" className="text-[11px] font-medium sm:text-xs">Preview name</Label>
                 <Input id="preview-name" value={previewName} onChange={(event) => setPreviewName(event.target.value)} className="h-8 rounded-lg text-xs sm:h-10 sm:rounded-xl sm:text-sm" />
               </div>
-              <div className="email-preview-light mx-auto w-full max-w-[600px] overflow-hidden bg-[#fafafa]" style={{ colorScheme: "light", backgroundColor: "#fafafa" }}>
+              <div className="email-preview-light mx-auto w-full max-w-[600px] overflow-hidden rounded-xl border border-slate-200 bg-[#fafafa] shadow-sm" style={{ colorScheme: "light", backgroundColor: "#fafafa" }}>
                 <div className="bg-white px-2.5 py-2 text-[10px] leading-4 sm:px-4 sm:py-2.5 sm:text-[11px]">
                   <p className="truncate"><span className="font-medium text-slate-500">From</span> {senderName}{senderAddress ? ` <${senderAddress}>` : ""}</p>
                   {replyTo && <p className="mt-1 truncate"><span className="font-medium text-slate-500">Reply-to</span> {replyTo}</p>}
@@ -491,7 +584,7 @@ export default function EmailPage() {
                 <iframe
                   title="Personalized email preview"
                   srcDoc={previewHtml}
-                  sandbox="allow-same-origin"
+                  sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox"
                   className="block w-full border-0"
                   style={{ height: previewFrameHeight, colorScheme: "light" }}
                   onLoad={(event) => {
@@ -505,7 +598,7 @@ export default function EmailPage() {
                   }}
                 />
               </div>
-            </div>
+            </section>
           </div>
           {sendMessage && <p role="status" className="mt-3 text-sm font-medium text-emerald-800">{sendMessage}</p>}
           {sendError && <p role="alert" className="mt-2 text-sm text-rose-700">{sendError}</p>}
@@ -725,7 +818,7 @@ export default function EmailPage() {
                       <span className="block truncate text-xs text-muted-foreground">{log.recipient_email} · ID {log.student_code}</span>
                     </span>
                     <span className="min-w-[145px] flex-1 truncate text-xs text-muted-foreground">
-                      {emailTemplates.find(({ id }) => id === log.template_id)?.name ?? log.template_id}
+                      {templateCatalog.find(({ id }) => id === log.template_id)?.name ?? log.template_id}
                     </span>
                     <Badge
                       variant="outline"

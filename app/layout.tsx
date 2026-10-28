@@ -4,6 +4,7 @@ import "./globals.css";
 import { SmoothScrollProvider } from "@/components/smooth-scroll";
 import { QueryProvider } from "@/lib/query-provider";
 import { BRAND_LOGO_URL } from "@/lib/brand";
+import { socialLinks } from "@/lib/social-links";
 
 const notoSans = Noto_Sans({
   subsets: ["latin"],
@@ -79,7 +80,7 @@ const structuredData = {
   "url": "https://techtrailblazeracademy.com",
   "logo": BRAND_LOGO_URL,
   "sameAs": [
-    "https://twitter.com/techtrailblazer",
+    ...socialLinks.map(({ href }) => href),
     "https://linkedin.com/company/techtrailblazer-academy"
   ],
   "offers": {

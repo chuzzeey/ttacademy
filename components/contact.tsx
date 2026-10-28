@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { Check, Copy, LoaderCircle, Menu, X } from 'lucide-react'
 import { BRAND_LOGO_URL } from '@/lib/brand'
 import { COURSE_CATALOG } from '@/lib/course-catalog'
+import PaymentProofSubmission from './payment-proof-submission'
 import WhatsAppButton from './whatsapp'
 
 const AFRICAN_COUNTRIES = [
@@ -127,12 +128,13 @@ export function HeaderNav() {
         </a>
 
         <div className="flex items-center gap-4 sm:gap-6">
-          <div className="hidden items-center gap-5 md:flex">
+          <div className="hidden items-center gap-4 lg:flex">
             <a href="#home" className="text-sm font-medium text-emerald-50/75 transition hover:text-[#82b310] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300">Home</a>
             <a href="#application-process" className="text-sm font-medium text-emerald-50/75 transition hover:text-[#82b310] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300">Courses</a>
             <a href="#benefits-section" className="text-sm font-medium text-emerald-50/75 transition hover:text-[#82b310] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300">Benefits</a>
             <a href="#faq-section" className="text-sm font-medium text-emerald-50/75 transition hover:text-[#82b310] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300">FAQ</a>
             <a href="#join-section" className="text-sm font-medium text-emerald-50/75 transition hover:text-[#82b310] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300">Community</a>
+            <a href="#payment-proof" className="text-xs font-medium text-emerald-50/75 transition hover:text-[#82b310] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300">Submit payment proof</a>
           </div>
           <button
             type="button"
@@ -140,7 +142,7 @@ export function HeaderNav() {
             aria-expanded={mobileMenuOpen}
             aria-controls="mobile-navigation"
             onClick={() => setMobileMenuOpen((open) => !open)}
-            className="inline-flex h-10 w-10 items-center justify-center text-emerald-50 transition hover:text-[#82b310] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 md:hidden"
+            className="inline-flex h-10 w-10 items-center justify-center text-emerald-50 transition hover:text-[#82b310] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 lg:hidden"
           >
             {mobileMenuOpen ? <X aria-hidden="true" className="h-5 w-5" /> : <Menu aria-hidden="true" className="h-5 w-5" />}
           </button>
@@ -149,7 +151,7 @@ export function HeaderNav() {
       <div
         id="mobile-navigation"
         hidden={!mobileMenuOpen}
-        className="absolute inset-x-0 top-full border-t border-white/10 bg-[#10251b] px-5 py-3 shadow-lg md:hidden"
+        className="absolute inset-x-0 top-full border-t border-white/10 bg-[#10251b] px-5 py-3 shadow-lg lg:hidden"
       >
         <nav aria-label="Mobile navigation" className="mx-auto flex max-w-7xl flex-col">
           {[
@@ -158,6 +160,7 @@ export function HeaderNav() {
             { label: 'Benefits', href: '#benefits-section' },
             { label: 'FAQ', href: '#faq-section' },
             { label: 'Community', href: '#join-section' },
+            { label: 'Submit payment proof', href: '#payment-proof' },
           ].map(({ label, href }) => (
             <a
               key={href}
@@ -671,7 +674,13 @@ export default function Contact() {
             </div>
           </div>
 
-      
+          <div className="mt-4 flex flex-col gap-4 rounded-2xl border border-emerald-100 bg-emerald-50/70 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+            <div className="min-w-0">
+              <p className="text-base font-semibold tracking-tight text-slate-950">Stay updated!</p>
+              <p className="mt-1 text-sm leading-6 text-slate-600">Get academy announcements, updates, and news.</p>
+            </div>
+            <WhatsAppButton />
+          </div>
         </div>
       </div>
       </section>
@@ -735,6 +744,7 @@ export default function Contact() {
           </button>
         </div>
       </dialog>
+      <PaymentProofSubmission />
     </>
   )
 }

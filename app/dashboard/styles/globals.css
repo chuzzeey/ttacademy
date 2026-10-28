@@ -133,6 +133,111 @@ html {
   transition: background-color 300ms ease, color 300ms ease;
 }
 
+.email-editor:empty::before {
+  content: attr(data-placeholder);
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.email-editor img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+}
+
+.email-editor p {
+  margin: 0 0 22px !important;
+  line-height: 1.75 !important;
+}
+
+.email-editor h1,
+.email-editor h2,
+.email-editor h3 {
+  margin: 0 0 20px !important;
+  color: #183b2b;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.email-editor h1 {
+  font-size: 24px;
+  line-height: 1.25;
+}
+
+.email-editor h2 {
+  font-size: 20px;
+}
+
+.email-editor h3 {
+  font-size: 17px;
+}
+
+.email-editor ul,
+.email-editor ol {
+  margin: 0 0 22px !important;
+  padding-left: 24px !important;
+}
+
+.email-editor ul {
+  list-style: disc outside !important;
+}
+
+.email-editor ol {
+  list-style: decimal outside !important;
+}
+
+.email-editor li {
+  margin-bottom: 12px !important;
+  line-height: 1.75 !important;
+}
+
+.email-editor a {
+  color: #087443;
+  text-decoration: underline;
+}
+
+.email-editor a[href*="checkout.korapay.com"],
+.email-preview-light a[href*="checkout.korapay.com"] {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+  background-color: #3b82f6 !important;
+  color: #fff !important;
+  text-decoration: none !important;
+}
+
+.email-editor a[href*="checkout.korapay.com"]::after,
+.email-preview-light a[href*="checkout.korapay.com"]::after {
+  position: absolute;
+  inset: -20% auto -20% -60%;
+  width: 35%;
+  background: linear-gradient(90deg, transparent, rgb(226 232 240 / 75%), transparent);
+  content: "";
+  opacity: 0;
+  pointer-events: none;
+  transform: skewX(-20deg);
+}
+
+.email-editor a[href*="checkout.korapay.com"]:hover,
+.email-preview-light a[href*="checkout.korapay.com"]:hover {
+  background-color: #60a5fa !important;
+}
+
+.email-editor a[href*="checkout.korapay.com"]:hover::after,
+.email-preview-light a[href*="checkout.korapay.com"]:hover::after {
+  opacity: 1;
+  animation: korapay-button-shimmer 1.1s ease-in-out infinite alternate;
+}
+
+@keyframes korapay-button-shimmer {
+  from {
+    transform: translateX(0) skewX(-20deg);
+  }
+  to {
+    transform: translateX(430%) skewX(-20deg);
+  }
+}
+
 .admin-theme-dark {
   --background: oklch(0.16 0.025 155);
   --foreground: oklch(0.94 0.012 145);
@@ -566,4 +671,26 @@ html {
    ============================================ */
 .modal-overlay {
   /* Darkening is handled by bg-black/40 or bg-black/50 classes */
+}
+.payment-proof-step-next {
+  animation: payment-proof-enter-next 260ms cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.payment-proof-step-previous {
+  animation: payment-proof-enter-previous 260ms cubic-bezier(.22, 1, .36, 1) both;
+}
+
+@keyframes payment-proof-enter-next {
+  from { opacity: 0; transform: translateX(28px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes payment-proof-enter-previous {
+  from { opacity: 0; transform: translateX(-28px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .payment-proof-step-next,
+  .payment-proof-step-previous { animation: none; }
 }

@@ -17,6 +17,7 @@ import {
   LogOut,
   Mail,
   Menu,
+  ReceiptText,
   Settings,
   ShieldCheck,
   Sun,
@@ -53,6 +54,7 @@ const navItems = [
   { label: "Students", href: "/dashboard/students", icon: Users },
   { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
   { label: "Email", href: "/dashboard/email", icon: Mail },
+  { label: "Payment Proof", href: "/dashboard/payment-proofs", icon: ReceiptText },
   { label: "Security", href: "/dashboard/profile#security", icon: ShieldCheck },
   { label: "Settings", href: "/dashboard/settings", icon: Settings },
 ]
@@ -71,6 +73,7 @@ export function Header() {
   const [mobileMenuMounted, setMobileMenuMounted] = useState(false)
   const [notificationOpen, setNotificationOpen] = useState(false)
   const [notifications, setNotifications] = useState<RecentRegistration[]>([])
+  const [unreadPaymentProofCount, setUnreadPaymentProofCount] = useState(0)
   const [selectedNotification, setSelectedNotification] = useState<RecentRegistration | null>(null)
   const [readNotificationIds, setReadNotificationIds] = useState<string[]>([])
   const [readStateLoaded, setReadStateLoaded] = useState(false)
@@ -81,11 +84,13 @@ export function Header() {
   const notificationDialogRef = useRef<HTMLElement>(null)
   const notificationTriggerRef = useRef<HTMLButtonElement>(null)
   const notificationRequestRef = useRef(false)
+  const paymentProofNotificationRequestRef = useRef(0)
   const notificationOpenRef = useRef(notificationOpen)
   notificationOpenRef.current = notificationOpen
   const drawerCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const notificationStorageKey = user ? `academy-notification-read:${user.id}` : null
   const unreadCount = notifications.filter((item) => !readNotificationIds.includes(item.id)).length
+  const totalUnreadCount = unreadCount + unreadPaymentProofCount
 
   const isActive = (href: string) => {
     if (href === "/dashboard") return pathname === href
@@ -134,11 +139,53 @@ export function Header() {
     }
   }, [])
 
+  const loadUnreadPaymentProofCount = useCallback(async () => {
+    const requestId = ++paymentProofNotificationRequestRef.current
+    try {
+      const response = await fetch("/api/admin/payment-proofs/notifications", { cache: "no-store" })
+      const result = await response.json() as { unreadCount?: number; error?: string }
+      if (!response.ok) throw new Error(result.error || "Unable to load payment proof notifications.")
+      if (requestId === paymentProofNotificationRequestRef.current) {
+        const unreadCount = typeof result.unreadCount === "number" && Number.isInteger(result.unreadCount)
+          ? Math.max(0, result.unreadCount)
+          : 0
+        setUnreadPaymentProofCount(unreadCount)
+      }
+    } catch (error) {
+      if (requestId === paymentProofNotificationRequestRef.current) {
+        console.error("Unread payment proof count loading failed:", error)
+        setNotificationError(error instanceof Error ? error.message : "Unable to load payment proof notifications.")
+      }
+    }
+  }, [])
+
+  const markPaymentProofsRead = useCallback(async () => {
+    const requestId = ++paymentProofNotificationRequestRef.current
+    try {
+      const response = await fetch("/api/admin/payment-proofs/notifications", { method: "POST" })
+      const result = await response.json() as { unreadCount?: number; error?: string }
+      if (!response.ok) throw new Error(result.error || "Unable to mark payment proofs as seen.")
+      if (requestId === paymentProofNotificationRequestRef.current) {
+        const unreadCount = typeof result.unreadCount === "number" && Number.isInteger(result.unreadCount)
+          ? Math.max(0, result.unreadCount)
+          : 0
+        setUnreadPaymentProofCount(unreadCount)
+      }
+    } catch (error) {
+      console.error("Payment proof notification read update failed:", error)
+      setNotificationError(error instanceof Error ? error.message : "Unable to mark payment proofs as seen.")
+    }
+  }, [])
+
   useEffect(() => {
     if (!user) return
     const channel = supabase
       .channel(`admin-notifications:${user.id}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "students" }, () => {
+        if (notificationOpenRef.current) void loadNotifications()
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "payment_proofs" }, () => {
+        void loadUnreadPaymentProofCount()
         if (notificationOpenRef.current) void loadNotifications()
       })
       .subscribe((status, error) => {
@@ -150,7 +197,7 @@ export function Header() {
     return () => {
       void supabase.removeChannel(channel)
     }
-  }, [loadNotifications, supabase, user])
+  }, [loadNotifications, loadUnreadPaymentProofCount, supabase, user])
 
   const toggleNotifications = () => {
     const nextOpen = !notificationOpen
@@ -174,14 +221,16 @@ export function Header() {
   }
 
   const markAllNotificationsRead = () => {
-    if (!notificationStorageKey) return
-    const nextReadIds = Array.from(new Set([...readNotificationIds, ...notifications.map((item) => item.id)]))
-    try {
-      window.localStorage.setItem(notificationStorageKey, JSON.stringify(nextReadIds))
-      setReadNotificationIds(nextReadIds)
-    } catch {
-      setNotificationError("Unable to save notification read status in this browser.")
+    if (notificationStorageKey) {
+      const nextReadIds = Array.from(new Set([...readNotificationIds, ...notifications.map((item) => item.id)]))
+      try {
+        window.localStorage.setItem(notificationStorageKey, JSON.stringify(nextReadIds))
+        setReadNotificationIds(nextReadIds)
+      } catch {
+        setNotificationError("Unable to save notification read status in this browser.")
+      }
     }
+    void markPaymentProofsRead()
   }
 
   const confirmLogout = async () => {
@@ -220,7 +269,19 @@ export function Header() {
 
   useEffect(() => {
     void loadNotifications()
-  }, [loadNotifications])
+    void loadUnreadPaymentProofCount()
+  }, [loadNotifications, loadUnreadPaymentProofCount])
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      void loadUnreadPaymentProofCount()
+    }, 30_000)
+    return () => window.clearInterval(timer)
+  }, [loadUnreadPaymentProofCount])
+
+  useEffect(() => {
+    if (pathname === "/dashboard/payment-proofs") void markPaymentProofsRead()
+  }, [markPaymentProofsRead, pathname])
 
   useEffect(() => {
     if (!notificationStorageKey) {
@@ -295,8 +356,13 @@ export function Header() {
           }`}
         >
           <Icon aria-hidden="true" className="h-[18px] w-[18px] shrink-0" />
-          <span className="truncate">{label}</span>
-          {isActive(href) && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-emerald-600" />}
+          <span className="min-w-0 flex-1 truncate">{label}</span>
+          {isActive(href) && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-600" />}
+          {href === "/dashboard/payment-proofs" && unreadPaymentProofCount > 0 && (
+            <span aria-label={`${unreadPaymentProofCount} new payment proofs`} className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-blue-700 px-1.5 text-[10px] font-bold leading-none text-white">
+              {unreadPaymentProofCount > 99 ? "99+" : unreadPaymentProofCount}
+            </span>
+          )}
         </Link>
       ))}
     </nav>
@@ -343,16 +409,16 @@ export function Header() {
     <button
       ref={notificationTriggerRef}
       type="button"
-      aria-label={readStateLoaded && unreadCount > 0 ? `Notifications, ${unreadCount} unread` : "Notifications"}
+      aria-label={readStateLoaded && totalUnreadCount > 0 ? `Notifications, ${totalUnreadCount} unread` : "Notifications"}
       aria-expanded={notificationOpen}
       aria-haspopup="dialog"
       onClick={toggleNotifications}
       className="admin-notification-trigger relative inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border/70 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-emerald-800"
     >
       <Bell aria-hidden="true" className="h-[18px] w-[18px]" />
-      {readStateLoaded && unreadCount > 0 && (
+      {readStateLoaded && totalUnreadCount > 0 && (
         <span className="admin-notification-badge absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-white bg-emerald-600 px-1 text-[9px] font-bold leading-none text-white">
-          {unreadCount > 9 ? "9+" : unreadCount}
+          {totalUnreadCount > 9 ? "9+" : totalUnreadCount}
         </span>
       )}
     </button>
@@ -505,13 +571,13 @@ export function Header() {
                       {selectedNotification ? selectedNotification.name || "New learner" : "Notifications"}
                     </h2>
                     <p className="mt-0.5 text-xs text-slate-500">
-                      {selectedNotification ? "Registration details" : "Recent learner registrations · last 7 days"}
+                      {selectedNotification ? "Registration details" : "Recent registrations and payment proofs"}
                     </p>
                   </div>
                 </div>
               </div>
               <div className="flex shrink-0 items-center gap-2">
-                {!selectedNotification && unreadCount > 0 && (
+                {!selectedNotification && totalUnreadCount > 0 && (
                   <button
                     type="button"
                     onClick={markAllNotificationsRead}
@@ -522,7 +588,7 @@ export function Header() {
                 )}
                 <span className="inline-flex min-h-8 items-center gap-1.5 rounded-full bg-emerald-50 px-3 text-[11px] font-semibold text-emerald-800">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
-                  {unreadCount} unread
+                  {totalUnreadCount} unread
                 </span>
                 <button
                   type="button"
@@ -537,7 +603,7 @@ export function Header() {
                 </button>
               </div>
             </div>
-            {!selectedNotification && unreadCount > 0 && (
+            {!selectedNotification && totalUnreadCount > 0 && (
               <div className="px-5 pt-3 sm:hidden">
                 <button type="button" onClick={markAllNotificationsRead} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl px-3 text-xs font-semibold text-emerald-800 transition hover:bg-emerald-50">
                   <Check aria-hidden="true" className="h-3.5 w-3.5" /> Mark all as read
@@ -605,8 +671,24 @@ export function Header() {
                     <ArrowLeft aria-hidden="true" className="h-3.5 w-3.5" /> Back to all notifications
                   </button>
                 </div>
-              ) : notifications.length ? (
-                <ul className="space-y-2">
+              ) : notifications.length || unreadPaymentProofCount > 0 ? (
+                <div className="space-y-3">
+                  {unreadPaymentProofCount > 0 && (
+                    <Link
+                      href="/dashboard/payment-proofs"
+                      onClick={() => setNotificationOpen(false)}
+                      className="flex items-center justify-between gap-4 rounded-2xl border border-blue-200 bg-blue-50/80 p-4 transition hover:border-blue-300 hover:bg-blue-50"
+                    >
+                      <span className="min-w-0">
+                        <span className="block text-sm font-semibold text-slate-900">New payment proof submissions</span>
+                        <span className="mt-1 block text-xs text-slate-600">Review receipts and approve or reject the payment.</span>
+                      </span>
+                      <span className="inline-flex h-8 min-w-8 shrink-0 items-center justify-center rounded-full bg-blue-700 px-2 text-xs font-bold text-white">
+                        {unreadPaymentProofCount > 99 ? "99+" : unreadPaymentProofCount}
+                      </span>
+                    </Link>
+                  )}
+                  {notifications.length > 0 && <ul className="space-y-2">
                   {notifications.map((item) => {
                     const isRead = readNotificationIds.includes(item.id)
                     return (
@@ -654,7 +736,8 @@ export function Header() {
                       </li>
                     )
                   })}
-                </ul>
+                  </ul>}
+                </div>
               ) : (
                 <div className="flex min-h-56 flex-col items-center justify-center px-6 text-center">
                   <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50 text-slate-400"><Bell aria-hidden="true" className="h-5 w-5" /></span>

@@ -36,7 +36,7 @@ const Home = () => (
                     ))}
                 </ul>
 
-                <div className="mt-8 flex flex-col gap-3 min-[430px]:flex-row min-[430px]:items-center">
+                <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
                     <a
                         href="#application-process"
                         className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#a0c44b] px-6 text-sm font-semibold text-emerald-950 shadow-[0_8px_24px_rgba(4,120,87,0.25)] transition duration-200 hover:-translate-y-0.5 hover:bg-[#91b13f] hover:shadow-[0_12px_30px_rgba(4,120,87,0.32)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-200 motion-reduce:transform-none"
@@ -48,6 +48,9 @@ const Home = () => (
                     </a>
                     <a href="#contact" className="inline-flex min-h-12 items-center justify-center rounded-xl border border-[#83945a] px-5 text-sm font-semibold text-emerald-100/80 transition-colors hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-200">
                         Apply
+                    </a>
+                    <a href="#payment-proof" className="inline-flex min-h-12 items-center justify-center rounded-xl border border-blue-300/35 px-5 text-sm font-semibold text-blue-100 transition-colors hover:border-blue-200 hover:bg-blue-300/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-200">
+                        Already paid? Submit here
                     </a>
                 </div>
             </div>

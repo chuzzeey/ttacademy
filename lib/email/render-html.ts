@@ -4,6 +4,8 @@ import {
   academyLogoUrl,
   getEmailBodyBlocks,
 } from "@/lib/email/templates"
+import { formatEmailBulletLines, formatEmailPaymentButton, formatEmailSocialLinks, formatEmailWhatsAppCommunityLink, sanitizeEmailHtml } from "@/lib/email/sanitize"
+import { socialLinks } from "@/lib/social-links"
 
 function escapeHtml(value: string) {
   return value
@@ -12,6 +14,27 @@ function escapeHtml(value: string) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;")
+}
+
+function applyEmailSpacing(html: string) {
+  const styles: Record<string, string> = {
+    p: "margin:0 0 22px;line-height:1.75",
+    h1: "margin:0 0 20px;line-height:1.25",
+    h2: "margin:0 0 20px;line-height:1.35",
+    h3: "margin:0 0 20px;line-height:1.35",
+    ul: "margin:0 0 22px;padding-left:24px",
+    ol: "margin:0 0 22px;padding-left:24px",
+    li: "margin-bottom:12px;line-height:1.75",
+  }
+  return html.replace(/<(p|h1|h2|h3|ul|ol|li)(\s[^>]*)?>/gi, (tag, name: string, attributes = "") => {
+    const spacing = styles[name.toLowerCase()]
+    const styleMatch = attributes.match(/\sstyle="([^"]*)"/i)
+    if (styleMatch) {
+      const style = `${styleMatch[1].replace(/;?\s*$/, ";")}${spacing}`
+      return `<${name}${attributes.replace(styleMatch[0], ` style="${escapeHtml(style)}"`)}>`
+    }
+    return `<${name}${attributes} style="${spacing}">`
+  })
 }
 
 export type EmailDesign = {
@@ -24,11 +47,14 @@ export function createEmailHtml(
   replyTo: string | undefined,
   design: EmailDesign,
   course?: string,
+  bodyHtml?: string,
 ) {
   const contact = replyTo
     ? `<br>Contact: <a href="mailto:${escapeHtml(replyTo)}" style="color:#087443">${escapeHtml(replyTo)}</a>`
     : ""
-  const emailBlocks = getEmailBodyBlocks(body).map((block) => {
+  const emailBlocks = bodyHtml
+    ? `<tr><td class="email-rich-body" style="padding:0 18px 18px;font-size:15px;line-height:1.75;color:#34443a;overflow-wrap:anywhere">${applyEmailSpacing(formatEmailSocialLinks(formatEmailWhatsAppCommunityLink(formatEmailPaymentButton(formatEmailBulletLines(sanitizeEmailHtml(bodyHtml))))))}</td></tr>`
+    : getEmailBodyBlocks(body).map((block) => {
     if (block.type === "paragraph") {
       const escapedText = escapeHtml(block.text)
       const escapedCourse = course ? escapeHtml(course.trim()) : ""
@@ -44,7 +70,7 @@ export function createEmailHtml(
           ? `<strong class="email-text-primary" style="font-weight:bold;color:#111827">${escapeHtml(heading)}:</strong> ${escapeHtml(description.join(": "))}`
           : escapeHtml(item)
         return `<tr><td valign="top" width="18" style="padding:0 0 32px;font-size:15px;line-height:1.6;color:${academyEmailAccent}">•</td><td class="email-text-body email-bullet-copy" style="padding:0 0 32px;font-size:14px;line-height:1.6;color:#34443a;overflow-wrap:anywhere">${content}</td></tr>`
-      }).join("")
+        }).join("")
       return `<tr><td class="email-bullets-wrap" style="padding:0 18px 14px"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">${items}</table></td></tr>`
     }
     if (block.type === "course-dates") {
@@ -77,6 +103,15 @@ export function createEmailHtml(
       </table>
     </td></tr>`
   }).join("")
+  const emailSocialIcons = socialLinks.map(({ href, name, svg }, index) => `
+    <td align="center" valign="top" width="58" style="width:58px">
+      <a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer" aria-label="Tech Trailblazer Academy on ${escapeHtml(name)}" style="display:block;width:56px;color:#166534;text-align:center;text-decoration:none">
+        <span style="display:inline-block;width:36px;height:36px;border:1px solid #dce9df;border-radius:50%;background:#ffffff;text-align:center">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" role="img" aria-label="${escapeHtml(name)}" style="display:inline-block;margin:9px auto 0;vertical-align:top">${svg}</svg>
+        </span>
+        <span style="display:block;padding-top:4px;font-size:9px;line-height:12px;color:#166534">${escapeHtml(name)}</span>
+      </a>
+    </td>${index < socialLinks.length - 1 ? '<td width="4" style="width:4px;font-size:1px">&nbsp;</td>' : ""}`).join("")
 
   return `<!doctype html>
 <html lang="en">
@@ -92,6 +127,19 @@ export function createEmailHtml(
       .email-card, .email-header, .email-title, .email-content { background-color:#ffffff !important; color:#20352a !important; }
       .email-footer { background-color:#f7faf8 !important; color:#718078 !important; }
       .email-details { background-color:#e8eafb !important; color:#183b2b !important; border-radius:10px; }
+      .email-rich-body p { margin:0 0 22px; line-height:1.75; }
+      .email-rich-body h1, .email-rich-body h2, .email-rich-body h3 { margin:0 0 20px; color:#183b2b; font-weight:bold; line-height:1.35; }
+      .email-rich-body h1 { font-size:24px; line-height:1.25; }
+      .email-rich-body h2 { font-size:20px; }
+      .email-rich-body h3 { font-size:17px; }
+      .email-rich-body ul, .email-rich-body ol { margin:0 0 22px; padding-left:24px; }
+      .email-rich-body li { margin-bottom:12px; line-height:1.75; }
+      .email-rich-body a { color:#087443; text-decoration:underline; }
+      .email-rich-body a[href*="checkout.korapay.com"] { position:relative;display:inline-block;overflow:hidden;background-color:#3b82f6 !important;color:#ffffff !important;text-decoration:none !important; }
+      .email-rich-body a[href*="checkout.korapay.com"]::after { position:absolute;inset:-20% auto -20% -60%;width:35%;background:linear-gradient(90deg,transparent,rgba(226,232,240,.75),transparent);content:"";opacity:0;pointer-events:none;transform:skewX(-20deg); }
+      .email-rich-body a[href*="checkout.korapay.com"]:hover { background-color:#60a5fa !important; }
+      .email-rich-body a[href*="checkout.korapay.com"]:hover::after { opacity:1;animation:korapay-button-shimmer 1.1s ease-in-out infinite alternate; }
+      @keyframes korapay-button-shimmer { from { transform:translateX(0) skewX(-20deg); } to { transform:translateX(430%) skewX(-20deg); } }
       @media screen and (max-width:480px) {
         .email-shell-cell { padding:0 !important; }
         .email-header { padding:16px 16px 10px !important; }
@@ -160,32 +208,11 @@ export function createEmailHtml(
             <div class="email-text-muted" style="margin-top:4px;font-size:11px;line-height:20px;color:#64748b">Learn. Grow. Succeed.</div>
             <img src="${escapeHtml(academyEmailBannerUrl)}" alt="Tech Trailblazer Academy" width="140" style="display:block;width:100%;max-width:140px;height:auto;margin:12px auto 0;border:0">
             <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:10px auto 0">
-              <tr>
-                <td align="center" valign="middle" width="34" height="34" style="width:34px;height:34px;border-radius:50%;background:#ecfdf5">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" aria-label="X" role="img" style="display:block">
-                    <path fill="#166534" d="M18.9 1.15h3.68l-8.04 9.19L24 23.21h-7.41l-5.8-7.58-6.63 7.58H.48l8.6-9.83L0 1.15h7.59l5.24 6.93zm-1.29 19.8h2.04L6.49 3.29H4.3z"/>
-                  </svg>
-                </td>
-                <td width="10" style="width:10px;font-size:1px">&nbsp;</td>
-                <td align="center" valign="middle" width="34" height="34" style="width:34px;height:34px;border-radius:50%;background:#ecfdf5">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" aria-label="Instagram" role="img" style="display:block">
-                    <rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="#166534" stroke-width="2"/>
-                    <circle cx="12" cy="12" r="4" fill="none" stroke="#166534" stroke-width="2"/>
-                    <circle cx="17.5" cy="6.5" r="1.25" fill="#166534"/>
-                  </svg>
-                </td>
-                <td width="10" style="width:10px;font-size:1px">&nbsp;</td>
-                <td align="center" valign="middle" width="34" height="34" style="width:34px;height:34px;border-radius:50%;background:#ecfdf5">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" aria-label="Facebook" role="img" style="display:block">
-                    <path fill="#166534" d="M13.5 21v-8h2.7l.4-3.1h-3.1v-2c0-.9.3-1.5 1.6-1.5h1.7V3.6c-.3 0-1.3-.1-2.5-.1-2.5 0-4.2 1.5-4.2 4.3v2.1H7.3V13h2.8v8z"/>
-                  </svg>
-                </td>
-              </tr>
+              <tr>${emailSocialIcons}</tr>
             </table>
             <div class="email-text-muted" style="margin-top:9px;font-size:11px;line-height:20px;color:#64748b">This message was sent to you by the Academy team. Please reply to this email if you need assistance.${contact}</div>
           </td></tr>
         </table>
-        <div style="padding:10px 8px;font-size:10px;line-height:15px;color:#829087">You’re receiving this message because you’re a learner with Tech Trailblazer Academy.</div>
       </td></tr>
     </table>
   </body>

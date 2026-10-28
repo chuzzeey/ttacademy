@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/server-admin"
 import { requireAdmin } from "@/lib/supabase/require-admin"
 import { emailTemplates, ensurePersonalization, renderEmailText } from "@/lib/email/templates"
+import { formatEmailSocialLinks } from "@/lib/email/sanitize"
 import { createEmailHtml, createSmtpTransport } from "@/lib/email/smtp"
+import { plainTextFromEmailHtml, sanitizeEmailHtml } from "@/lib/email/sanitize"
 import { createEmailPdf, loadEmailPdfImages, type EmailPdfImages } from "@/lib/email/pdf"
 
 const maxRecipients = 100
@@ -19,7 +21,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid email request" }, { status: 400 })
     }
 
-    const { templateId, subject, body, studentIds, bannerHeadline, bannerSubtitle } = payload as Record<string, unknown>
+    const { templateId, subject, body, bodyHtml, studentIds, bannerHeadline, bannerSubtitle } = payload as Record<string, unknown>
     if (
       typeof templateId !== "string" ||
       !emailTemplates.some((template) => template.id === templateId) ||
@@ -29,6 +31,7 @@ export async function POST(request: NextRequest) {
       typeof body !== "string" ||
       !body.trim() ||
       body.length > 12000 ||
+      (bodyHtml !== undefined && (typeof bodyHtml !== "string" || bodyHtml.length > 50000)) ||
       typeof bannerHeadline !== "string" ||
       !bannerHeadline.trim() ||
       bannerHeadline.trim().length > 100 ||
@@ -92,6 +95,13 @@ export async function POST(request: NextRequest) {
               studentCode: student.student_code,
               course: student.course || "Tech Trailblazer Academy",
             })
+            const personalizedHtml = typeof bodyHtml === "string"
+              ? renderEmailText(formatEmailSocialLinks(sanitizeEmailHtml(bodyHtml)), {
+                name: student.name || "Learner",
+                studentCode: student.student_code,
+                course: student.course || "Tech Trailblazer Academy",
+              })
+              : undefined
             let status: "sent" | "failed" = "sent"
             let errorMessage: string | null = null
             let messageId: string | null = null
@@ -104,12 +114,13 @@ export async function POST(request: NextRequest) {
                 },
                 to: student.email,
                 subject: subject.trim(),
-                text: personalizedBody,
+                text: personalizedHtml ? plainTextFromEmailHtml(personalizedHtml) : personalizedBody,
                 html: createEmailHtml(
                   personalizedBody,
                   transport!.replyTo,
                   emailDesign,
                   student.course || "Tech Trailblazer Academy",
+                  personalizedHtml,
                 ),
                 replyTo: transport!.replyTo,
                 attachments: [{
@@ -138,6 +149,7 @@ export async function POST(request: NextRequest) {
                 template_id: templateId,
                 subject: subject.trim(),
                 body_text: personalizedBody,
+                body_html: personalizedHtml,
                 banner_headline: bannerHeadline.trim(),
                 banner_subtitle: bannerSubtitle.trim(),
                 status,

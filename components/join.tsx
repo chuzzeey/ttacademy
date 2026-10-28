@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import TelegramButton from './tele'
+import SocialFollowButton from './social-follow-button'
 
 const learners = ['/stud1.jpeg', '/stud2.jpeg', '/stud3.jpeg', '/stud4.jpeg']
 
@@ -15,7 +15,7 @@ const Join = () => (
                     Start your learning journey now and connect with other learners.
                 </p>
                 <div className="mt-6">
-                    <TelegramButton />
+                    <SocialFollowButton />
                 </div>
             </div>
 
