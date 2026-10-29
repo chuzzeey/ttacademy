@@ -3,10 +3,9 @@
 import { useState, useEffect, useMemo, Suspense } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { ArrowRight, Check, Eye, EyeOff, Key, ShieldCheck } from 'lucide-react'
 import { ADMIN_EMAIL } from '@/lib/supabase/admin-access'
-import { BRAND_LOGO_URL } from '@/lib/brand'
+import Brand from '@/components/brand'
 
 type SignInPhase = 'credentials' | 'access' | 'workspace'
 
@@ -115,11 +114,9 @@ function LoginForm() {
         aria-hidden="true"
         className="pointer-events-none absolute -bottom-48 -right-32 h-[34rem] w-[34rem] rounded-full bg-[#b7c8ec]/55 blur-[110px]"
       />
-      <img
+      <div
         aria-hidden="true"
-        src={BRAND_LOGO_URL}
-        alt=""
-        className="pointer-events-none absolute bottom-[4%] right-[-9rem] z-0 w-[26rem] rotate-[-10deg] opacity-[0.07] blur-[0.5px] saturate-50 sm:right-[-5rem] lg:right-[3%] lg:top-[8%] lg:bottom-auto lg:w-[30rem]"
+        className="pointer-events-none absolute -bottom-32 -right-32 z-0 h-[34rem] w-[34rem] rounded-full border border-[#17251c]/[0.06] sm:right-0 lg:top-[8%] lg:bottom-auto"
       />
       <div className="relative z-10 mx-auto flex min-h-svh w-full max-w-[1440px] items-center justify-center p-3 sm:p-6 lg:p-10">
         <div className="grid min-h-[min(760px,calc(100svh-5rem))] w-full max-w-[1180px] overflow-hidden rounded-[28px] border border-white/70 bg-white/35 shadow-[0_32px_100px_-45px_rgba(30,55,37,0.35)] backdrop-blur-2xl lg:grid-cols-[1.03fr_0.97fr]">
@@ -141,21 +138,10 @@ function LoginForm() {
               className="pointer-events-none absolute right-[-1rem] top-[29%] h-[17rem] w-[17rem] rounded-full border border-white/[0.08]"
             />
 
-            <Link
+            <Brand
               href="/"
-              className="relative z-10 inline-flex w-fit items-center gap-4 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-[#b9ebc5]"
-            >
-              <span className="flex h-[4.5rem] w-24 items-center justify-center rounded-2xl border border-white/15 bg-white/10 p-3 shadow-inner shadow-white/10 backdrop-blur-md xl:h-20 xl:w-[6.5rem]">
-                <img
-                  src={BRAND_LOGO_URL}
-                  alt=""
-                  className="h-full w-full object-contain"
-                />
-              </span>
-              <span className="max-w-[14rem] text-base font-semibold leading-5 tracking-tight xl:text-lg">
-                Tech Trailblazer Academy
-              </span>
-            </Link>
+              className="relative z-10 w-fit rounded-xl bg-[#10251b]/80 px-4 py-3"
+            />
 
             <div className="relative z-10 max-w-md pb-4">
               <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.07] px-3 py-1.5 text-[11px] font-medium text-white/75 backdrop-blur">
@@ -187,27 +173,15 @@ function LoginForm() {
 
           <section className="relative flex min-h-[min(760px,calc(100svh-5rem))] flex-col justify-between overflow-hidden rounded-[24px] bg-white/55 p-5 shadow-[0_16px_40px_-28px_rgba(30,55,37,0.45)] backdrop-blur-2xl sm:rounded-[28px] sm:p-8 lg:min-h-0 lg:overflow-visible lg:rounded-none lg:bg-white/35 lg:p-10 lg:shadow-none xl:p-14">
             <header className="relative -mx-5 -mt-5 mb-2 overflow-hidden rounded-b-none border-b border-white/10 bg-[#17251c] px-5 pb-5 pt-3 text-white sm:-mx-8 sm:-mt-8 sm:px-8 sm:pb-6 sm:pt-5 lg:mx-0 lg:mt-0 lg:mb-0 lg:overflow-visible lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0 lg:text-[#19231c]">
-              <img
+              <div
                 aria-hidden="true"
-                src={BRAND_LOGO_URL}
-                alt=""
-                className="pointer-events-none absolute -right-8 top-8 w-44 rotate-[-12deg] opacity-[0.1] mix-blend-screen sm:-right-4 sm:top-4 sm:w-52 lg:hidden"
+                className="pointer-events-none absolute -right-8 top-8 h-44 w-44 rounded-full border border-white/[0.08] sm:-right-4 sm:top-4 sm:h-52 sm:w-52 lg:hidden"
               />
               <div className="relative z-10 flex items-center justify-between gap-3 lg:justify-end">
-              <Link
+              <Brand
                 href="/"
-                aria-label="Tech Trailblazer Academy home"
-                className="inline-flex min-w-0 items-center gap-3 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-[#b9ebc5] lg:hidden"
-              >
-                <img
-                  src={BRAND_LOGO_URL}
-                  alt=""
-                  className="h-12 w-14 shrink-0 rounded-lg border border-white/20 bg-white/10 p-1 object-contain sm:h-14 sm:w-16 md:h-16 md:w-[4.5rem]"
-                />
-                <span className="hidden truncate text-sm font-semibold leading-5 tracking-tight sm:inline sm:text-base">
-                  Tech Trailblazer Academy
-                </span>
-              </Link>
+                className="relative z-10 min-w-0 rounded-lg bg-[#10251b]/70 px-2 py-1.5 lg:hidden"
+              />
               <span className="hidden items-center gap-1.5 rounded-full border border-[#dce6dd] bg-white/65 px-3 py-1.5 text-[11px] font-medium text-[#59665c] shadow-sm lg:inline-flex">
                 <ShieldCheck aria-hidden="true" className="h-3.5 w-3.5 text-[#28734b]" />
                 Admin access
@@ -367,8 +341,8 @@ function LoginForm() {
             <div className="relative overflow-hidden bg-[#17251c] px-7 pb-7 pt-8 text-center text-white">
               <div aria-hidden="true" className="pointer-events-none absolute -right-14 -top-24 h-56 w-56 rounded-full bg-emerald-400/20 blur-3xl" />
               <div aria-hidden="true" className="pointer-events-none absolute -bottom-32 -left-10 h-48 w-48 rounded-full bg-blue-300/10 blur-3xl" />
-              <div className={`relative mx-auto flex h-24 w-24 items-center justify-center rounded-[28px] border border-white/15 bg-white/10 p-3 shadow-[0_0_45px_rgba(100,220,140,.12)] ${signInSuccess ? "" : "motion-safe:animate-[pulse_2.4s_ease-in-out_infinite]"}`}>
-                <img src={BRAND_LOGO_URL} alt="" className="h-full w-full object-contain" />
+              <div className={`relative mx-auto rounded-xl border border-white/15 bg-white/10 px-4 py-3 shadow-[0_0_45px_rgba(100,220,140,.12)] ${signInSuccess ? "" : "motion-safe:animate-[pulse_2.4s_ease-in-out_infinite]"}`}>
+                <Brand href={null} className="justify-center" />
                 {signInSuccess && (
                   <span className="absolute -bottom-2 -right-2 flex h-9 w-9 items-center justify-center rounded-full border-[3px] border-[#17251c] bg-emerald-500 text-white shadow-md">
                     <Check className="h-5 w-5 animate-in zoom-in duration-300" strokeWidth={3} />

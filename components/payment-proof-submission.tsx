@@ -1,16 +1,18 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { ArrowLeft, ArrowRight, Check, CheckCircle2, FileImage, LoaderCircle, LockKeyhole, Upload, X } from "lucide-react"
 import { COURSE_CATALOG } from "@/lib/course-catalog"
 
 type Step = 0 | 1 | 2
 type StudentCheck = { valid: boolean; course?: string; error?: string }
 
+export const OPEN_ACADEMY_PAYMENT_EVENT = "academy:open-payment-proof"
+
 const maxFileSize = 15 * 1024 * 1024
 const acceptedTypes = ["image/jpeg", "image/png", "image/webp", "image/avif", "image/gif"]
 
-export default function PaymentProofSubmission() {
+export default function PaymentProofSubmission({ modalOnly = false }: { modalOnly?: boolean }) {
   const [open, setOpen] = useState(false)
   const [step, setStep] = useState<Step>(0)
   const [direction, setDirection] = useState<"next" | "previous">("next")
@@ -23,6 +25,30 @@ export default function PaymentProofSubmission() {
   const [success, setSuccess] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const selectedCourseTitle = COURSE_CATALOG.find(({ title }) => title.toLowerCase() === course)?.title || course
+
+  useEffect(() => {
+    if (!modalOnly) return
+
+    const openPayment = () => setOpen(true)
+    window.addEventListener(OPEN_ACADEMY_PAYMENT_EVENT, openPayment)
+    return () => window.removeEventListener(OPEN_ACADEMY_PAYMENT_EVENT, openPayment)
+  }, [modalOnly])
+
+  useEffect(() => {
+    if (!open) return
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !checking && !submitting) setOpen(false)
+    }
+    window.addEventListener("keydown", closeOnEscape)
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener("keydown", closeOnEscape)
+    }
+  }, [open, checking, submitting])
 
   const close = () => {
     if (checking || submitting) return
@@ -93,7 +119,8 @@ export default function PaymentProofSubmission() {
   }
 
   return (
-    <section id="payment-proof" className="scroll-mt-24 px-5 py-12 sm:px-8 sm:py-16">
+    <>
+    {!modalOnly && <section id="payment-proof" className="scroll-mt-24 px-5 py-12 sm:px-8 sm:py-16">
       <div className="mx-auto max-w-5xl overflow-hidden rounded-[2rem] border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-orange-50 p-6 shadow-[0_24px_70px_-45px_rgba(30,64,175,.4)] sm:p-9 lg:p-11">
         <div className="grid items-center gap-8 md:grid-cols-[1fr_auto]">
           <div>
@@ -113,12 +140,12 @@ export default function PaymentProofSubmission() {
           </button>
         </div>
       </div>
-
-      {open && (
+    </section>}
+    {open && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/55 p-3 backdrop-blur-sm sm:p-6" role="presentation" onMouseDown={(event) => {
           if (event.target === event.currentTarget) close()
         }}>
-          <section role="dialog" aria-modal="true" aria-labelledby="proof-dialog-title" className="w-full max-w-xl overflow-hidden rounded-[1.75rem] border border-white/70 bg-white shadow-[0_30px_100px_-24px_rgba(15,23,42,.55)]">
+          <section role="dialog" aria-modal="true" aria-labelledby="proof-dialog-title" className="max-h-[calc(100dvh-1.5rem)] w-full max-w-xl overflow-y-auto rounded-[1.75rem] border border-white/70 bg-white shadow-[0_30px_100px_-24px_rgba(15,23,42,.55)] sm:max-h-[calc(100dvh-3rem)]">
             <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-5 sm:px-7">
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-700">Payment verification</p>
@@ -217,6 +244,6 @@ export default function PaymentProofSubmission() {
           </section>
         </div>
       )}
-    </section>
+    </>
   )
 }

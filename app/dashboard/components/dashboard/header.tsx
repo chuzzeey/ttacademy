@@ -24,7 +24,7 @@ import {
   Users,
   X,
 } from "lucide-react"
-import { BRAND_LOGO_URL } from "@/lib/brand"
+import Brand from "@/components/brand"
 import { useAdminProfile } from "@/lib/hooks/use-admin-profile"
 import { formatRegistrationDate } from "@/lib/format-registration-date"
 import { useAdminTheme } from "./admin-theme-provider"
@@ -427,18 +427,12 @@ export function Header() {
   return (
     <>
       <aside className="admin-sidebar fixed inset-y-0 left-0 z-40 hidden w-[17rem] flex-col border-r border-slate-200/80 bg-white lg:flex">
-        <Link
-          href="/dashboard"
-          className="flex min-h-[92px] items-center gap-4 border-b border-slate-100 px-6"
-          aria-label="Tech Trailblazer Academy overview"
-        >
-          <span className="flex h-[4.25rem] w-[4.75rem] shrink-0 items-center justify-center rounded-2xl bg-white p-1.5">
-            <img src={BRAND_LOGO_URL} alt="" className="h-full w-full object-contain" />
-          </span>
-          <span className="text-[15px] font-semibold leading-5 tracking-tight text-slate-900">
-            Tech Trailblazer Academy
-          </span>
-        </Link>
+        <div className="flex min-h-[92px] items-center border-b border-slate-100 px-6">
+          <Brand
+            href="/dashboard"
+            className="rounded-xl bg-[#17251c] px-3 py-2"
+          />
+        </div>
 
         <div className="flex-1 overflow-y-auto px-4 py-5">
           <div className="mb-5">{themeToggle}</div>
@@ -472,12 +466,10 @@ export function Header() {
             >
               <Menu aria-hidden="true" className="h-5 w-5" />
             </button>
-            <Link href="/dashboard" className="flex min-w-0 items-center gap-2.5 lg:hidden">
-              <img src={BRAND_LOGO_URL} alt="" className="h-10 w-11 shrink-0 object-contain sm:h-11 sm:w-12" />
-              <span className="max-w-[min(28vw,15rem)] truncate text-xs font-semibold tracking-tight text-slate-900 max-[360px]:hidden sm:text-sm">
-                Tech Trailblazer Academy
-              </span>
-            </Link>
+            <Brand
+              href="/dashboard"
+              className="min-w-0 rounded-lg bg-[#17251c] px-2 py-1.5 lg:hidden"
+            />
             <div className="hidden lg:block">
               <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-700">Academy workspace</p>
               <p className="mt-0.5 text-sm font-medium text-slate-500">Administration</p>
@@ -779,10 +771,10 @@ export function Header() {
             className={`admin-mobile-drawer absolute inset-y-0 left-0 flex w-[min(20rem,88vw)] flex-col border-r border-slate-200 bg-white shadow-2xl transition-transform duration-[420ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}
           >
             <div className="flex min-h-[82px] items-center justify-between border-b border-slate-100 px-4">
-              <Link href="/dashboard" onClick={closeMobileMenu} className="flex min-w-0 items-center gap-3">
-                <img src={BRAND_LOGO_URL} alt="" className="h-12 w-14 shrink-0 object-contain" />
-                <span className="text-sm font-semibold leading-5 text-slate-900">Tech Trailblazer Academy</span>
-              </Link>
+              <Brand
+                href="/dashboard"
+                className="min-w-0 rounded-lg bg-[#17251c] px-2 py-1.5"
+              />
               <button type="button" tabIndex={mobileMenuOpen ? 0 : -1} aria-label="Close navigation" onClick={closeMobileMenu} className="ml-2 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100">
                 <X aria-hidden="true" className="h-4 w-4" />
               </button>
@@ -817,8 +809,8 @@ export function Header() {
           >
             {logoutPhase === "success" ? (
               <div className="flex flex-col items-center px-7 py-9 text-center">
-                <div className="relative flex h-24 w-24 items-center justify-center rounded-[28px] bg-emerald-50 p-3 animate-[pulse_1.5s_ease-in-out_infinite]">
-                  <img src={BRAND_LOGO_URL} alt="" className="h-full w-full object-contain" />
+                <div className="relative flex h-24 w-24 items-center justify-center rounded-[28px] bg-[#17251c] p-3 animate-[pulse_1.5s_ease-in-out_infinite]">
+                  <Brand href={null} className="scale-90" />
                   <span className="absolute -bottom-2 -right-2 flex h-9 w-9 items-center justify-center rounded-full border-[3px] border-white bg-emerald-600 text-white shadow-md">
                     <Check className="h-5 w-5 animate-in zoom-in duration-300" strokeWidth={3} />
                   </span>

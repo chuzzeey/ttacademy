@@ -1,12 +1,11 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import Image from 'next/image'
 import { Check, Copy, LoaderCircle, Menu, X } from 'lucide-react'
-import { BRAND_LOGO_URL } from '@/lib/brand'
 import { COURSE_CATALOG } from '@/lib/course-catalog'
 import PaymentProofSubmission from './payment-proof-submission'
 import WhatsAppButton from './whatsapp'
+import Brand from './brand'
 
 const AFRICAN_COUNTRIES = [
   { code: "NG", name: "Nigeria", dial: "+234" },
@@ -120,12 +119,7 @@ export function HeaderNav() {
       }`}
     >
       <div className="relative mx-auto flex h-16 max-w-7xl items-center justify-between px-5 sm:px-8 lg:h-20 lg:px-10">
-        <a href="#home" aria-label="Tech Trailblazer Academy home" className="flex items-center gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700">
-          <Image src={BRAND_LOGO_URL} alt="" width={120} height={48} style={{ width: 'auto', height: 44 }} priority />
-          <span className="hidden text-xs font-semibold tracking-tight text-white sm:block">
-            Tech Trailblazer Academy
-          </span>
-        </a>
+        <Brand />
 
         <div className="flex items-center gap-4 sm:gap-6">
           <div className="hidden items-center gap-4 lg:flex">

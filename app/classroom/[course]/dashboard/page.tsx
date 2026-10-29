@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, usePathname, useRouter } from 'next/navigation'
 import {
   Send, Smile, Megaphone, AlertTriangle, Paperclip, Moon, Sun, Users, X, LogOut, Menu
 } from 'lucide-react'
@@ -40,8 +40,10 @@ interface Message {
 
 export default function DashboardPage() {
   const params = useParams()
+  const pathname = usePathname()
   const router = useRouter()
   const courseSlug = params?.course as string
+  const classroomBase = pathname.startsWith('/academy/') ? '/academy/classroom' : '/classroom'
   const courseData = getCourseData(courseSlug)
   const dashboard = courseData.dashboard
 
@@ -162,14 +164,14 @@ export default function DashboardPage() {
     
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT') {
-        router.push(`/classroom/${courseSlug}/login`)
+        router.push(`${classroomBase}/${courseSlug}/login`)
       }
     })
     
     supabase.auth.getSession().then(({ data: { session }, error }) => {
       if (error) console.error('Could not restore classroom session:', error)
       if (!session) {
-        router.push(`/classroom/${courseSlug}/login`)
+        router.push(`${classroomBase}/${courseSlug}/login`)
       } else {
         setCurrentUserId(session.user.id)
       }
@@ -208,7 +210,7 @@ export default function DashboardPage() {
             await supabase.auth.signOut()
           } catch (_) {}
           alert('Your account has been restricted by the admin. You have been logged out.')
-          router.push(`/classroom/${courseSlug}/login`)
+          router.push(`${classroomBase}/${courseSlug}/login`)
         } else if (json.data && json.data.restricted === false) {
           isRestrictedRef.current = false
         }
@@ -401,7 +403,7 @@ export default function DashboardPage() {
       }
       await supabase.auth.signOut()
       setShowLogoutModal(false)
-      router.push(`/classroom/${courseSlug}/login`)
+      router.push(`${classroomBase}/${courseSlug}/login`)
     } catch (err) {
       console.error('Logout error:', err)
     }

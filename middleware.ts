@@ -31,16 +31,18 @@ export async function middleware(request: NextRequest) {
   const isProtectedPath = pathname.startsWith('/dashboard')
   const isLoginPath = pathname === '/admin-login'
   const teacherSegments = pathname.split('/').filter(Boolean)
+  const isAcademyPath = teacherSegments[0] === 'academy'
+  const classroomSegments = isAcademyPath ? teacherSegments.slice(1) : teacherSegments
   const isTeacherClassPath = teacherSegments[0] === 'teachers'
     && teacherSegments.length >= 2
     && !['login', 'setup-password'].includes(teacherSegments[1])
-  const isStudentClassPath = teacherSegments[0] === 'classroom'
-    && teacherSegments.length >= 3
-    && teacherSegments[2] === 'dashboard'
+  const isStudentClassPath = classroomSegments[0] === 'classroom'
+    && classroomSegments.length >= 3
+    && classroomSegments[2] === 'dashboard'
   const classSlug = isTeacherClassPath
     ? teacherSegments[1]
     : isStudentClassPath
-      ? teacherSegments[1]
+      ? classroomSegments[1]
       : ''
   let isAdmin = user?.email?.toLowerCase() === ADMIN_EMAIL
 
@@ -78,7 +80,9 @@ export async function middleware(request: NextRequest) {
 
   if ((isTeacherClassPath || isStudentClassPath) && !user) {
     const loginUrl = new URL(
-      isTeacherClassPath ? `/teachers/login/${classSlug}` : `/classroom/${classSlug}/login`,
+      isTeacherClassPath
+        ? `/teachers/login/${classSlug}`
+        : `${isAcademyPath ? '/academy' : ''}/classroom/${classSlug}/login`,
       request.url,
     )
     loginUrl.searchParams.set('redirect', pathname)
@@ -101,7 +105,9 @@ export async function middleware(request: NextRequest) {
     const expectedRole = isTeacherClassPath ? 'teacher' : 'student'
     if (role !== expectedRole) {
       const loginUrl = new URL(
-        isTeacherClassPath ? `/teachers/login/${classSlug}` : `/classroom/${classSlug}/login`,
+        isTeacherClassPath
+          ? `/teachers/login/${classSlug}`
+          : `${isAcademyPath ? '/academy' : ''}/classroom/${classSlug}/login`,
         request.url,
       )
       loginUrl.searchParams.set('error', 'access')
@@ -128,5 +134,6 @@ export const config = {
     '/admin-login',
     '/teachers/:path*',
     '/classroom/:path*',
+    '/academy/classroom/:path*',
   ],
 }

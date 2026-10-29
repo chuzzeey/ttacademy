@@ -1,7 +1,7 @@
 'use client'
 import React from 'react'
-import { BRAND_LOGO_URL } from '@/lib/brand'
 import { socialLinks } from '@/lib/social-links'
+import Brand from './brand'
 
 const Footer = () => {
     const footerLinks = {
@@ -22,16 +22,7 @@ const Footer = () => {
                 <div className="grid grid-cols-1 gap-10 border-b border-slate-200 pb-10 text-center sm:grid-cols-[1fr_auto] sm:text-left">
                     {/* Logo & Brand */}
                     <div className="flex flex-col items-center sm:items-start">
-                        <a href="#home" className="flex flex-col items-center transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 sm:items-start">
-                            <img 
-                                src={BRAND_LOGO_URL}
-                                alt="Tech Trailblazer Academy" 
-                                className="h-8 md:h-10 mb-3"
-                            />
-                            <span className="text-xs font-semibold tracking-tight text-slate-900">
-                                Tech Trailblazer Academy
-                            </span>
-                        </a>
+                        <Brand className="rounded-xl bg-[#17251c] px-4 py-3" />
                         <p className="mt-3 max-w-sm text-sm leading-6 text-slate-500">
                             Empowering the next generation of tech professionals with industry-leading education.
                         </p>
