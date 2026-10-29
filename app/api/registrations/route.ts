@@ -129,7 +129,15 @@ export async function POST(request: NextRequest) {
       .from('students')
       .select('email')
       .eq('email', email.trim().toLowerCase())
-      .single()
+      .maybeSingle()
+
+    if (checkError) {
+      console.error("Registration email check failed:", checkError)
+      return NextResponse.json(
+        { error: "Unable to verify registration details. Please try again." },
+        { status: 500 },
+      )
+    }
 
     if (existingStudent) {
       return NextResponse.json(

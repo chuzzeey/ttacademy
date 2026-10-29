@@ -253,6 +253,7 @@ export default function ApplicationModal({
                     type="date"
                     autoComplete="bday"
                     max={new Date().toISOString().slice(0, 10)}
+                    onClick={(event) => event.currentTarget.showPicker()}
                     required
                   />
                 </label>

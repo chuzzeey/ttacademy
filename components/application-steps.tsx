@@ -1,40 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import {
-    ArrowUpRight,
-    BarChart3,
-    Bot,
-    Bug,
-    Cloud,
-    Code2,
-    Monitor,
-    Paintbrush,
-    Palette,
-    Server,
-    ShieldCheck,
-    Video,
-    Workflow,
-    type LucideIcon,
-} from 'lucide-react'
+import { ArrowUpRight } from 'lucide-react'
 import { COURSE_CATALOG } from '@/lib/course-catalog'
+import { courseIcons } from '@/lib/course-icons'
 
 const applicationCourses = COURSE_CATALOG
-
-const courseIcons: Record<string, LucideIcon> = {
-    cybersecurity: ShieldCheck,
-    'uiux-design': Palette,
-    'cloud-computing': Cloud,
-    'web-development': Code2,
-    'data-analysis': BarChart3,
-    'ai-video-creation': Video,
-    'ai-automation': Workflow,
-    'ai-agent-development': Bot,
-    'backend-development': Server,
-    'frontend-development': Monitor,
-    'ethical-hacking': Bug,
-    'graphic-design-branding': Paintbrush,
-}
 
 function ApplicationSteps() {
     const [selectedCourse, setSelectedCourse] = useState<{ slug: string; title: string } | null>(null)
@@ -71,7 +42,7 @@ function ApplicationSteps() {
 
                     <ul className="grid gap-3 sm:grid-cols-2">
                         {applicationCourses.map(({ slug, title }) => {
-                            const CourseIcon = courseIcons[slug]
+                            const CourseIcon = courseIcons[title]
 
                             return (
                                 <li key={slug} className="flex min-w-0 items-center justify-between gap-4 border border-slate-200/90 bg-white px-4 py-4 transition-colors hover:border-[#83945a] sm:px-5">

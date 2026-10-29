@@ -1,0 +1,30 @@
+import {
+  BarChart3,
+  Bot,
+  Bug,
+  Cloud,
+  Code2,
+  Monitor,
+  Paintbrush,
+  Palette,
+  Server,
+  ShieldCheck,
+  Video,
+  Workflow,
+  type LucideIcon,
+} from 'lucide-react'
+
+export const courseIcons: Record<string, LucideIcon> = {
+  'AI Automation': Workflow,
+  Cybersecurity: ShieldCheck,
+  'Ethical Hacking': Bug,
+  'AI Agent Development': Bot,
+  'Web Development': Code2,
+  'Backend Development': Server,
+  'Frontend Development': Monitor,
+  'Data Analytics': BarChart3,
+  'Graphic Design / Branding': Paintbrush,
+  'UI/UX Design': Palette,
+  'Cloud Computing': Cloud,
+  'AI Video Editing': Video,
+}

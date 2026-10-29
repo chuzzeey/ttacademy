@@ -14,7 +14,7 @@ export function useStudents() {
   const { data, isLoading, isFetching, error, refetch } = useQuery<Student[]>({
     queryKey: ['students'],
     queryFn: async () => {
-      const res = await fetch('/api/registrations')
+      const res = await fetch('/api/registrations', { cache: 'no-store' })
       const json: { data?: Student[]; error?: string } = await res.json()
       if (!res.ok) throw new Error(json.error || 'Failed to fetch students')
       if (!Array.isArray(json.data)) {
@@ -22,7 +22,8 @@ export function useStudents() {
       }
       return json.data
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes cache
+    staleTime: 0,
+    refetchOnMount: 'always',
   })
   const students = data ?? []
 

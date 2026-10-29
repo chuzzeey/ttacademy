@@ -2,6 +2,8 @@
 
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import { benefits, courses, values } from '../lib/content';
+import { courseIcons } from '../../lib/course-icons';
+import { socialLinks } from '../../lib/social-links';
 import ApplicationModal from './application-modal';
 
 type SitePage = 'home' | 'courses' | 'about' | 'contact';
@@ -16,12 +18,6 @@ const applicationCountries = [
   { code: 'DZ', name: 'Algeria', dial: '+213' },
 ];
 
-function submitForm(event: FormEvent<HTMLFormElement>, setSent: (sent: boolean) => void) {
-  event.preventDefault();
-  setSent(true);
-  event.currentTarget.reset();
-}
-
 export default function Site({ page }: { page: SitePage }) {
   const communityVideoRef = useRef<HTMLVideoElement>(null);
   const communityVideoAttemptedRef = useRef(false);
@@ -32,7 +28,6 @@ export default function Site({ page }: { page: SitePage }) {
   const [enrollError, setEnrollError] = useState('');
   const [enrollStudentCode, setEnrollStudentCode] = useState('');
   const [enrollDialCode, setEnrollDialCode] = useState('+234');
-  const [messageSent, setMessageSent] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [proceedError, setProceedError] = useState('');
   const [applicationOpen, setApplicationOpen] = useState(false);
@@ -398,6 +393,7 @@ export default function Site({ page }: { page: SitePage }) {
           <section className="course-list">
             {courses.map((course) => {
               const isOpen = openCourse === course.title;
+              const CourseIcon = courseIcons[course.title];
               return (
                 <article className={`course-item${isOpen ? ' is-open' : ''}`} key={course.title}>
                   <button
@@ -406,8 +402,9 @@ export default function Site({ page }: { page: SitePage }) {
                     aria-expanded={isOpen}
                     onClick={() => setOpenCourse(isOpen ? '' : course.title)}
                   >
-                    <span>
-                      {course.title} <i aria-hidden="true">{course.icon}</i>
+                    <span className="course-title">
+                      <span>{course.title}</span>
+                      <CourseIcon className="course-course-icon" aria-hidden="true" />
                     </span>
                     <span className="toggle-icon" aria-hidden="true">
                       {isOpen ? '×' : '+'}
@@ -607,11 +604,9 @@ export default function Site({ page }: { page: SitePage }) {
                   </div>
                 ) : (
                   <>
-                    <h3>Complete your application</h3>
-                    <p>
-                      Share a few details so we can get your learning journey started.{' '}
-                      <span>* Required fields</span>
-                    </p>
+                    <p className="eyebrow">ACADEMY APPLICATION</p>
+                    <h3>Tell us a little about yourself.</h3>
+                    <p>Complete your details to apply for your selected program.</p>
                     <fieldset disabled={enrollSubmitting}>
                       <section className="inline-form-section">
                         <h4>Personal information</h4>
@@ -627,6 +622,7 @@ export default function Site({ page }: { page: SitePage }) {
                               type="date"
                               autoComplete="bday"
                               max={new Date().toISOString().slice(0, 10)}
+                              onClick={(event) => event.currentTarget.showPicker()}
                               required
                             />
                           </label>
@@ -668,13 +664,13 @@ export default function Site({ page }: { page: SitePage }) {
                         </div>
                       </section>
                       <section className="inline-form-section">
-                        <h4>Demographics</h4>
+                        <h4>About you</h4>
                         <div className="inline-form-grid">
                           <label>
                             Sex *
                             <select name="sex" defaultValue="" required>
                               <option value="" disabled>
-                                Select your sex
+                                Select
                               </option>
                               <option value="male">Male</option>
                               <option value="female">Female</option>
@@ -694,7 +690,7 @@ export default function Site({ page }: { page: SitePage }) {
                               }}
                             >
                               <option value="" disabled>
-                                Select country
+                                Select
                               </option>
                               {applicationCountries.map((country) => (
                                 <option key={country.code} value={country.name}>
@@ -703,16 +699,15 @@ export default function Site({ page }: { page: SitePage }) {
                               ))}
                             </select>
                           </label>
-                        </div>
-                      </section>
-                      <section className="inline-form-section">
-                        <h4>Course selection</h4>
-                        <div className="inline-form-grid">
                           <label>
-                            Course applying for *
+                            State / province
+                            <input name="state" autoComplete="address-level1" />
+                          </label>
+                          <label>
+                            Program *
                             <select name="course" defaultValue="" required>
                               <option value="" disabled>
-                                Select course
+                                Select a program
                               </option>
                               {courses.map((course) => (
                                 <option key={course.title} value={course.title}>
@@ -745,22 +740,16 @@ export default function Site({ page }: { page: SitePage }) {
                           </label>
                         </div>
                       </section>
-                      <section className="inline-form-section">
-                        <h4>Motivation</h4>
-                        <label>
-                          Why do you want to learn this skill? *
-                          <textarea name="learning_reason" rows={3} maxLength={1500} required />
-                        </label>
-                      </section>
+                      <label>
+                        Why do you want to learn this skill? *
+                        <textarea name="learning_reason" rows={3} maxLength={1500} required />
+                      </label>
                     </fieldset>
                     {enrollError && (
                       <p className="error-message" role="alert">
                         {enrollError}
                       </p>
                     )}
-                    <p className="inline-form-review">
-                      Please review your details carefully before submitting.
-                    </p>
                     <button className="lime-button" type="submit" disabled={enrollSubmitting}>
                       {enrollSubmitting ? 'Submitting your application…' : 'Submit application'}
                       {!enrollSubmitting && <span>↗</span>}
@@ -864,103 +853,33 @@ export default function Site({ page }: { page: SitePage }) {
               </div>
             </div>
           </section>
-          <section className="contact-content section-shell">
-            <div className="contact-copy">
-              <h2>
-                Let’s make your
-                <br />
-                next step clearer.
-              </h2>
-              <p>
-                Whether you’re exploring tech for the first time or changing careers, you can start
-                here.
-              </p>
-              <article>
-                <span>◉</span>
-                <div>
-                  <h3>Find your starting point</h3>
-                  <p>Not sure which tech path fits you? Tell us what you enjoy and what you hope to build.</p>
-                </div>
-              </article>
-              <article>
-                <span>▤</span>
-                <div>
-                  <h3>Understand the learning journey</h3>
-                  <p>Ask about the curriculum, mentorship, practical projects and the time you can commit.</p>
-                </div>
-              </article>
-              <article>
-                <span>◇</span>
-                <div>
-                  <h3>Plan your enrollment</h3>
-                  <p>Ask about entry requirements, program availability and payment options before taking the next step.</p>
-                </div>
-              </article>
-              <div className="about-callout">
-                <h3>Ready to start learning?</h3>
-                <p>Visit About Us to learn what we stand for and register your enrollment interest.</p>
-                <a href="/academy/about">About Us</a>
-              </div>
+          <section className="social-contact-section section-shell" aria-labelledby="social-contact-title">
+            <div className="social-contact-heading">
+              <p className="eyebrow eyebrow-lime">STAY CONNECTED</p>
+              <h2 id="social-contact-title">Connect with Tech Trailblazer Academy.</h2>
+              <p>Follow our channels for updates, inspiration, and ways to get in touch.</p>
             </div>
-            <form className="contact-form" onSubmit={(event) => submitForm(event, setMessageSent)}>
-              {messageSent ? (
-                <>
-                  <h2>Message received</h2>
-                  <p className="success-message" role="status">
-                    Thanks for your message. Our team will be in touch.
-                  </p>
-                </>
-              ) : (
-                <>
-                  <h2>Send us a message</h2>
-                  <p>
-                    A little context helps us guide you. <span>* Required fields</span>
-                  </p>
-                  <div className="name-fields">
-                    <label>
-                      First name *
-                      <input name="firstName" placeholder="Your first name" required />
-                    </label>
-                    <label>
-                      Last name *
-                      <input name="lastName" placeholder="Your last name" required />
-                    </label>
-                  </div>
-                  <label>
-                    Email address *
-                    <input name="email" type="email" placeholder="you@example.com" required />
-                  </label>
-                  <label>
-                    What would you like to discuss? *
-                    <select name="topic" required defaultValue="">
-                      <option value="" disabled>
-                        Select a topic
-                      </option>
-                      {courses.map((course) => (
-                        <option key={course.title}>{course.title}</option>
-                      ))}
-                      <option>Fees and payment options</option>
-                      <option>General question</option>
-                    </select>
-                  </label>
-                  <label>
-                    Your message *
-                    <textarea
-                      name="message"
-                      rows={4}
-                      placeholder="Tell us about your goals or ask us a question..."
-                      required
-                    />
-                  </label>
-                  <label className="consent">
-                    <input type="checkbox" name="consent" required />
-                    I agree to be contacted about my inquiry.
-                  </label>
-                  <button type="submit">Send message</button>
-                  <small>Please don’t include passwords, payment details or sensitive documents.</small>
-                </>
-              )}
-            </form>
+            <div className="social-contact-grid">
+              {socialLinks.map((social) => (
+                <a
+                  className="social-contact-card"
+                  key={social.id}
+                  href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`${social.name}: ${social.handle}`}
+                >
+                  <span className="social-contact-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" dangerouslySetInnerHTML={{ __html: social.svg }} />
+                  </span>
+                  <span className="social-contact-copy">
+                    <strong>{social.name}</strong>
+                    <small>{social.handle}</small>
+                  </span>
+                  <span className="social-contact-arrow" aria-hidden="true">↗</span>
+                </a>
+              ))}
+            </div>
           </section>
         </main>
       )}
