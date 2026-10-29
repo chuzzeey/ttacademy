@@ -3,7 +3,47 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { ADMIN_EMAIL } from '@/lib/supabase/admin-access'
 
+const academyDomain = 'techtrailblazeracademy.com'
+
 export async function middleware(request: NextRequest) {
+  const requestHost = (request.headers.get('host') ?? request.headers.get('x-forwarded-host') ?? request.nextUrl.hostname)
+    .split(',')[0]
+    .trim()
+    .replace(/:\d+$/, '')
+    .toLowerCase()
+  const isAcademyDomain = requestHost === academyDomain || requestHost === `www.${academyDomain}`
+  const requestedPath = request.nextUrl.pathname
+
+  if (requestHost === academyDomain) {
+    const canonicalUrl = request.nextUrl.clone()
+    canonicalUrl.hostname = `www.${academyDomain}`
+    return NextResponse.redirect(canonicalUrl)
+  }
+
+  if (isAcademyDomain && (requestedPath === '/academy' || requestedPath.startsWith('/academy/'))) {
+    const publicUrl = request.nextUrl.clone()
+    publicUrl.pathname = requestedPath.slice('/academy'.length) || '/'
+    return NextResponse.redirect(publicUrl)
+  }
+
+  const academyRoute = requestedPath === '/'
+    || ['/courses', '/about', '/contact'].includes(requestedPath)
+    || requestedPath === '/classroom'
+    || requestedPath.startsWith('/classroom/')
+  const academyClassroomRoute = requestedPath === '/classroom'
+    || requestedPath.startsWith('/classroom/')
+  const academyRewriteUrl = isAcademyDomain && academyRoute
+    ? request.nextUrl.clone()
+    : null
+
+  if (academyRewriteUrl) {
+    academyRewriteUrl.pathname = `/academy${requestedPath === '/' ? '' : requestedPath}`
+  }
+
+  if (academyRewriteUrl && !academyClassroomRoute) {
+    return NextResponse.rewrite(academyRewriteUrl)
+  }
+
   let response = NextResponse.next({ request })
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -25,7 +65,7 @@ export async function middleware(request: NextRequest) {
     response.cookies.getAll().forEach((cookie) => result.cookies.set(cookie))
     return result
   }
-  const pathname = request.nextUrl.pathname
+  const pathname = academyRewriteUrl?.pathname ?? requestedPath
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError) console.error('Session verification failed:', authError)
   const isProtectedPath = pathname.startsWith('/dashboard')
@@ -82,10 +122,10 @@ export async function middleware(request: NextRequest) {
     const loginUrl = new URL(
       isTeacherClassPath
         ? `/teachers/login/${classSlug}`
-        : `${isAcademyPath ? '/academy' : ''}/classroom/${classSlug}/login`,
+        : `${isAcademyDomain ? '' : isAcademyPath ? '/academy' : ''}/classroom/${classSlug}/login`,
       request.url,
     )
-    loginUrl.searchParams.set('redirect', pathname)
+    loginUrl.searchParams.set('redirect', academyRewriteUrl ? requestedPath : pathname)
     return withAuthCookies(NextResponse.redirect(loginUrl))
   }
 
@@ -107,7 +147,7 @@ export async function middleware(request: NextRequest) {
       const loginUrl = new URL(
         isTeacherClassPath
           ? `/teachers/login/${classSlug}`
-          : `${isAcademyPath ? '/academy' : ''}/classroom/${classSlug}/login`,
+          : `${isAcademyDomain ? '' : isAcademyPath ? '/academy' : ''}/classroom/${classSlug}/login`,
         request.url,
       )
       loginUrl.searchParams.set('error', 'access')
@@ -125,11 +165,18 @@ export async function middleware(request: NextRequest) {
     return withAuthCookies(NextResponse.redirect(safeRedirectUrl))
   }
 
-  return withAuthCookies(response)
+  return withAuthCookies(
+    academyRewriteUrl ? NextResponse.rewrite(academyRewriteUrl, { request }) : response,
+  )
 }
 
 export const config = {
   matcher: [
+    '/',
+    '/courses',
+    '/about',
+    '/contact',
+    '/academy/:path*',
     '/dashboard/:path*',
     '/admin-login',
     '/teachers/:path*',
