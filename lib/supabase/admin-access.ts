@@ -1,1 +1,1 @@
-export const ADMIN_EMAIL = "adminb@atomic.io"
+export const ADMIN_EMAIL = "amahchibu@gmail.com"

@@ -89,7 +89,7 @@ CREATE POLICY "Admins can receive student realtime updates"
   ON public.students
   FOR SELECT
   TO authenticated
-  USING (LOWER(auth.jwt() ->> 'email') = 'adminb@atomic.io');
+  USING (LOWER(auth.jwt() ->> 'email') = 'amahchibu@gmail.com');
 
 CREATE TABLE IF NOT EXISTS public.admin_profiles (
   user_id UUID PRIMARY KEY REFERENCES auth.users (id) ON DELETE CASCADE,
@@ -113,7 +113,7 @@ CREATE POLICY "Admins can read their own profile"
 GRANT SELECT ON public.admin_profiles TO authenticated;
 
 DELETE FROM public.admin_profiles
-WHERE lower(email) <> 'adminb@atomic.io';
+WHERE lower(email) <> 'amahchibu@gmail.com';
 
 INSERT INTO public.admin_profiles (user_id, email, full_name)
 SELECT
@@ -121,7 +121,7 @@ SELECT
   lower(email),
   coalesce(nullif(raw_user_meta_data ->> 'name', ''), 'Admin')
 FROM auth.users
-WHERE lower(email) = 'adminb@atomic.io'
+WHERE lower(email) = 'amahchibu@gmail.com'
 ON CONFLICT (user_id) DO UPDATE
 SET email = EXCLUDED.email,
     full_name = EXCLUDED.full_name;

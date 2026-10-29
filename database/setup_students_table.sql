@@ -59,7 +59,7 @@ CREATE POLICY "Admins can receive student realtime updates"
   ON public.students
   FOR SELECT
   TO authenticated
-  USING (LOWER(auth.jwt() ->> 'email') = 'adminb@atomic.io');
+  USING (LOWER(auth.jwt() ->> 'email') = 'amahchibu@gmail.com');
 
 -- Done! Your landing page wizard form will now save data here.
 

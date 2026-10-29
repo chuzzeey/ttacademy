@@ -2,7 +2,7 @@
 // Run this with: node scripts/reset-admin-password.js
 
 async function resetAdminPassword() {
-  const email = 'adminb@atomic.io';
+  const email = 'amahchibu@gmail.com';
   const newPassword = process.env.ADMIN_PASSWORD;
   const sessionCookie = process.env.ADMIN_SESSION_COOKIE;
   const baseUrl = process.env.ADMIN_BASE_URL || 'http://localhost:3001';
