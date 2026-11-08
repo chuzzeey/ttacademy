@@ -30,6 +30,6 @@ jobs:
             --output /dev/null \
             --max-time 20 \
             --header "apikey: $SUPABASE_ANON_KEY" \
-            "$SUPABASE_URL/rest/v1/"
+            "$SUPABASE_URL/rest/v1/enrollment_interests?select=id&limit=0"
 
-          echo "Supabase REST API responded successfully."
+          echo "Supabase database query completed successfully."
