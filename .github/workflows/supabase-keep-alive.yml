@@ -30,7 +30,6 @@ jobs:
             --output /dev/null \
             --max-time 20 \
             --header "apikey: $SUPABASE_ANON_KEY" \
-            --header "Authorization: Bearer $SUPABASE_ANON_KEY" \
             "$SUPABASE_URL/rest/v1/"
 
           echo "Supabase REST API responded successfully."

@@ -9,7 +9,8 @@ the project has another issue.
 The workflow reads these repository Actions secrets:
 
 - `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` (the legacy anon key or the current publishable key)
 
-They should match the application's Supabase URL and public anon key. Never
-add secret values to the workflow file or commit them to the repository.
+They should match the application's Supabase project. Never add key values to
+the workflow file or commit them to the repository. The publishable key is
+sent only as the `apikey` header; do not use a secret or service-role key.
