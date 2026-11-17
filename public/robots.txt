@@ -2,7 +2,7 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://techtrailblazeracademy.com/sitemap.xml
+Sitemap: https://www.techtblazeracademy.com/sitemap.xml
 
 # Block common non-content paths
 Disallow: /api/

@@ -35,14 +35,14 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL("https://techtrailblazeracademy.com"),
+  metadataBase: new URL("https://www.techtblazeracademy.com"),
   alternates: {
     canonical: "/",
   },
   openGraph: {
     title: "Tech Trailblazer Academy - We Tech Different",
     description: "Master cutting-edge tech skills through practical, hands-on online learning. Real projects, expert mentors, career-focused training.",
-    url: "https://techtrailblazeracademy.com",
+    url: "https://www.techtblazeracademy.com",
     siteName: "Tech Trailblazer Academy",
     images: [
       {
@@ -77,7 +77,7 @@ const structuredData = {
   "@type": "EducationalOrganization",
   "name": "Tech Trailblazer Academy",
   "description": "Master cutting-edge tech skills through practical, hands-on online learning. Real projects, expert mentors, career-focused training.",
-  "url": "https://techtrailblazeracademy.com",
+  "url": "https://www.techtblazeracademy.com",
   "logo": BRAND_LOGO_URL,
   "sameAs": [
     ...socialLinks.map(({ href }) => href),

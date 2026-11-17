@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { ADMIN_EMAIL } from '@/lib/supabase/admin-access'
 
-const academyDomain = 'techtrailblazeracademy.com'
+const academyDomain = 'techtblazeracademy.com'
 
 export async function middleware(request: NextRequest) {
   const requestHost = (request.headers.get('host') ?? request.headers.get('x-forwarded-host') ?? request.nextUrl.hostname)
