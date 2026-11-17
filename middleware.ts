@@ -4,6 +4,7 @@ import type { NextRequest } from 'next/server'
 import { ADMIN_EMAIL } from '@/lib/supabase/admin-access'
 
 const academyDomain = 'techtblazeracademy.com'
+const mainSiteDomain = 'techtailblazeracademy.site'
 
 export async function middleware(request: NextRequest) {
   const requestHost = (request.headers.get('host') ?? request.headers.get('x-forwarded-host') ?? request.nextUrl.hostname)
@@ -14,9 +15,9 @@ export async function middleware(request: NextRequest) {
   const isAcademyDomain = requestHost === academyDomain || requestHost === `www.${academyDomain}`
   const requestedPath = request.nextUrl.pathname
 
-  if (requestHost === academyDomain) {
+  if (requestHost === academyDomain || requestHost === mainSiteDomain) {
     const canonicalUrl = request.nextUrl.clone()
-    canonicalUrl.hostname = `www.${academyDomain}`
+    canonicalUrl.hostname = `www.${requestHost}`
     return NextResponse.redirect(canonicalUrl)
   }
 

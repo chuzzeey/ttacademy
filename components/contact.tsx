@@ -5,7 +5,7 @@ import { Check, Copy, LoaderCircle, Menu, X } from 'lucide-react'
 import { COURSE_CATALOG } from '@/lib/course-catalog'
 import PaymentProofSubmission from './payment-proof-submission'
 import WhatsAppButton from './whatsapp'
-import Brand from './brand'
+import MainSiteBrand from './main-site-brand'
 
 const AFRICAN_COUNTRIES = [
   { code: "NG", name: "Nigeria", dial: "+234" },
@@ -119,7 +119,7 @@ export function HeaderNav() {
       }`}
     >
       <div className="relative mx-auto flex h-16 max-w-7xl items-center justify-between px-5 sm:px-8 lg:h-20 lg:px-10">
-        <Brand />
+        <MainSiteBrand priority />
 
         <div className="flex items-center gap-4 sm:gap-6">
           <div className="hidden items-center gap-4 lg:flex">

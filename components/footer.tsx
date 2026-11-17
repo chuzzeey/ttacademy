@@ -1,7 +1,7 @@
 'use client'
 import React from 'react'
 import { socialLinks } from '@/lib/social-links'
-import Brand from './brand'
+import MainSiteBrand from './main-site-brand'
 
 const Footer = () => {
     const footerLinks = {
@@ -22,7 +22,7 @@ const Footer = () => {
                 <div className="grid grid-cols-1 gap-10 border-b border-slate-200 pb-10 text-center sm:grid-cols-[1fr_auto] sm:text-left">
                     {/* Logo & Brand */}
                     <div className="flex flex-col items-center sm:items-start">
-                        <Brand className="rounded-xl bg-[#17251c] px-4 py-3" />
+                        <MainSiteBrand />
                         <p className="mt-3 max-w-sm text-sm leading-6 text-slate-500">
                             Empowering the next generation of tech professionals with industry-leading education.
                         </p>

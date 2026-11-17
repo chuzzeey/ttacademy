@@ -35,18 +35,18 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL("https://www.techtblazeracademy.com"),
+  metadataBase: new URL("https://www.techtailblazeracademy.site"),
   alternates: {
     canonical: "/",
   },
   openGraph: {
     title: "Tech Trailblazer Academy - We Tech Different",
     description: "Master cutting-edge tech skills through practical, hands-on online learning. Real projects, expert mentors, career-focused training.",
-    url: "https://www.techtblazeracademy.com",
+    url: "https://www.techtailblazeracademy.site",
     siteName: "Tech Trailblazer Academy",
     images: [
       {
-        url: BRAND_LOGO_URL,
+        url: "/main-site-logo.webp",
         alt: "Tech Trailblazer Academy - We Tech Different",
       },
     ],
@@ -57,7 +57,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Tech Trailblazer Academy - We Tech Different",
     description: "Master cutting-edge tech skills through practical, hands-on online learning. Real projects, expert mentors.",
-    images: [BRAND_LOGO_URL],
+    images: ["/main-site-logo.webp"],
   },
   robots: {
     index: true,
@@ -77,8 +77,8 @@ const structuredData = {
   "@type": "EducationalOrganization",
   "name": "Tech Trailblazer Academy",
   "description": "Master cutting-edge tech skills through practical, hands-on online learning. Real projects, expert mentors, career-focused training.",
-  "url": "https://www.techtblazeracademy.com",
-  "logo": BRAND_LOGO_URL,
+  "url": "https://www.techtailblazeracademy.site",
+  "logo": "https://www.techtailblazeracademy.site/main-site-logo.webp",
   "sameAs": [
     ...socialLinks.map(({ href }) => href),
     "https://linkedin.com/company/techtrailblazer-academy"

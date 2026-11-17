@@ -7,6 +7,14 @@ export const metadata: Metadata = {
   title: 'Tech Trailblazer Academy',
   description:
     'Build your future in tech with affordable, in-depth learning and mentorship from Tech Trailblazer Academy.',
+  metadataBase: new URL('https://www.techtblazeracademy.com'),
+  openGraph: {
+    url: 'https://www.techtblazeracademy.com',
+    images: [{ url: '/academy-logo.webp', alt: 'Tech Trailblazer Academy' }],
+  },
+  twitter: {
+    images: ['/academy-logo.webp'],
+  },
 };
 
 export default function AcademyLayout({ children }: Readonly<{ children: React.ReactNode }>) {
