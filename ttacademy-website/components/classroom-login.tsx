@@ -92,7 +92,7 @@ export default function ClassroomLogin() {
         <ArrowLeft aria-hidden="true" size={16} /> All classrooms
       </a>
       <section className="classroom-login-card">
-        <AcademyBrand className="classroom-login-brand" />
+        <AcademyBrand className="classroom-login-brand" priority />
         <p className="eyebrow">STUDENT LEARNING PORTAL</p>
         <h1>{verified ? 'You’re verified!' : 'Welcome to your classroom'}</h1>
         <p className="classroom-login-course">{course.title}</p>

@@ -1,20 +1,28 @@
-export default function AcademyBrand({ className = '' }: { className?: string }) {
+import Image from 'next/image';
+
+export default function AcademyBrand({
+  className = '',
+  priority = false,
+}: {
+  className?: string;
+  priority?: boolean;
+}) {
   return (
     <a
       className={`brand${className ? ` ${className}` : ''}`}
       href="/academy"
       aria-label="Tech Trailblazer Academy home"
     >
-      <span className="brand-mark" aria-hidden="true">
-        <span>↘</span>
-      </span>
-      <span className="brand-name">
-        TECH
-        <br />
-        TRAILBLAZER
-        <br />
-        <small>ACADEMY</small>
-      </span>
+      <Image
+        className="brand-logo"
+        src="/academy-logo.webp"
+        alt="Tech Trailblazer Academy"
+        width={830}
+        height={223}
+        unoptimized
+        loading={priority ? 'eager' : 'lazy'}
+        fetchPriority={priority ? 'high' : 'auto'}
+      />
     </a>
   );
 }

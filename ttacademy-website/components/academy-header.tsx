@@ -47,7 +47,7 @@ export default function AcademyHeader() {
     <>
       <header className="site-header academy-header">
         <div className="header-inner">
-          <AcademyBrand />
+          <AcademyBrand className="academy-header-brand" priority />
           <nav className="primary-navigation" aria-label="Main navigation">
             {links.map(({ label, href }) => (
               <a
