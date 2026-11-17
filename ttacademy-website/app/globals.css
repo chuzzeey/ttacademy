@@ -1710,6 +1710,12 @@ p {
   width: 160px;
 }
 
+@media (min-width: 641px) and (max-width: 900px) {
+  .academy-header .brand-logo {
+    width: 170px;
+  }
+}
+
 .side-menu-heading > button {
   width: 40px;
   height: 40px;
