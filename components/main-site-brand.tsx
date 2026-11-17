@@ -1,6 +1,17 @@
 import Image from 'next/image'
 
-export default function MainSiteBrand({ priority = false }: { priority?: boolean }) {
+export default function MainSiteBrand({
+  priority = false,
+  size = 'header',
+}: {
+  priority?: boolean
+  size?: 'header' | 'footer'
+}) {
+  const logoSize =
+    size === 'footer'
+      ? 'h-auto w-[120px] max-w-full sm:w-[136px] md:w-[150px] lg:w-[164px]'
+      : 'h-auto w-[170px] sm:w-[190px]'
+
   return (
     <a
       href="#home"
@@ -12,7 +23,7 @@ export default function MainSiteBrand({ priority = false }: { priority?: boolean
         alt="Tech Trailblazer Academy"
         width={760}
         height={185}
-        className="h-auto w-[170px] sm:w-[190px]"
+        className={logoSize}
         unoptimized
         loading={priority ? 'eager' : 'lazy'}
         fetchPriority={priority ? 'high' : 'auto'}

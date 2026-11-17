@@ -22,7 +22,7 @@ const Footer = () => {
                 <div className="grid grid-cols-1 gap-10 border-b border-slate-200 pb-10 text-center sm:grid-cols-[1fr_auto] sm:text-left">
                     {/* Logo & Brand */}
                     <div className="flex flex-col items-center sm:items-start">
-                        <MainSiteBrand />
+                        <MainSiteBrand size="footer" />
                         <p className="mt-3 max-w-sm text-sm leading-6 text-slate-500">
                             Empowering the next generation of tech professionals with industry-leading education.
                         </p>
